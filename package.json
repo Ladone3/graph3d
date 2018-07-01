@@ -1,0 +1,46 @@
+{
+  "name": "treeJsTest",
+  "version": "0.0.1",
+  "description": "Test",
+  "author": {
+    "name": "Ladone3"
+  },
+  "scripts": {
+    "_typings-tsc": "./node_modules/.bin/tsc --declaration --outDir dist/dts",
+    "_typings-dts-bundle": "./node_modules/.bin/dts-bundle --main dist/dts/index.d.ts --name ontodia --out ../ontodia.d.ts",
+    "_typings": "npm run _typings-tsc && npm run _typings-dts-bundle",
+    "_webpack": "./node_modules/.bin/webpack",
+    "build": "npm run _webpack",
+    "start": "./node_modules/.bin/webpack-dev-server --port 5000 --host 0.0.0.0 --config webpack.config.js --content-base dist/",
+    "lint": "./node_modules/.bin/tslint -c tslint.json 'src/**/*.ts' 'src/**/*.tsx' -t stylish"
+  },
+  "dependencies": {
+    "@types/three": "^0.89.10",
+    "three": "^0.90.0",
+    "tree": "^0.1.3",
+    "react": "^16.4.1",
+    "react-dom": "^16.4.1"
+  },
+  "devDependencies": {
+    "@types/react": "^16.4.6",
+    "@types/react-dom": "^16.0.6",
+    "css-loader": "^0.28.11",
+    "dts-bundle": "0.7.2",
+    "es6-promise": "4.2.2",
+    "exports-loader": "0.6.3",
+    "expose-loader": "0.7.1",
+    "file-loader": "0.8.5",
+    "html-webpack-plugin": "2.22.0",
+    "node-sass": "^4.9.0",
+    "sass-loader": "4.0.2",
+    "style-loader": "0.13.1",
+    "ts-loader": "1.3.3",
+    "tslint": "4.5.1",
+    "typescript": "2.3.2",
+    "url-loader": "0.5.7",
+    "webpack": "1.13.2",
+    "webpack-dev-server": "1.16.2"
+  },
+  "main": "dist/ontodia.js",
+  "typings": "dist/ontodia.d.ts"
+}

@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "jsx": "react",
+        "lib": [
+            "dom",
+            "es2015"
+        ],
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "noImplicitReturns": true
+    },
+    "compileOnSave": false
+}
