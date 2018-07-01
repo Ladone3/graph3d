@@ -1,0 +1,55 @@
+{
+  "name": "l3-graph",
+  "version": "0.0.1",
+  "author": {
+    "name": "Ladone3"
+  },
+  "scripts": {
+    "_webpack": "./node_modules/.bin/webpack",
+    "build": "npm run _webpack && npm run typings",
+    "typings": "npm run _typings-tsc && npm run _typings-dts-bundle",
+    "_typings": "npm run _typings-tsc && npm run _typings-dts-bundle",
+    "_typings-tsc": "./node_modules/.bin/tsc --declaration --outDir dist/temp/dts",
+    "_typings-dts-bundle": "./node_modules/.bin/dts-bundle --main dist/temp/dts/index.d.ts --name l3-graph --out ../../l3-graph.d.ts",
+    "start": "./node_modules/.bin/webpack-dev-server --port 5000 --host 0.0.0.0 --config webpack.examples.config.js --content-base dist/",
+    "lint": "./node_modules/.bin/tslint -c tslint.json 'src/**/*.ts' 'src/**/*.tsx' -t stylish"
+  },
+  "dependencies": {
+    "@types/lodash": "^4.14.110",
+    "@types/three": "^0.89.10",
+    "lodash": "~4.17.10",
+    "three": "^0.99.0",
+    "webcola": "~3.3.8"
+  },
+  "peerDependencies": {
+    "react": "^15.0.0",
+    "react-dom": "^15.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "15.6.9",
+    "@types/react-dom": "15.5.8",
+    "css-loader": "1.0.0",
+    "dts-bundle": "0.7.2",
+    "es6-promise": "4.2.4",
+    "html-webpack-plugin": "3.2.0",
+    "node-sass": "4.9.3",
+    "raw-loader": "0.5.1",
+    "react": "15.6.2",
+    "react-dom": "15.6.2",
+    "sass-loader": "7.1.0",
+    "style-loader": "0.23.0",
+    "ts-loader": "5.1.1",
+    "tslib": "1.9.3",
+    "tslint": "5.11.0",
+    "typescript": "2.7.2",
+    "url-loader": "1.1.1",
+    "webpack": "4.19.0",
+    "webpack-cli": "3.1.0",
+    "webpack-dev-server": "3.1.8"
+  },
+  "resolutions": {
+    "@types/react": "15.6.9"
+  },
+  "main": "dist/l3-graph.bundle.js",
+  "typings": "dist/l3-graph.d.ts"
+}

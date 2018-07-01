@@ -1,0 +1,67 @@
+.a {
+    color: #999999;
+}
+
+.o3d-main {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background-color: aliceblue;
+}
+
+.o3d-node-html-container {
+    box-sizing: border-box;
+    padding-left: 20px;
+    padding-top: 10px;
+    width: 40px;
+    height: 20px;
+    
+    .o3d-sphere {
+        margin-left: -8px;
+        margin-top: -8px;
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        // background-color: green;
+        border-radius: 32px;
+        // box-shadow: inset 0px 0px 10px -1px black;
+        cursor: pointer;
+        // display: none;
+    }
+
+    .o3d-node-html-view {
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        user-select: none;
+        opacity: 0.4;
+        transform: scale(0.3);
+        transform-origin: top left;
+        transition: transform 0.5s, opacity 0.5s;
+        width: max-content;
+
+        .o3d-default-node-view {
+            // width: 100px;
+            // height: 40px;
+            background-color: #268eb8;
+            color: white;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            text-overflow: ellipsis;
+            font-size: 12px;
+            user-select: none;
+            border: 1px solid black;
+            padding: 10px;
+        }
+    }
+
+    &:hover {
+        .o3d-node-html-view {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+}
