@@ -6,8 +6,8 @@ export interface DataProvider {
     getData(): Promise<GraphData>;
 }
 
-export const NODE_NUMBER = 10;
-export const LINK_NUMBER = 10;
+export const NODE_NUMBER = 1000;
+export const LINK_NUMBER = 1000;
 export const POSITION_RANGE = 100;
 
 export class RandomDataProvider implements DataProvider {
