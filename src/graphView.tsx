@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as THREE from 'three';
 import { GraphModel, Element, isNode, isLink } from './model/graphModel';
 import { GraphElementView, NodeView, LinkView } from './model/views';
+import { Vectro3D } from './model/models';
 
 export interface GraphViewProps {
     graphModel: GraphModel;
@@ -10,6 +11,8 @@ export interface GraphViewProps {
 export interface GraphViewState {
 
 }
+
+export const CAMERA_DIST = 100;
 
 export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
     private scene: THREE.Scene;
@@ -32,19 +35,30 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
     }
 
     private subscribeOnModel() {
-        this.graphModel.on('add-elements', (elements: Element[]) => {
+        this.graphModel.on('add:elements', (elements: Element[]) => {
             for (const element of elements) {
-                const newView = this.getView(element);
+                const newView = this.findView(element);
                 if (newView) {
                     this.views.push(newView);
                     this.scene.add(newView.getMesh());
                 }
             }
+            this.renderGraph();
         });
-        // this.graphModel.on('remove-elements', () => { });
+
+        this.graphModel.on('change:camera-angle', (cameraAngle: Vectro3D) => {
+            this.camera.position.x = Math.sin(cameraAngle.x) * CAMERA_DIST;
+            this.camera.position.y = Math.cos(cameraAngle.y) * CAMERA_DIST;
+            this.camera.position.z = Math.cos(cameraAngle.z) * CAMERA_DIST;
+
+            this.camera.lookAt(this.scene.position);
+            this.renderGraph();
+        });
+
+        // this.graphModel.on('remove:elements', () => { });
     }
 
-    private getView(model: Element): GraphElementView | undefined {
+    private findView(model: Element): GraphElementView | undefined {
         if (isNode(model)) {
             return new NodeView(model);
         } else if (isLink(model)) {
@@ -76,25 +90,29 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
 
         this.renderer.render(this.scene, this.camera);
 
-        let angle = 0;
-        const cameraDist = 100;
-        const cameraStep = 0.04;
+        // let angle = 0;
+        // const cameraDist = 100;
+        // const cameraStep = 0.04;
 
-        const animate = () => {
-            angle += cameraStep;
-            this.camera.position.x = Math.sin(angle) * cameraDist;
-            this.camera.position.y = Math.abs(Math.sin(angle)) * cameraDist;
-            this.camera.position.z = Math.cos(angle) * cameraDist;
-            this.camera.lookAt(this.scene.position);
-            this.renderer.render(this.scene, this.camera);
-            setTimeout(() => requestAnimationFrame(animate), 40);
-        };
-        animate();
+        // const animate = () => {
+        //     angle += cameraStep;
+        //     this.camera.position.x = Math.sin(angle) * cameraDist;
+        //     this.camera.position.y = Math.abs(Math.sin(angle)) * cameraDist;
+        //     this.camera.position.z = Math.cos(angle) * cameraDist;
+        //     this.camera.lookAt(this.scene.position);
+        //     this.renderer.render(this.scene, this.camera);
+        //     setTimeout(() => requestAnimationFrame(animate), 40);
+        // };
+        // animate();
+    }
+
+    renderGraph() {
+        this.renderer.render(this.scene, this.camera);
     }
 
     render() {
         return <div
-            className='o3d-main'
+            className='o3d-main__screen'
             ref={(div) => this.sceneHtmlContainer = div}
         >
         </div>;

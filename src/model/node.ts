@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Point3D } from './models';
+import { Vectro3D } from './models';
 import * as _ from 'lodash';
 import { Subscribable } from '../utils/subscribeable';
 import { GraphModel } from './graphModel';
@@ -7,7 +7,7 @@ import { GraphModel } from './graphModel';
 export const DEFAULT_NODE_ID = 'o3d-node';
 
 export interface NodeParameters {
-    position: Point3D;
+    position: Vectro3D;
     label: string;
     typeId?: string;
 }
@@ -20,7 +20,7 @@ export class Node extends Subscribable {
     public readonly id: string;
     public readonly typeId: string;
     private label: string;
-    private position: Point3D;
+    private position: Vectro3D;
     private _graph: GraphModel | undefined;
 
     constructor(parameters: NodeParameters) {
@@ -32,7 +32,7 @@ export class Node extends Subscribable {
         this.position = parameters.position;
     }
 
-    setPosition(point: Point3D) {
+    setPosition(point: Vectro3D) {
         this.position = _.clone(point);
         this.trigger('change:position', point);
     }

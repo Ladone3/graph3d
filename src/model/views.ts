@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Node } from './node';
 import { Link } from './link';
-import { Point3D } from './models';
+import { Vectro3D } from './models';
 
 export const DEFAULT_NODE_ID = 'o3d-node';
 
@@ -79,8 +79,8 @@ export class LinkView implements GraphElementView {
     }
 
     private calculateVertices(
-        source: Point3D,
-        target: Point3D,
+        source: Vectro3D,
+        target: Vectro3D,
     ): THREE.Vector3[] {
         return [
             new THREE.Vector3(source.x, source.y, source.z),

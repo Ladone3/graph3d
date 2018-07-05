@@ -1,6 +1,7 @@
 import { Node } from './node';
 import { Link } from './link';
 import { Subscribable } from '../utils/subscribeable';
+import { Vectro3D } from './models';
 
 export type Element = Node | Link;
 
@@ -18,16 +19,22 @@ export function isLink(element: Element): element is Link {
 }
 
 /**
- * @fires add-element
- * @fires remove-element
+ * @fires add:elements
+ * @fires remove:elements
+ * @fires change:camera-angle
  */
 export class GraphModel extends Subscribable {
     private nodes: Node[] = [];
     private links: Link[] = [];
+    private cameraAngle: Vectro3D = { x: 0, y: 0, z: 0 };
 
-    public addElement(element: Element) {
-        this._addElement(element);
-        this.trigger('add-elements', [element]);
+    public setCameraAngle(cameraAngle: Vectro3D) {
+        this.cameraAngle = cameraAngle;
+        this.trigger('change:camera-angle', cameraAngle);
+    }
+
+    public getCameraAngle() {
+        return this.cameraAngle;
     }
 
     public setData(data: GraphData) {
@@ -39,11 +46,16 @@ export class GraphModel extends Subscribable {
         this.addElements(newElements);
     }
 
+    public addElement(element: Element) {
+        this._addElement(element);
+        this.trigger('add:elements', [element]);
+    }
+
     public addElements(elements: Element[]) {
         for (let element of elements) {
             this.addElement(element);
         }
-        this.trigger('add-elements', elements);
+        this.trigger('add:elements', elements);
     }
 
     public removeElement(element: Element) {
@@ -54,7 +66,7 @@ export class GraphModel extends Subscribable {
         } else if (isLink(element)) {
             this.links = this.links.filter(link => link.id !== element.id);
         }
-        this.trigger('remove-elements', [element]);
+        this.trigger('remove:elements', [element]);
     }
 
     public removeElements(elements: Element[]) {
@@ -64,7 +76,7 @@ export class GraphModel extends Subscribable {
         }
         this.nodes = this.nodes.filter(node => !elementsMap[node.id]);
         this.links = this.links.filter(link => !elementsMap[link.id]);
-        this.trigger('remove-elements', elements);
+        this.trigger('remove:elements', elements);
     }
 
     private _addElement(element: Element) {
