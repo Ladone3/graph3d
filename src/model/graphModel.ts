@@ -28,9 +28,17 @@ export class GraphModel extends Subscribable {
     private links: Link[] = [];
     private cameraAngle: Vectro3D = { x: 0, y: 0, z: 0 };
 
-    public setCameraAngle(cameraAngle: Vectro3D) {
-        this.cameraAngle = cameraAngle;
-        this.trigger('change:camera-angle', cameraAngle);
+    public setCameraAngle(anglePoint: Vectro3D) {
+        this.cameraAngle = {
+            x: anglePoint.x % (Math.PI * 2),
+            y: Math.max(Math.min(anglePoint.y, Math.PI), 0),
+            z: anglePoint.z % (Math.PI * 2),
+        };
+        this.trigger('change:camera-angle', this.cameraAngle);
+        console.log('================');
+        console.log(this.cameraAngle.x);
+        console.log(this.cameraAngle.y);
+        console.log(this.cameraAngle.z);
     }
 
     public getCameraAngle() {

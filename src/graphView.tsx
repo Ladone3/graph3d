@@ -83,9 +83,9 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
         spotLight.position.set( -40, 60, -10 );
         this.scene.add(spotLight );
 
-        this.camera.position.x = -10;
-        this.camera.position.y = 10;
-        this.camera.position.z = 10;
+        this.camera.position.x = 0;
+        this.camera.position.y = 0;
+        this.camera.position.z = CAMERA_DIST;
         this.camera.lookAt(this.scene.position);
 
         this.renderer.render(this.scene, this.camera);
