@@ -2,8 +2,8 @@ import * as React from 'react';
 import { GraphView } from './views/graphView';
 import { GraphModel } from './models/graphModel';
 import { DataProvider, RandomDataProvider } from './data/dataProvider';
-import { LayoutLink, LayoutNode, forceLayout } from './layout/layout';
-import { Node } from './models/node';
+import { LayoutLink, LayoutNode, forceLayout, LayoutNode3D, LayoutLink3D, forceLayout3d } from './layout/layout';
+import * as cola from 'webcola';
 
 export interface MainPageProps {
 
@@ -81,7 +81,8 @@ export class MainPage extends React.Component<MainPageProps, MainPageState> {
 
     private startAnimation() {
         this.animationInterval = setInterval(() => {
-            this.forceLayout();
+            // this.forceLayout();
+            this.forceLayout3d();
         }, 60);
     }
 
@@ -126,13 +127,51 @@ export class MainPage extends React.Component<MainPageProps, MainPageState> {
         });
 
         for (const layoutNode of layoutNodes) {
-            const node = proccessMap[layoutNode.id].originalNode;
+            const node = layoutNode.originalNode;
             const nodePos = node.getPosition();
 
             node.setPosition({
                 x: layoutNode.x,
                 y: layoutNode.y,
                 z: Math.round(nodePos.z / 2),
+            });
+        }
+    }
+
+    private forceLayout3d() {
+        const { nodes, links } = this.graph.getData();
+        const proccessMap: { [ id: string]: number } = {};
+
+        const layoutNodes: LayoutNode3D[] = nodes.map((node, index) => {
+            const layoutNode = new LayoutNode3D(node);
+
+            proccessMap[layoutNode.node.id] = index;
+            return layoutNode;
+        });
+
+        const layoutLinks: LayoutLink3D [] = links.map(link => {
+            return new LayoutLink3D(
+                link,
+                proccessMap[link.getSource().id],
+                proccessMap[link.getTarget().id],
+            );
+        });
+
+        forceLayout3d ({
+            nodes: layoutNodes,
+            links: layoutLinks,
+            iterations: 1,
+            preferredLinkLength: 10,
+        });
+
+        for (const layoutNode of layoutNodes) {
+            const node = layoutNode.node;
+            const nodePos = node.getPosition();
+
+            node.setPosition({
+                x: layoutNode.x,
+                y: layoutNode.y,
+                z: layoutNode.z,
             });
         }
     }
