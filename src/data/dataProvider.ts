@@ -1,13 +1,12 @@
-import { GraphData } from '../model/graphModel';
-import { Node } from '../model/node';
-import { Link } from '../model/link';
+import { GraphData } from '../models/graphModel';
+import { Node } from '../models/node';
+import { Link } from '../models/link';
 
 export interface DataProvider {
     getData(): Promise<GraphData>;
 }
 
-export const NODE_NUMBER = 100;
-export const LINK_NUMBER = 100;
+export const NODE_NUMBER = 50;
 export const POSITION_RANGE = 100;
 
 export class RandomDataProvider implements DataProvider {
@@ -22,16 +21,17 @@ export class RandomDataProvider implements DataProvider {
                 label: 'Node ' + i,
                 position: {
                     x: Math.random() * POSITION_RANGE - POSITION_RANGE / 2,
-                    y: Math.random() * POSITION_RANGE - POSITION_RANGE / 2,
+                    y: Math.random() * POSITION_RANGE,
                     z: Math.random() * POSITION_RANGE - POSITION_RANGE / 2,
                 }
             }));
         }
 
-        for (let i = 0; i < LINK_NUMBER; i++) {
+        for (let i = 0; i < NODE_NUMBER; i++) {
+            const node = data.nodes[i];
             data.links.push(new Link({
                 label: 'Link ' + i,
-                source: data.nodes[Math.round(Math.random() * (data.nodes.length - 1))],
+                source: node,
                 target: data.nodes[Math.round(Math.random() * (data.nodes.length - 1))],
             }));
         }

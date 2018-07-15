@@ -14,6 +14,7 @@ export interface LinkParameters {
 
 /**
  * @fires change:label
+ * @fires change:geometry
  */
 export class Link extends Subscribable {
     public readonly id: string;
@@ -32,6 +33,9 @@ export class Link extends Subscribable {
         this.label = parameters.label;
         this.source = parameters.source;
         this.target = parameters.target;
+
+        this.source.on('change:position', () => this.performUpdate());
+        this.target.on('change:position', () => this.performUpdate());
     }
 
     setLabel(label: string) {
@@ -61,5 +65,9 @@ export class Link extends Subscribable {
 
     _getGraph() {
         return this._graph;
+    }
+
+    private performUpdate() {
+        this.trigger('change:geometry');
     }
 }
