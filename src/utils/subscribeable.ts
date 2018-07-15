@@ -24,7 +24,7 @@ export class Subscribable {
     public trigger(eventId: string, eventObject: any) {
         if (this._subscribtions && this._subscribtions[eventId]) {
             this._subscribtions[eventId].forEach(c => {
-                c.call(this, _.cloneDeep(eventObject));
+                c.call(this, eventObject);
             });
         }
     };

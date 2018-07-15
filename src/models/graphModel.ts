@@ -22,11 +22,18 @@ export function isLink(element: Element): element is Link {
  * @fires add:elements
  * @fires remove:elements
  * @fires change:camera-angle
+ * @fires syncupdate
  */
 export class GraphModel extends Subscribable {
     private nodes: Node[] = [];
     private links: Link[] = [];
     private cameraAngle: Vectro3D = { x: 0, y: 0, z: 0 };
+    private animationFrame: number;
+    private updatedObjects: any[] = [];
+
+    public getCameraAngle() {
+        return this.cameraAngle;
+    }
 
     public setCameraAngle(anglePoint: Vectro3D) {
         this.cameraAngle = {
@@ -35,14 +42,15 @@ export class GraphModel extends Subscribable {
             z: anglePoint.z % (Math.PI * 2),
         };
         this.trigger('change:camera-angle', this.cameraAngle);
-        console.log('================');
-        console.log(this.cameraAngle.x);
-        console.log(this.cameraAngle.y);
-        console.log(this.cameraAngle.z);
+
+        // console.log('================');
+        // console.log(this.cameraAngle.x);
+        // console.log(this.cameraAngle.y);
+        // console.log(this.cameraAngle.z);
     }
 
-    public getCameraAngle() {
-        return this.cameraAngle;
+    public getData() {
+        return { nodes: this.nodes, links: this.links };
     }
 
     public setData(data: GraphData) {
@@ -61,7 +69,7 @@ export class GraphModel extends Subscribable {
 
     public addElements(elements: Element[]) {
         for (let element of elements) {
-            this.addElement(element);
+            this._addElement(element);
         }
         this.trigger('add:elements', elements);
     }
@@ -98,11 +106,13 @@ export class GraphModel extends Subscribable {
     }
 
     private subscribeOnElement(element: Element) {
-        // if (isNode(element)) {
-        //     element.on('');
-        // } else if (isLink(element)) {
-
-        // }
+        if (isNode(element)) {
+            element.on('change:position', eventObject => this.performSyncUpdate(eventObject));
+            element.on('change:size', eventObject => this.performSyncUpdate(eventObject));
+            element.on('change:label', eventObject => this.performSyncUpdate(eventObject));
+        } else if (isLink(element)) {
+            element.on('change:label', eventObject => this.performSyncUpdate(eventObject));
+        }
     }
 
     private unsubscribeFromElement(element: Element) {
@@ -111,5 +121,17 @@ export class GraphModel extends Subscribable {
         // } else if (isLink(element)) {
 
         // }
+    }
+
+    public performSyncUpdate(object?: any) {
+        if (object) {
+            this.updatedObjects.push(object);
+        }
+        cancelAnimationFrame(this.animationFrame);
+        this.animationFrame = requestAnimationFrame(() => {
+            const eventObjects = this.updatedObjects;
+            this.updatedObjects = [];
+            this.trigger('syncupdate', eventObjects);
+        });
     }
 }

@@ -1,8 +1,10 @@
 import * as React from 'react';
 import * as THREE from 'three';
-import { GraphModel, Element, isNode, isLink } from './model/graphModel';
-import { GraphElementView, NodeView, LinkView } from './model/views';
-import { Vectro3D } from './model/models';
+import { GraphModel, Element, isNode, isLink } from '../models/graphModel';
+import { GraphElementView } from './views';
+import { NodeView } from './nodeView';
+import { LinkView } from './linkView';
+import { Vectro3D } from '../models/models';
 
 export interface GraphViewProps {
     graphModel: GraphModel;
@@ -55,6 +57,10 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
             this.renderGraph();
         });
 
+        this.graphModel.on('syncupdate', () => {
+            this.renderGraph();
+        });
+
         // this.graphModel.on('remove:elements', () => { });
     }
 
@@ -78,6 +84,15 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
         this.sceneHtmlContainer.appendChild(this.renderer.domElement);
 
         this.scene.background = new THREE.Color(0x999999);
+
+        const planeGeometry = new THREE.PlaneGeometry(150, 150);
+        const planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -0.5 * Math.PI;
+        plane.position.x = 0;
+        plane.position.y = -100;
+        plane.position.z = 0;
+        this.scene.add(plane);
 
         const spotLight = new THREE.SpotLight( 0xffffff );
         spotLight.position.set( -40, 60, -10 );
@@ -107,6 +122,7 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
     }
 
     renderGraph() {
+        console.log('render =>');
         this.renderer.render(this.scene, this.camera);
     }
 

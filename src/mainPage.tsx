@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { GraphView } from './graphView';
-import { GraphModel } from './model/graphModel';
+import { GraphView } from './views/graphView';
+import { GraphModel } from './models/graphModel';
 import { DataProvider, RandomDataProvider } from './data/dataProvider';
-import { Vectro2D } from './model/models';
+import { LayoutLink, LayoutNode, forceLayout } from './layout/layout';
+import { Node } from './models/node';
 
 export interface MainPageProps {
 
@@ -15,6 +16,7 @@ export interface MainPageState {
 export class MainPage extends React.Component<MainPageProps, MainPageState> {
     private graph: GraphModel;
     private dataProvider: DataProvider;
+    private animationInterval: NodeJS.Timer;
 
     constructor(props: MainPageProps) {
         super(props);
@@ -25,6 +27,14 @@ export class MainPage extends React.Component<MainPageProps, MainPageState> {
         }).catch(error => {
             console.error(error);
         });
+    }
+
+    componentDidMount() {
+        this.startAnimation();
+    }
+
+    componentWillUnmount() {
+        this.stopAnimation();
     }
 
     private onMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -67,6 +77,64 @@ export class MainPage extends React.Component<MainPageProps, MainPageState> {
 
         document.body.addEventListener('mousemove', _onchange);
         document.body.addEventListener('mouseup', _onend);
+    }
+
+    private startAnimation() {
+        this.animationInterval = setInterval(() => {
+            this.forceLayout();
+        }, 60);
+    }
+
+    private stopAnimation() {
+        clearInterval(this.animationInterval);
+    }
+
+    private forceLayout() {
+        const { nodes, links } = this.graph.getData();
+        const proccessMap: { [ id: string]: LayoutNode } = {};
+
+        const layoutNodes: LayoutNode[] = nodes.map(node => {
+            const position = node.getPosition();
+            const size = node.getSize();
+
+            const layoutNode = {
+                id: node.id,
+                x: position.x,
+                y: position.y,
+                width: size.x,
+                height: size.y,
+                originalNode: node,
+            };
+
+            proccessMap[layoutNode.id] = layoutNode;
+            return layoutNode;
+        });
+
+        const layoutLinks: LayoutLink[] = links.map(link => {
+            return {
+                originalLink: link,
+                source: proccessMap[link.getSource().id],
+                target: proccessMap[link.getTarget().id]
+            };
+        });
+
+        forceLayout({
+            nodes: layoutNodes,
+            links: layoutLinks,
+            iterations: 1,
+            preferredLinkLength: 10,
+        });
+
+        for (const layoutNode of layoutNodes) {
+            const node = proccessMap[layoutNode.id].originalNode;
+            const nodePos = node.getPosition();
+
+            node.setPosition({
+                x: layoutNode.x,
+                y: layoutNode.y,
+                z: Math.round(nodePos.z / 2),
+            });
+        }
     }
 
     render() {
