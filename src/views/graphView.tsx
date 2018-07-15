@@ -122,6 +122,7 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
     }
 
     renderGraph() {
+        console.log('render =>');
         this.renderer.render(this.scene, this.camera);
     }
 
