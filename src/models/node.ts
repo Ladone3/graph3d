@@ -18,7 +18,7 @@ export interface NodeParameters {
  * @fires change:size
  * @fires change:label
  */
-export class Node extends Subscribable {
+export class Node extends Subscribable<Node> {
     public readonly id: string;
     public readonly typeId: string;
     private label: string;

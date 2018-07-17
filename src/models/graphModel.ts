@@ -1,6 +1,6 @@
 import { Node } from './node';
 import { Link } from './link';
-import { Subscribable } from '../utils/subscribeable';
+import { Subscribable, GraphEvent } from '../utils/subscribeable';
 import { Vectro3D } from './models';
 
 export type Element = Node | Link;
@@ -24,12 +24,12 @@ export function isLink(element: Element): element is Link {
  * @fires change:camera-angle
  * @fires syncupdate
  */
-export class GraphModel extends Subscribable {
+export class GraphModel extends Subscribable<GraphModel> {
     private nodes: Node[] = [];
     private links: Link[] = [];
     private cameraAngle: Vectro3D = { x: 0, y: 0, z: 0 };
     private animationFrame: number;
-    private updatedObjects: any[] = [];
+    private events: any[] = [];
 
     public getCameraAngle() {
         return this.cameraAngle;
@@ -42,11 +42,6 @@ export class GraphModel extends Subscribable {
             z: anglePoint.z % (Math.PI * 2),
         };
         this.trigger('change:camera-angle', this.cameraAngle);
-
-        // console.log('================');
-        // console.log(this.cameraAngle.x);
-        // console.log(this.cameraAngle.y);
-        // console.log(this.cameraAngle.z);
     }
 
     public getData() {
@@ -107,11 +102,12 @@ export class GraphModel extends Subscribable {
 
     private subscribeOnElement(element: Element) {
         if (isNode(element)) {
-            element.on('change:position', eventObject => this.performSyncUpdate(eventObject));
-            element.on('change:size', eventObject => this.performSyncUpdate(eventObject));
-            element.on('change:label', eventObject => this.performSyncUpdate(eventObject));
+            element.on('change:position', event => this.performSyncUpdate(event));
+            element.on('change:size', event => this.performSyncUpdate(event));
+            element.on('change:label', event => this.performSyncUpdate(event));
         } else if (isLink(element)) {
-            element.on('change:label', eventObject => this.performSyncUpdate(eventObject));
+            element.on('change:label', event => this.performSyncUpdate(event));
+            element.on('change:geometry', event => this.performSyncUpdate(event));
         }
     }
 
@@ -123,15 +119,13 @@ export class GraphModel extends Subscribable {
         // }
     }
 
-    public performSyncUpdate(object?: any) {
-        if (object) {
-            this.updatedObjects.push(object);
-        }
+    public performSyncUpdate(event: GraphEvent) {
+        this.events.push(event);
         cancelAnimationFrame(this.animationFrame);
         this.animationFrame = requestAnimationFrame(() => {
-            const eventObjects = this.updatedObjects;
-            this.updatedObjects = [];
-            this.trigger('syncupdate', eventObjects);
+            const events = this.events;
+            this.events = [];
+            this.trigger('syncupdate', events);
         });
     }
 }

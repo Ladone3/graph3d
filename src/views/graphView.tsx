@@ -5,6 +5,7 @@ import { GraphElementView } from './views';
 import { NodeView } from './nodeView';
 import { LinkView } from './linkView';
 import { Vectro3D } from '../models/models';
+import { GraphEvent } from '../utils/subscribeable';
 
 export interface GraphViewProps {
     graphModel: GraphModel;
@@ -24,11 +25,13 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
     private sceneHtmlContainer: HTMLElement;
 
     private views: GraphElementView[];
+    private viewMap: { [id: string]: GraphElementView };
 
     constructor(props: GraphViewProps) {
         super(props);
         this.graphModel = props.graphModel;
         this.views = [];
+        this.viewMap = {};
     }
 
     componentDidMount() {
@@ -37,18 +40,20 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
     }
 
     private subscribeOnModel() {
-        this.graphModel.on('add:elements', (elements: Element[]) => {
-            for (const element of elements) {
+        this.graphModel.on('add:elements', (event: GraphEvent<GraphModel>) => {
+            for (const element of event.eventObject) {
                 const newView = this.findView(element);
                 if (newView) {
                     this.views.push(newView);
                     this.scene.add(newView.getMesh());
+                    this.viewMap[element.id] = newView;
                 }
             }
             this.renderGraph();
         });
 
-        this.graphModel.on('change:camera-angle', (cameraAngle: Vectro3D) => {
+        this.graphModel.on('change:camera-angle', (event: GraphEvent<GraphModel>) => {
+            const cameraAngle = event.eventObject;
             this.camera.position.x = Math.sin(cameraAngle.x) * CAMERA_DIST;
             this.camera.position.y = Math.cos(cameraAngle.y) * CAMERA_DIST;
             this.camera.position.z = Math.cos(cameraAngle.z) * CAMERA_DIST;
@@ -57,11 +62,16 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
             this.renderGraph();
         });
 
-        this.graphModel.on('syncupdate', () => {
+        this.graphModel.on('syncupdate', (combineEvent: GraphEvent<GraphModel>) => {
+            const events: GraphEvent[] = combineEvent.eventObject;
+            const updatedModels = events.map(e => e.target);
+
+            for (const model of updatedModels) {
+                this.viewMap[model.id].update();
+            }
+
             this.renderGraph();
         });
-
-        // this.graphModel.on('remove:elements', () => { });
     }
 
     private findView(model: Element): GraphElementView | undefined {
@@ -104,25 +114,9 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
         this.camera.lookAt(this.scene.position);
 
         this.renderer.render(this.scene, this.camera);
-
-        // let angle = 0;
-        // const cameraDist = 100;
-        // const cameraStep = 0.04;
-
-        // const animate = () => {
-        //     angle += cameraStep;
-        //     this.camera.position.x = Math.sin(angle) * cameraDist;
-        //     this.camera.position.y = Math.abs(Math.sin(angle)) * cameraDist;
-        //     this.camera.position.z = Math.cos(angle) * cameraDist;
-        //     this.camera.lookAt(this.scene.position);
-        //     this.renderer.render(this.scene, this.camera);
-        //     setTimeout(() => requestAnimationFrame(animate), 40);
-        // };
-        // animate();
     }
 
     renderGraph() {
-        console.log('render =>');
         this.renderer.render(this.scene, this.camera);
     }
 

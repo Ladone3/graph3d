@@ -19,15 +19,19 @@ export class LinkView implements GraphElementView {
         return this.line;
     }
 
+    public update() {
+        const sourcePosition = this.model.getSource().getPosition();
+        const targetPosition = this.model.getTarget().getPosition();
+        this.lineGeometry.vertices = this.calculateVertices(sourcePosition, targetPosition);
+        this.lineGeometry.verticesNeedUpdate = true;
+    }
+
     private init() {
         this.lineGeometry = new THREE.Geometry();
         this.lineMaterial = new THREE.LineBasicMaterial( { color: 0x0000ff } );
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
 
         this.update();
-
-        this.model.on('change:label', () => this.update());
-        this.model.on('change:geometry', () => this.update());
     }
 
     private calculateVertices(
@@ -38,16 +42,5 @@ export class LinkView implements GraphElementView {
             new THREE.Vector3(source.x, source.y, source.z),
             new THREE.Vector3(target.x, target.y, target.z),
         ];
-    }
-
-    private update() {
-        this.lineGeometry.verticesNeedUpdate = true;
-        const sourcePosition = this.model.getSource().getPosition();
-        const targetPosition = this.model.getTarget().getPosition();
-        // this.line.position.x = (sourcePosition.x + targetPosition.x) / 2;
-        // this.line.position.y = (sourcePosition.y + targetPosition.y) / 2;
-        // this.line.position.z = (sourcePosition.z + targetPosition.z) / 2;
-        // this.lineGeometry.
-        this.lineGeometry.vertices = this.calculateVertices(sourcePosition, targetPosition);
     }
 }

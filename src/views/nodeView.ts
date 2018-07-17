@@ -20,6 +20,20 @@ export class NodeView implements GraphElementView {
         return this.sphere;
     }
 
+    public update() {
+        const position = this.model.getPosition();
+        this.sphere.position.set(
+            position.x,
+            position.y,
+            position.z,
+        );
+
+        const size = this.model.getSize();
+        this.sphere.scale.x = size.x;
+        this.sphere.scale.y = size.y;
+        this.sphere.scale.z = size.z;
+    }
+
     private init() {
         this.sphereGeometry = new THREE.SphereGeometry(1, 5, 5);
         this.sphereMaterial = new THREE.MeshLambertMaterial({color: 0x7777ff});
@@ -32,22 +46,5 @@ export class NodeView implements GraphElementView {
         this.sphere.position.z = 0;
 
         this.update();
-
-        this.model.on('change:position', () => this.update());
-        this.model.on('change:label', () => this.update());
-        this.model.on('change:size', () => this.update());
-    }
-
-    private update() {
-        const position = this.model.getPosition();
-        // this.sphere.position.x = position.x;
-        // this.sphere.position.y = position.y;
-        // this.sphere.position.z = position.z;
-        this.sphere.position.set(position.x, position.y, position.z);
-
-        const size = this.model.getSize();
-        this.sphere.scale.x = size.x;
-        this.sphere.scale.y = size.y;
-        this.sphere.scale.z = size.z;
     }
 }

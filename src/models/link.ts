@@ -16,7 +16,7 @@ export interface LinkParameters {
  * @fires change:label
  * @fires change:geometry
  */
-export class Link extends Subscribable {
+export class Link extends Subscribable<Link> {
     public readonly id: string;
     public readonly typeId: string;
     private label: string;
