@@ -28,7 +28,9 @@ export class LinkView implements GraphElementView {
 
     private init() {
         this.lineGeometry = new THREE.Geometry();
-        this.lineMaterial = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+        this.lineMaterial = new THREE.LineBasicMaterial({
+            color: (this.model.getTypeId() === 'red-line' ? 0xff0000 : 0x0000ff),
+        });
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
 
         this.update();

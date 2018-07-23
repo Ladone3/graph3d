@@ -2,12 +2,14 @@ import { Node } from './node';
 import { Link } from './link';
 import { Subscribable, GraphEvent } from '../utils/subscribeable';
 import { Vectro3D } from './models';
+import { Polygon } from './polygon';
 
-export type Element = Node | Link;
+export type Element = Node | Link | Polygon;
 
 export interface GraphData {
     nodes: Node[];
-    links: Link[];
+    links?: Link[];
+    polygons?: Polygon[];
 }
 
 export function isNode(element: Element): element is Node {
@@ -16,6 +18,10 @@ export function isNode(element: Element): element is Node {
 
 export function isLink(element: Element): element is Link {
     return element instanceof Link;
+}
+
+export function isPolygon(element: Element): element is Polygon {
+    return element instanceof Polygon;
 }
 
 /**
@@ -27,6 +33,7 @@ export function isLink(element: Element): element is Link {
 export class GraphModel extends Subscribable<GraphModel> {
     private nodes: Node[] = [];
     private links: Link[] = [];
+    private polygons: Polygon[] = [];
     private cameraAngle: Vectro3D = { x: 0, y: 0, z: 0 };
     private cameraDistance: number = 100;
     private animationFrame: number;
@@ -55,15 +62,18 @@ export class GraphModel extends Subscribable<GraphModel> {
     }
 
     public getData() {
-        return { nodes: this.nodes, links: this.links };
+        return { nodes: this.nodes, links: this.links, polygons: this.polygons };
     }
 
     public setData(data: GraphData) {
-        const oldElements: Element[] = (this.nodes as Element[]).concat(this.links);
+        const oldElements: Element[] = [].concat(this.nodes).concat(this.links).concat(this.polygons);
         this.removeElements(oldElements);
         this.nodes = [];
         this.links = [];
-        const newElements: Element[] = (data.nodes as Element[]).concat(data.links);
+        this.polygons = [];
+        const newElements: Element[] = [].concat(data.nodes)
+                                         .concat(data.links || [])
+                                         .concat(data.polygons || []);
         this.addElements(newElements);
     }
 
@@ -107,6 +117,8 @@ export class GraphModel extends Subscribable<GraphModel> {
             this.nodes.push(element);
         } else if (isLink(element)) {
             this.links.push(element);
+        } else if (isPolygon(element)) {
+            this.polygons.push(element);
         }
     }
 
@@ -118,15 +130,13 @@ export class GraphModel extends Subscribable<GraphModel> {
         } else if (isLink(element)) {
             element.on('change:label', event => this.performSyncUpdate(event));
             element.on('change:geometry', event => this.performSyncUpdate(event));
+        } else if (isPolygon(element)) {
+            element.on('change:geometry', event => this.performSyncUpdate(event));
         }
     }
 
     private unsubscribeFromElement(element: Element) {
-        // if (isNode(element)) {
-        //     element.on('');
-        // } else if (isLink(element)) {
-
-        // }
+        // ...
     }
 
     public performSyncUpdate(event: GraphEvent) {

@@ -2,8 +2,19 @@ import * as React from 'react';
 import { GraphView } from './views/graphView';
 import { GraphModel } from './models/graphModel';
 import { DataProvider, RandomDataProvider } from './data/dataProvider';
-import { LayoutLink, LayoutNode, forceLayout, LayoutNode3D, LayoutLink3D, forceLayout3d } from './layout/layout';
+import {
+    LayoutLink,
+    LayoutNode,
+    forceLayout,
+    LayoutNode3D,
+    LayoutLink3D,
+    forceLayout3d,
+    riseFieldsLayout,
+} from './layout/layout';
 import * as cola from 'webcola';
+import { Link } from './models/link';
+import { Node } from './models/node';
+import { Polygon } from './models/polygon';
 
 export interface MainPageProps {
 
@@ -88,12 +99,64 @@ export class MainPage extends React.Component<MainPageProps, MainPageState> {
     private startAnimation() {
         this.animationInterval = setInterval(() => {
             // this.forceLayout();
-            this.forceLayout3d();
+            // this.forceLayout3d();
+            this.riseFieldsLayout();
         }, 60);
     }
 
     private stopAnimation() {
         clearInterval(this.animationInterval);
+    }
+
+    private riseFieldsLayout() {
+        const { nodes, links } = this.graph.getData();
+        const proccessMap: { [ id: string]: LayoutNode } = {};
+
+        const layoutNodes: LayoutNode[] = nodes.map(node => {
+            const position = node.getPosition();
+            const size = node.getSize();
+
+            const layoutNode = {
+                id: node.id,
+                x: position.x,
+                y: position.y,
+                z: position.z,
+                width: size.x,
+                height: size.y,
+                originalNode: node,
+            };
+
+            proccessMap[layoutNode.id] = layoutNode;
+            return layoutNode;
+        });
+
+        const layoutLinks: LayoutLink[] = links
+            // .filter(link => link.getTypeId() !== 'red-line')
+            .map(link => {
+                return {
+                    originalLink: link,
+                    source: proccessMap[link.getSource().id],
+                    target: proccessMap[link.getTarget().id]
+                };
+            });
+
+        riseFieldsLayout({
+            nodes: layoutNodes,
+            links: layoutLinks,
+            iterations: 1,
+            preferredLinkLength: 20,
+        });
+
+        for (const layoutNode of layoutNodes) {
+            const node = layoutNode.originalNode;
+            const nodePos = node.getPosition();
+
+            node.setPosition({
+                x: layoutNode.x,
+                y: layoutNode.y,
+                z: layoutNode.z,
+            });
+        }
     }
 
     private forceLayout() {
@@ -108,6 +171,7 @@ export class MainPage extends React.Component<MainPageProps, MainPageState> {
                 id: node.id,
                 x: position.x,
                 y: position.y,
+                z: position.z,
                 width: size.x,
                 height: size.y,
                 originalNode: node,
@@ -117,13 +181,15 @@ export class MainPage extends React.Component<MainPageProps, MainPageState> {
             return layoutNode;
         });
 
-        const layoutLinks: LayoutLink[] = links.map(link => {
-            return {
-                originalLink: link,
-                source: proccessMap[link.getSource().id],
-                target: proccessMap[link.getTarget().id]
-            };
-        });
+        const layoutLinks: LayoutLink[] = links
+            // .filter(link => link.getTypeId() !== 'red-line')
+            .map(link => {
+                return {
+                    originalLink: link,
+                    source: proccessMap[link.getSource().id],
+                    target: proccessMap[link.getTarget().id]
+                };
+            });
 
         forceLayout({
             nodes: layoutNodes,

@@ -1,11 +1,12 @@
 import * as React from 'react';
 import * as THREE from 'three';
-import { GraphModel, Element, isNode, isLink } from '../models/graphModel';
+import { GraphModel, Element, isNode, isLink, isPolygon } from '../models/graphModel';
 import { GraphElementView } from './views';
 import { NodeView } from './nodeView';
 import { LinkView } from './linkView';
 import { Vectro3D } from '../models/models';
 import { GraphEvent } from '../utils/subscribeable';
+import { PolygonView } from './polygonView';
 
 export interface GraphViewProps {
     graphModel: GraphModel;
@@ -80,6 +81,8 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
             return new NodeView(model);
         } else if (isLink(model)) {
             return new LinkView(model);
+        } else if (isPolygon(model)) {
+            return new PolygonView(model);
         } else {
             return undefined;
         }
@@ -97,7 +100,7 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
         this.scene.background = new THREE.Color(0x999999);
 
         const planeGeometry = new THREE.PlaneGeometry(150, 150);
-        const planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
+        const planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff, transparent: true, opacity: 0.5});
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.rotation.x = -0.5 * Math.PI;
         plane.position.x = 0;

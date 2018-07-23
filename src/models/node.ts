@@ -7,8 +7,8 @@ export const DEFAULT_NODE_TYPE_ID = 'o3d-node';
 export const DEFAULT_NODE_SIZE: Vectro3D = { x: 1, y: 1, z: 1 };
 
 export interface NodeParameters {
-    position: Vectro3D;
     label: string;
+    position?: Vectro3D;
     size?: Vectro3D;
     typeId?: string;
 }
@@ -32,7 +32,7 @@ export class Node extends Subscribable<Node> {
         this.id = _.uniqueId('Node-');
         this.typeId = parameters.typeId || DEFAULT_NODE_TYPE_ID;
         this.label = parameters.label;
-        this.position = parameters.position;
+        this.position = parameters.position || { x: 0, y: 0, z: 0 };
         this.size = parameters.size || DEFAULT_NODE_SIZE;
     }
 

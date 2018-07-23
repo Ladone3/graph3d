@@ -55,6 +55,10 @@ export class Link extends Subscribable<Link> {
         return this.target;
     }
 
+    getTypeId() {
+        return this.typeId;
+    }
+
     remove() {
         this._graph.removeElement(this);
     }
