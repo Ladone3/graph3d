@@ -21,13 +21,14 @@ export function isLink(element: Element): element is Link {
 /**
  * @fires add:elements
  * @fires remove:elements
- * @fires change:camera-angle
+ * @fires change:camera-position
  * @fires syncupdate
  */
 export class GraphModel extends Subscribable<GraphModel> {
     private nodes: Node[] = [];
     private links: Link[] = [];
     private cameraAngle: Vectro3D = { x: 0, y: 0, z: 0 };
+    private cameraDistance: number = 100;
     private animationFrame: number;
     private events: any[] = [];
 
@@ -41,7 +42,16 @@ export class GraphModel extends Subscribable<GraphModel> {
             y: Math.max(Math.min(anglePoint.y, Math.PI), 0),
             z: anglePoint.z % (Math.PI * 2),
         };
-        this.trigger('change:camera-angle', this.cameraAngle);
+        this.trigger('change:camera-position');
+    }
+
+    public getCameraDistance() {
+        return this.cameraDistance;
+    }
+
+    public setCameraDistance(distance: number) {
+        this.cameraDistance = Math.max(0, distance);
+        this.trigger('change:camera-position');
     }
 
     public getData() {

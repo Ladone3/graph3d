@@ -52,11 +52,12 @@ export class GraphView extends React.Component<GraphViewProps, GraphViewState> {
             this.renderGraph();
         });
 
-        this.graphModel.on('change:camera-angle', (event: GraphEvent<GraphModel>) => {
-            const cameraAngle = event.eventObject;
-            this.camera.position.x = Math.sin(cameraAngle.x) * CAMERA_DIST;
-            this.camera.position.y = Math.cos(cameraAngle.y) * CAMERA_DIST;
-            this.camera.position.z = Math.cos(cameraAngle.z) * CAMERA_DIST;
+        this.graphModel.on('change:camera-position', () => {
+            const cameraAngle = this.graphModel.getCameraAngle();
+            const cameraDistnace = this.graphModel.getCameraDistance();
+            this.camera.position.x = Math.sin(cameraAngle.x) * cameraDistnace;
+            this.camera.position.y = Math.cos(cameraAngle.y) * cameraDistnace;
+            this.camera.position.z = Math.cos(cameraAngle.z) * cameraDistnace;
 
             this.camera.lookAt(this.scene.position);
             this.renderGraph();

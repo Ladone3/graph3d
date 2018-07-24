@@ -16,7 +16,7 @@ export interface MainPageState {
 export class MainPage extends React.Component<MainPageProps, MainPageState> {
     private graph: GraphModel;
     private dataProvider: DataProvider;
-    private animationInterval: NodeJS.Timer;
+    private animationInterval: any;
 
     constructor(props: MainPageProps) {
         super(props);
@@ -37,7 +37,13 @@ export class MainPage extends React.Component<MainPageProps, MainPageState> {
         this.stopAnimation();
     }
 
-    private onMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    private onWheel(e: React.WheelEvent<HTMLDivElement>) {
+        const delta = e.deltaY || e.deltaX || e.deltaZ;
+        const curDistance = this.graph.getCameraDistance();
+        this.graph.setCameraDistance(curDistance + delta);
+    }
+
+    private onMouseDown(event: React.MouseEvent<HTMLDivElement>) {
         let prevPoint = {
             x: event.screenX,
             y: event.screenY,
@@ -181,7 +187,8 @@ export class MainPage extends React.Component<MainPageProps, MainPageState> {
             <GraphView graphModel={this.graph}></GraphView>
             <div
                 className='o3d-main__touch-panel'
-                onMouseDown={this.onMouseDown}
+                onMouseDown={event => this.onMouseDown(event)}
+                onWheel={event => this.onWheel(event)}
             >
             </div>
         </div>;
