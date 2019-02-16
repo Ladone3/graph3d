@@ -1,6 +1,9 @@
 import { Node } from './node';
-import * as _ from 'lodash';
+import { uniqueId } from 'lodash';
 import { Subscribable } from '../utils/subscribeable';
+import { createUUID, isTypesEqual } from '../utils';
+
+const LINK_HASH_POSTFIX = createUUID();
 
 export const DEFAULT_LINK_ID = 'o3d-link';
 
@@ -13,39 +16,49 @@ export interface LinkParameters {
 }
 
 export interface LinkEvents {
-    'change:label': string;
     'force-update': void;
     'remove': void;
 }
 
 export class Link extends Subscribable<LinkEvents> {
-    public readonly id: string;
-    public readonly types: string[];
-    private _label: string;
-
+    get id() {
+        return `Link~From(${this._sourceId})With(${this._types.join('/')})To(${this._targetId})#${LINK_HASH_POSTFIX}`;
+    }
     public source: Node;
     public target: Node;
-
     public _sourceId: string;
     public _targetId: string;
+
+    private _label: string;
+    private _types: string[];
 
     constructor(parameters: LinkParameters) {
         super();
 
-        this.id = parameters.id || _.uniqueId('Link-');
-        this.types = parameters.types || [DEFAULT_LINK_ID];
+        this._types = parameters.types || [DEFAULT_LINK_ID];
         this._label = parameters.label;
         this._sourceId = parameters.sourceId;
         this._targetId = parameters.targetId;
+    }
+
+    get types() {
+        return this._types;
+    }
+    set types(types: string[]) {
+        if (!isTypesEqual(this._types, types)) {
+            this._types = types;
+            this.trigger('force-update');
+        }
     }
 
     get label() {
         return this._label;
     }
     set label(label: string) {
-        const previous = this._label;
-        this._label = label;
-        this.trigger('change:label', previous);
+        if (this._label !== label) {
+            this._label = label;
+            this.trigger('force-update');
+        }
     }
 
     forceUpdate() {

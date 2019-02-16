@@ -1,6 +1,6 @@
 import { Vector2D } from '../models/primitives';
 import { ViewController } from './viewController';
-import { handleDragging } from '../utils/utils';
+import { handleDragging } from '../utils';
 
 import * as _ from 'lodash';
 import { DiagramView } from '../views/diagramView';

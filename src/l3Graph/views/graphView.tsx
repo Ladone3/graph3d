@@ -3,19 +3,24 @@ import { GraphModel, Element, isNode, isLink } from '../models/graphModel';
 import { DiagramElementView } from './diagramElementView';
 import { NodeView } from './nodeView';
 import { LinkView } from './linkView';
-import { LinkViewTemplate, NodeViewTemplate } from '../templates';
+import {
+    NodeTemplateProvider,
+    DEFAULT_NODE_TEMPLATE_PROVIDER,
+    LinkTemplateProvider,
+    DEFAULT_LINK_TEMPLATE_PROVIDER,
+} from '../templates';
 
 export interface GraphViewProps {
     graphModel: GraphModel;
     scene: THREE.Scene;
-    nodeTemplates: {[typeId: string]: NodeViewTemplate };
-    linkTemplates: {[typeId: string]: LinkViewTemplate };
+    nodeTemplateProvider?: NodeTemplateProvider;
+    linkTemplateProvider?: LinkTemplateProvider;
 }
 
 export class GraphView {
     camera: THREE.PerspectiveCamera;
     scene: THREE.Scene;
-    views: Map<string, DiagramElementView>;
+    views: Map<string, DiagramElementView<Element>>;
 
     renderer: THREE.WebGLRenderer;
     overlayRenderer: THREE.CSS3DRenderer;
@@ -25,8 +30,10 @@ export class GraphView {
 
     constructor(private props: GraphViewProps) {
         this.views = new Map();
-        this.graphModel = props.graphModel;
         this.scene = props.scene;
+        this.graphModel = props.graphModel;
+        this.graphModel.nodes.forEach(node => this.addElementView(node));
+        this.graphModel.links.forEach(link => this.addElementView(link));
         this.subscribeOnModel();
     }
 
@@ -47,12 +54,12 @@ export class GraphView {
         const view = this.findViewForElement(element);
 
         if (view) {
-            const mesh = view.getMesh();
+            const mesh = view.mesh;
             if (mesh) {
                 this.scene.add(mesh);
             }
 
-            const overlay = view.getOverlay();
+            const overlay = view.overlay;
             if (overlay) {
                 this.scene.add(overlay);
             }
@@ -64,53 +71,46 @@ export class GraphView {
         const view = this.views.get(element.id);
 
         if (view) {
-            const mesh = view.getMesh();
-            if (mesh) {
-                this.scene.remove(mesh);
+            if (view.mesh) {
+                this.scene.remove(view.mesh);
             }
 
-            const overlay = view.getOverlay();
-            if (overlay) {
-                this.scene.remove(overlay);
+            if (view.overlay) {
+                this.scene.remove(view.overlay);
             }
         }
     }
 
-    private findViewForElement(model: Element): DiagramElementView | undefined {
+    private findViewForElement(model: Element): DiagramElementView<Element> | undefined {
         if (isNode(model)) {
-            let template: NodeViewTemplate<any>;
-            if (this.props.nodeTemplates) {
-                for (const type of model.types) {
-                    template =  this.props.nodeTemplates[type];
-                    if (template) {
-                        break;
-                    }
-                }
-            }
-            return new NodeView(model, template);
+            const templateProvider =  this.props.nodeTemplateProvider || DEFAULT_NODE_TEMPLATE_PROVIDER;
+            return new NodeView(model, templateProvider(model.types));
         } else if (isLink(model)) {
-            let template: LinkViewTemplate;
-            for (const type of model.types) {
-                template =  this.props.linkTemplates[type];
-                if (template) {
-                    break;
-                }
-            }
-            return new LinkView(model, template);
+            const templateProvider = this.props.linkTemplateProvider || DEFAULT_LINK_TEMPLATE_PROVIDER;
+            return new LinkView(model, templateProvider(model.types));
         } else {
             return undefined;
         }
     }
 
     update(specificIds?: string[]) {
-        if (specificIds) {
-            for (const id of specificIds) {
-                this.views.get(id).update();
+        const updateView = (elementId: string) => {
+            if (this.graphModel.fullUpdateList.has(elementId)) {
+                const element = this.graphModel.getElementById(elementId);
+                this.removeElementView(element);
+                this.addElementView(element);
             }
-        } else {
+            this.views.get(elementId).update();
+        };
+        if (!specificIds) {
+            specificIds = [];
             this.views.forEach(view => {
-                view.update();
+                specificIds.push(view.model.id);
             });
         }
+        for (const id of specificIds) {
+            updateView(id);
+        }
+        this.graphModel.fullUpdateList.clear();
     }
 }

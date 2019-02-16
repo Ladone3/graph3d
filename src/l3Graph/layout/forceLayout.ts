@@ -156,7 +156,7 @@ export function applyForceLayout(graph: GraphModel) {
     }
 }
 
-export function applyForceLayout3d(graph: GraphModel, iterations?: number) {
+export function applyForceLayout3d(graph: GraphModel, iterations?: number, linkLength?: number) {
     const { nodes, links } = graph;
     const proccessMap: { [ id: string]: number } = {};
     const layoutNodes: LayoutNode3D[] = [];
@@ -182,7 +182,7 @@ export function applyForceLayout3d(graph: GraphModel, iterations?: number) {
         nodes: layoutNodes,
         links: layoutLinks,
         iterations: iterations || 1,
-        preferredLinkLength: PREFFERED_LINK_LENGTH,
+        preferredLinkLength: linkLength || PREFFERED_LINK_LENGTH,
     });
 
     for (const layoutNode of layoutNodes) {

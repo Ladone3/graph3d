@@ -1,14 +1,31 @@
 import * as React from 'react';
-import { DataProvider } from './data/dataProvider';
 import { ViewController, ViewControllersSet } from './controllers/viewController';
 import { DEFAULT_VIEW_CONTROLLERS_SET } from './controllers/defaultViewControllers';
 import { KeyHandler } from './utils/keyHandler';
-import { NodeViewTemplate, LinkViewTemplate } from './templates';
+import { NodeTemplateProvider, LinkTemplateProvider } from './templates';
 import { MouseEditor } from './editors/mouseEditor';
 import { DiagramModel } from './models/diagramModel';
 import { DiagramView } from './views/diagramView';
+import { Link } from './models/link';
+import { Node } from './models/node';
+import { isTypesEqual } from './utils';
+
+export interface GraphElements {
+    nodes: Node[];
+    links: Link[];
+}
+
+interface GraphUpdate {
+    newNodes?: Node[];
+    newLinks?: Link[];
+    nodesToRemove?: Node[];
+    linksToRemove?: Link[];
+    nodesToUpdate?: Node[];
+    linksToUpdate?: Link[];
+}
 
 export interface L3GraphProps {
+    graph: GraphElements;
     viewOptions?: ViewOptions;
     viewControllers?: ViewControllersSet;
     onComponentMount?: (graph: L3Graph) => void;
@@ -16,8 +33,8 @@ export interface L3GraphProps {
 }
 
 export interface ViewOptions {
-    nodeTemplates?: {[typeId: string]: NodeViewTemplate };
-    linkTemplates?: {[typeId: string]: LinkViewTemplate };
+    nodeTemplateProvider?: NodeTemplateProvider;
+    linkTemplateProvider?: LinkTemplateProvider;
 }
 
 export interface State {
@@ -35,6 +52,17 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         this.model = new DiagramModel();
         this.state = {};
         this.keyHandler = new KeyHandler();
+        this.updateGraph({
+            newNodes: props.graph.nodes,
+            newLinks: props.graph.links,
+        });
+    }
+
+    componentWillUpdate(props: L3GraphProps) {
+        const {graph} = props;
+        this.updateGraph(
+            this.merge(graph),
+        );
     }
 
     get viewController() {
@@ -58,6 +86,80 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
             this.props.onComponentUnmount(this);
         }
         this.onBlur();
+    }
+
+    private updateGraph(update: GraphUpdate) {
+        const {newNodes, newLinks, nodesToRemove, linksToRemove, linksToUpdate, nodesToUpdate} = update;
+        if (newNodes) { this.model.addElements(newNodes); }
+        if (newLinks) { this.model.addElements(newLinks); }
+        if (linksToRemove) { this.model.removeLinksByIds(linksToRemove.map(l => l.id)); }
+        if (nodesToRemove) { this.model.removeNodesByIds(nodesToRemove.map(n => n.id)); }
+        if (nodesToUpdate) { this.model.updateElements(nodesToUpdate); }
+        if (linksToUpdate) { this.model.updateElements(linksToUpdate); }
+    }
+
+    private merge(newGraphModel: GraphElements): GraphUpdate {
+        const graph = this.model.graph;
+        const {nodes, links} = newGraphModel;
+
+        const newNodes: Node[] = [];
+        const newLinks: Link[] = [];
+        const nodesToRemove: Node[] = [];
+        const linksToRemove: Link[] = [];
+        const nodesToUpdate: Node[] = [];
+        const linksToUpdate: Link[] = [];
+
+        const nodeMap = new Map<string, Node>();
+        for (const node of nodes) {
+            const id = node.id;
+            if (!graph.nodes.has(id)) {
+                newNodes.push(node);
+            } else {
+                const curNode = graph.nodes.get(id);
+                const needUpdateView =
+                    curNode.data !== node.data ||
+                    isTypesEqual(curNode.types, node.types);
+
+                if (needUpdateView) {
+                    nodesToUpdate.push(node);
+                }
+            }
+            nodeMap.set(id, node);
+        }
+        if (graph.nodes) {
+            graph.nodes.forEach(node => {
+                if (!nodeMap.has(node.id)) {
+                    nodesToRemove.push(node);
+                }
+            });
+        }
+
+        const linksMap = new Map<string, Link>();
+        for (const link of links) {
+            const id = link.id;
+            if (!graph.links.has(id)) {
+                newLinks.push(link);
+            } else {
+                const curLink = graph.links.get(id);
+                const needUpdateView =
+                    curLink.label !== link.label ||
+                    curLink.types.sort().join('') !== link.types.sort().join('');
+
+                if (needUpdateView) {
+                    linksToUpdate.push(link);
+                }
+            }
+            linksMap.set(id, link);
+        }
+        if (graph.links) {
+            graph.links.forEach(link => {
+                if (!linksMap.has(link.id)) {
+                    linksToRemove.push(link);
+                }
+            });
+        }
+
+        return {newNodes, newLinks, nodesToRemove, linksToRemove, nodesToUpdate, linksToUpdate};
     }
 
     private onWheel(e: React.WheelEvent<HTMLDivElement>) {
@@ -106,8 +208,8 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                 <DiagramView
                     model={this.model}
                     onViewMount={this.onViewMount}
-                    nodeTemplates={viewOptions.nodeTemplates}
-                    linkTemplates={viewOptions.linkTemplates}>
+                    nodeTemplateProvider={viewOptions.nodeTemplateProvider}
+                    linkTemplateProvider={viewOptions.linkTemplateProvider}>
                 </DiagramView>
             </div>
             <div className='o3d-toolbar'>

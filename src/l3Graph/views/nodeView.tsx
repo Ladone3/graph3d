@@ -13,75 +13,35 @@ import {
     createContextProvider,
 } from '../templates';
 import { getColorByTypes } from '../utils/colorUtils';
+import { getPrimitive } from '../utils/shapeUtils';
 
 export const DEFAULT_SCALE = 20;
 
-export class NodeView implements DiagramElementView {
-    private model: Node;
-    private template: NodeViewTemplate;
+export class NodeView implements DiagramElementView<Node> {
+    public readonly model: Node;
+    public readonly mesh: THREE.Object3D;
+    public readonly overlay: THREE.CSS3DSprite;
 
-    private mesh: THREE.Object3D;
-    private overlayObject: THREE.CSS3DSprite;
     private boundingBox: THREE.Box3;
-
     private meshOffset: THREE.Vector3;
     private htmlOverlay: HTMLElement;
-    // private htmlSphere: HTMLElement;
     private htmlBody: HTMLElement;
 
-    constructor(model: Node, template?: NodeViewTemplate) {
+    constructor(model: Node, customTemplate?: NodeViewTemplate) {
         this.model = model;
-        this.template = template || DEFAULT_NODE_TEMPLATE;
-        this.init();
-    }
-
-    public getMesh(): THREE.Object3D | undefined {
-        return this.mesh;
-    }
-
-    public getOverlay(): THREE.CSS3DSprite | undefined {
-        return this.overlayObject;
-    }
-
-    public getBoundingBox(): THREE.Box3 {
-        return this.boundingBox;
-    }
-
-    public update() {
-        const position = this.model.position;
-
-        // Update mesh
-        if (this.mesh) {
-            this.mesh.position.set(
-                position.x + this.meshOffset.x,
-                position.y + this.meshOffset.y,
-                position.z + this.meshOffset.z,
-            );
-        }
-
-        // Update overlay
-        if (this.overlayObject) {
-            this.overlayObject.position.set(
-                position.x,
-                position.y,
-                position.z,
-            );
-        }
-    }
-
-    private init = () => {
         this.boundingBox = new THREE.Box3();
         const template: NodeViewTemplate = {
             ...DEFAULT_NODE_TEMPLATE,
-            ...this.template,
+            ...customTemplate,
         };
+        const mesh = template.mesh(model.data);
+        const Overlay = template.overlay.get(model.data);
 
-        const mesh = template.mesh(this.model.data);
-        if (template.mesh) {
+        if (mesh) {
             if (isObject3d(mesh)) {
                 this.mesh = mesh;
             } else if (isMeshPrimitive(mesh)) {
-                // this.mesh = mesh;
+                this.mesh = getPrimitive(mesh);
             } else if (isMeshObj(mesh)) {
                 const obj = mesh.obj;
                 const colors = mesh.colors || [];
@@ -102,12 +62,11 @@ export class NodeView implements DiagramElementView {
                 .getCenter(this.mesh.position)
                 .multiplyScalar(-1);
             this.meshOffset = this.mesh.position.clone();
+        } else {
+            this.mesh = null;
         }
 
-        const Overlay = template.overlay.get(this.model.data);
         if (Overlay) {
-            const model = this.model;
-
             this.htmlOverlay = document.createElement('DIV');
             this.htmlOverlay.className = 'o3d-node-html-container';
 
@@ -123,7 +82,43 @@ export class NodeView implements DiagramElementView {
             } else {
                 ReactDOM.render(createElement(Overlay, model.data), this.htmlBody);
             }
-            this.overlayObject = new THREE.CSS3DSprite(this.htmlOverlay);
+            this.overlay = new THREE.CSS3DSprite(this.htmlOverlay);
+        } else {
+            this.overlay = null;
+        }
+    }
+
+    public getMesh(): THREE.Object3D | undefined {
+        return this.mesh;
+    }
+
+    public getOverlay(): THREE.CSS3DSprite | undefined {
+        return this.overlay;
+    }
+
+    public getBoundingBox(): THREE.Box3 {
+        return this.boundingBox;
+    }
+
+    public update() {
+        const position = this.model.position;
+
+        // Update mesh
+        if (this.mesh) {
+            this.mesh.position.set(
+                position.x + this.meshOffset.x,
+                position.y + this.meshOffset.y,
+                position.z + this.meshOffset.z,
+            );
+        }
+
+        // Update overlay
+        if (this.overlay) {
+            this.overlay.position.set(
+                position.x,
+                position.y,
+                position.z,
+            );
         }
     }
 }

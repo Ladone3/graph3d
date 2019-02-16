@@ -2,14 +2,13 @@ import * as THREE from 'three';
 import { Link } from '../models/link';
 import { Vector3D } from '../models/primitives';
 import { DiagramElementView } from './diagramElementView';
-import { LinkViewTemplate } from '../templates';
-import { vector3DToTreeVector3 } from '../utils/utils';
+import { LinkViewTemplate, DEFAULT_LINK_TEMPLATE } from '../templates';
+import { vector3DToTreeVector3 } from '../utils';
 
-export const LINE_COLOR = 0x0000ff;
-
-export class LinkView implements DiagramElementView {
-    private model: Link;
-    private template: LinkViewTemplate;
+export class LinkView implements DiagramElementView<Link> {
+    public readonly model: Link;
+    public readonly mesh: THREE.Object3D;
+    public readonly overlay: THREE.CSS3DObject | null;
 
     private lineGeometry: THREE.Geometry;
     private lineMaterial: THREE.LineBasicMaterial;
@@ -18,23 +17,34 @@ export class LinkView implements DiagramElementView {
     private arrowGeometry: THREE.Geometry;
     private arrowMaterial: THREE.MeshBasicMaterial;
     private arrow: THREE.Mesh;
-
-    private group: THREE.Object3D;
-
     private boundingBox: THREE.Box3;
 
-    constructor(model: Link, template?: LinkViewTemplate) {
+    constructor(model: Link, customTemplate?: LinkViewTemplate) {
         this.model = model;
-        this.template = template;
-        this.init();
-    }
+        const template: LinkViewTemplate = {
+            ...DEFAULT_LINK_TEMPLATE,
+            ...customTemplate,
+        };
 
-    public getMesh(): THREE.Object3D {
-        return this.group;
-    }
+        this.boundingBox = new THREE.Box3();
+        this.lineGeometry = new THREE.Geometry();
+        this.lineMaterial = new THREE.LineBasicMaterial({color: template.color});
+        this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
 
-    public getOverlay(): THREE.CSS3DObject | undefined {
-        return undefined;
+        this.arrowGeometry = new THREE.ConeGeometry(2, 10, 4);
+        this.arrowMaterial = new THREE.MeshBasicMaterial({color: template.color});
+        this.arrow = new THREE.Mesh(
+            this.arrowGeometry,
+            this.arrowMaterial,
+        );
+
+        this.mesh = new THREE.Group();
+        this.mesh.add(this.line);
+        this.mesh.add(this.arrow);
+
+        this.overlay = null;
+
+        this.update();
     }
 
     // Not implemented yet
@@ -57,26 +67,6 @@ export class LinkView implements DiagramElementView {
 
         this.arrow.lookAt(targetPos.x + 0.00001, targetPos.y + 0.00001, targetPos.z + 0.00001);
         this.arrow.rotateX(Math.PI / 2);
-    }
-
-    private init() {
-        this.boundingBox = new THREE.Box3();
-        this.lineGeometry = new THREE.Geometry();
-        this.lineMaterial = new THREE.LineBasicMaterial({color: LINE_COLOR});
-        this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
-
-        this.arrowGeometry = new THREE.ConeGeometry(2, 10, 4);
-        this.arrowMaterial = new THREE.MeshBasicMaterial({color: LINE_COLOR});
-        this.arrow = new THREE.Mesh(
-            this.arrowGeometry,
-            this.arrowMaterial,
-        );
-
-        this.group = new THREE.Group();
-        this.group.add(this.line);
-        this.group.add(this.arrow);
-
-        this.update();
     }
 
     private calculateVertices(

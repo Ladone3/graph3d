@@ -14,15 +14,17 @@ export namespace THREE {
     export type Object3D = any;
 }
 
-export type MeshPrimitive = 'cube' |
-                            'sphere' |
-                            'cone' |
-                            'cilinder' |
-                            'dodecahedron' |
-                            'tube' |
-                            'torus' |
-                            'tetrahedron' |
-                            'plane';
+export interface MeshPrimitive {
+    shape: 'cube' |
+           'sphere' |
+           'cone' |
+           'cylinder' |
+           'dodecahedron' |
+           'torus' |
+           'tetrahedron' |
+           'plane';
+    color?: string;
+}
 
 export type L3Mesh = THREE.Object3D | MeshObj | MeshPrimitive;
 
@@ -37,17 +39,16 @@ export function isObject3d(mesh: L3Mesh): mesh is _THREE.Object3D {
 }
 
 export function isMeshPrimitive(mesh: L3Mesh): mesh is MeshPrimitive {
-    return typeof mesh === 'string' && [
+    return mesh.shape && [
         'cube',
         'sphere',
         'cone',
-        'cilinder',
+        'cylinder',
         'dodecahedron',
-        'tube',
         'torus',
         'tetrahedron',
         'plane',
-    ].indexOf(mesh) !== -1;
+    ].indexOf(mesh.shape) !== -1;
 }
 
 export interface NodeViewTemplate<NodeContent = any> {
@@ -58,8 +59,10 @@ export interface NodeViewTemplate<NodeContent = any> {
     mesh?: (data: NodeContent) => L3Mesh;
 }
 
-export type TemplateProvider = (types: string[]) => NodeViewTemplate;
+export type NodeTemplateProvider = (types: string[]) => NodeViewTemplate;
 
 export interface LinkViewTemplate {
     color: number | string;
 }
+
+export type LinkTemplateProvider = (types: string[]) => LinkViewTemplate;

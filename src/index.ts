@@ -4,22 +4,24 @@ require('./js/LoaderSupport.js');
 require('./js/OBJLoader.js');
 require('./js/OBJLoader2.js');
 
-export { L3Graph } from './l3Graph/l3Graph';
+export { L3Graph, ViewOptions, L3GraphProps, GraphElements } from './l3Graph/l3Graph';
 export { Node } from './l3Graph/models/node';
 export { Link } from './l3Graph/models/link';
 
 export {
     NodeViewTemplate,
     LinkViewTemplate,
+    L3Mesh,
     MeshObj,
     MeshPrimitive,
     THREE,
     DEFAULT_NODE_TEMPLATE,
     DEFAULT_NODE_TEMPLATE_PROVIDER,
+    DEFAULT_LINK_TEMPLATE,
+    DEFAULT_LINK_TEMPLATE_PROVIDER,
 } from './l3Graph/templates';
 
 export { ViewController } from './l3Graph/controllers/viewController';
-export { DataProvider } from './l3Graph/data/dataProvider';
 
 export * from './l3Graph/utils/subscribeable';
 

@@ -12,7 +12,7 @@ export function getColorByTypes(strings: string[]): string {
     return rgbToHex(r, g, b);
 }
 
-function rgbToHex(r: number, g: number, b: number): string {
+export function rgbToHex(r: number, g: number, b: number): string {
     let rH = Number(r).toString(16);
     if (rH.length < 2) {
         rH = '0' + rH;
@@ -31,7 +31,7 @@ function rgbToHex(r: number, g: number, b: number): string {
 /**
  * https://gist.github.com/eyecatchup/9536706
  */
-function HSVtoRGB(h: number, s: number, v: number) {
+export function HSVtoRGB(h: number, s: number, v: number) {
     let r, g, b;
     let i;
     let f, p, q, t;
@@ -89,7 +89,7 @@ function HSVtoRGB(h: number, s: number, v: number) {
  * Calculate a 32 bit FNV-1a hash
  * https://gist.github.com/vaiorabbit/5657561
  */
-function hashFnv32a(str: string, seed = 0x811c9dc5): number {
+export function hashFnv32a(str: string, seed = 0x811c9dc5): number {
     /* tslint:disable:no-bitwise */
     let i: number, l: number, hval = seed & 0x7fffffff;
 

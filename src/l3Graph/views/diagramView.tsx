@@ -1,8 +1,7 @@
 import * as React from 'react';
 import * as THREE from 'three';
 import { Vector3D } from '../models/primitives';
-import { NodeViewTemplate } from '../templates';
-import { LinkViewTemplate } from '../templates';
+import { NodeTemplateProvider, LinkTemplateProvider } from '../templates';
 import { GraphView } from './graphView';
 import { DiagramModel } from '../models/diagramModel';
 import { Element } from '../models/graphModel';
@@ -13,8 +12,8 @@ export interface DiagramViewProps {
     model: DiagramModel;
     onViewMount?: (view: DiagramView) => void;
     // todo: separate it
-    nodeTemplates?: {[typeId: string]: NodeViewTemplate };
-    linkTemplates?: {[typeId: string]: LinkViewTemplate };
+    nodeTemplateProvider?: NodeTemplateProvider;
+    linkTemplateProvider?: LinkTemplateProvider;
 }
 
 export interface CameraState {
@@ -152,8 +151,8 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.graphView = new GraphView({
             graphModel: this.props.model.graph,
             scene: this.scene,
-            nodeTemplates: this.props.nodeTemplates || {},
-            linkTemplates: this.props.linkTemplates || {},
+            nodeTemplateProvider: this.props.nodeTemplateProvider,
+            linkTemplateProvider: this.props.linkTemplateProvider,
         });
         this.widgetsView = new WidgetsView({
             widgetsModel: this.props.model.widgets,

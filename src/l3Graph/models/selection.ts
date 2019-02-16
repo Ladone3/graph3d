@@ -1,6 +1,5 @@
 import { Vector3D } from './primitives';
-import * as _ from 'lodash';
-import { Subscribable, EventObject } from '../utils/subscribeable';
+import { Subscribable } from '../utils/subscribeable';
 import { Widget, WidgetEvents } from './widget';
 import { Node } from './node';
 
@@ -35,10 +34,7 @@ export class Selection extends Subscribable<SelectionEvents> implements Widget {
             }
         }
 
-        const previous = this._focusNode;
-        this._focusNode = _.clone(target);
         this._focusNode = target;
-
         this.updateView();
     }
 

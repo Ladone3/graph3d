@@ -16,11 +16,17 @@ export interface GraphModelEvents {
     'add:elements': Element[];
     'remove:elements': Element[];
     'change:element': Element;
+    'refresh:element': Element;
 }
 
 export class GraphModel extends Subscribable<GraphModelEvents> {
     public nodes: Map<string, Node> = new Map();
     public links: Map<string, Link> = new Map();
+    public fullUpdateList: Set<string> = new Set();
+
+    public getElementById(id: string) {
+        return this.nodes.get(id) || this.links.get(id);
+    }
 
     public addElements(elements: Element[]) {
         const newElements: Element[] = [];
@@ -44,18 +50,30 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         this.trigger('add:elements', newElements);
     }
 
+    public updateElements(elements: Element[]) {
+        for (const element of elements) {
+            this.fullUpdateList.add(element.id);
+            if (isNode(element)) {
+                const node = this.nodes.get(element.id);
+                node.data = element.data;
+                node.types = element.types;
+            } else {
+                const link = this.links.get(element.id);
+                link.types = element.types;
+                link.label = element.label;
+            }
+        }
+    }
+
     private subscribeOnNode(element: Node) {
         element.on('force-update', event => this.performNodeUpdate(element));
         element.on('change:position', event => this.performNodeUpdate(element));
         element.on('remove', event => this.removeElements([element]));
-        // element.onAny(event => this.performNodeUpdate(element));
     }
 
     private subscribeOnLink(element: Link) {
         element.on('force-update', event => this.performLinkUpdate(element));
-        element.on('change:label', event => this.performLinkUpdate(element));
         element.on('remove', event => this.removeElements([element]));
-        // element.onAny(event => this.performLinkUpdate(element));
     }
 
     private unsubscribeFromElement(element: Element) {

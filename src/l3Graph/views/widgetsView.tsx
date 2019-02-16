@@ -13,7 +13,7 @@ export interface WidgetsViewProps {
 export class WidgetsView {
     camera: THREE.PerspectiveCamera;
     scene: THREE.Scene;
-    views: Map<string, DiagramElementView>;
+    views: Map<string, DiagramElementView<any>>;
 
     renderer: THREE.WebGLRenderer;
     overlayRenderer: THREE.CSS3DRenderer;
@@ -38,20 +38,17 @@ export class WidgetsView {
         const view = this.findViewForWidget(widget);
 
         if (view) {
-            const mesh = view.getMesh();
-            const overlay = view.getOverlay();
-
-            if (mesh) {
-                this.scene.add(mesh);
+            if (view.mesh) {
+                this.scene.add(view.mesh);
             }
-            if (overlay) {
-                this.scene.add(overlay);
+            if (view.overlay) {
+                this.scene.add(view.overlay);
             }
             this.views.set(widget.widgetId, view);
         }
     }
 
-    private findViewForWidget(model: Widget): DiagramElementView | undefined {
+    private findViewForWidget(model: Widget): DiagramElementView<any> | undefined {
         if (model.widgetId === 'o3d-selection-widget') {
             return new SelectionView(model as Selection);
         } else {

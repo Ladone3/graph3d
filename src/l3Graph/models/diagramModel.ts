@@ -52,6 +52,10 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         this.graph.removeLinksByIds(linkIds);
     }
 
+    public updateElements(elements: Element[]) {
+        this.graph.updateElements(elements);
+    }
+
     private onElementUpdate = (event: EventObject<'change:element', Element>) => {
         const element = event.data;
         this.graphEvents.set(element.id, element);

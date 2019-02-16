@@ -1,7 +1,6 @@
 import { Vector3D } from './primitives';
 import * as _ from 'lodash';
-import { Subscribable, EventObject } from '../utils/subscribeable';
-import { Node, NodeEvents } from './node';
+import { Subscribable } from '../utils/subscribeable';
 
 export const DEFAULT_SELECTION_TYPE_ID = 'o3d-selection';
 export const DEFAULT_NODE_SIZE: Vector3D = { x: 1, y: 1, z: 1 };

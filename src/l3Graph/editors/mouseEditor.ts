@@ -1,11 +1,8 @@
 import * as THREE from 'three';
 
-import { GraphView } from '../views/graphView';
-import { handleDragging, vector3DToTreeVector3, treeVector3ToVector3D } from '../utils/utils';
+import { handleDragging, vector3DToTreeVector3, treeVector3ToVector3D } from '../utils';
 import { Node } from '../models/node';
-import { Vector3D } from '../models/primitives';
 import { Selection } from '../models/selection';
-import { SelectionView } from '../views/selectionView';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
 
@@ -69,22 +66,20 @@ export class MouseEditor {
 
         this.diagramhModel.nodes.forEach(node => {
             const nodeView = this.diagramView.graphView.views.get(node.id);
-            const mesh = nodeView.getMesh();
-            const overlay = nodeView.getOverlay();
 
-            if (mesh) {
-                if (mesh instanceof THREE.Group) {
-                    for (const obj of mesh.children) {
+            if (nodeView.mesh) {
+                if (nodeView.mesh instanceof THREE.Group) {
+                    for (const obj of nodeView.mesh.children) {
                         meshes.push(obj);
                         nodeMeshMap.push(node);
                     }
                 } else {
-                    meshes.push(mesh);
+                    meshes.push(nodeView.mesh);
                     nodeMeshMap.push(node);
                 }
             }
-            if (overlay) {
-                meshes.push(overlay);
+            if (nodeView.overlay) {
+                meshes.push(nodeView.overlay);
                 nodeMeshMap.push(node);
             }
         });

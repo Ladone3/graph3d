@@ -7,38 +7,17 @@ import { Selection } from '../models/selection';
 
 const LINES_LENGTH = 100;
 
-export class SelectionView implements DiagramElementView {
-    private model: Selection;
-    private group: THREE.Group;
+export class SelectionView implements DiagramElementView<Selection> {
+    public readonly model: Selection;
+    public readonly mesh: THREE.Group;
+    public readonly overlay: THREE.CSS3DObject | null;
+
     private boundingBox: THREE.Box3;
 
     constructor(model: Selection) {
         this.model = model;
-        this.init();
-    }
 
-    public getMesh() {
-        return this.group;
-    }
-
-    public getOverlay(): undefined {
-        return undefined;
-    }
-
-    public getBoundingBox(): THREE.Box3 {
-        return this.boundingBox;
-    }
-
-    public update() {
-        const isWidgetVisible = Boolean(this.model.focusNode);
-        this.group.visible = isWidgetVisible;
-
-        const position = isWidgetVisible ? this.model.focusNode.position : { x: 0, y: 0, z: 0 };
-        this.group.position.set(position.x, position.y, position.z);
-    }
-
-    private init = () => {
-        this.group = new THREE.Group();
+        this.mesh = new THREE.Group();
 
         // x
         const geometryX = new THREE.Geometry();
@@ -54,8 +33,8 @@ export class SelectionView implements DiagramElementView {
         );
         arrowX.position.copy(geometryX.vertices[1]);
         arrowX.rotateZ(- Math.PI / 2);
-        this.group.add(lineX);
-        this.group.add(arrowX);
+        this.mesh.add(lineX);
+        this.mesh.add(arrowX);
 
         // y
         const geometryY = new THREE.Geometry();
@@ -70,8 +49,8 @@ export class SelectionView implements DiagramElementView {
             new THREE.MeshBasicMaterial({color: 0x0000ff}),
         );
         arrowY.position.copy(geometryY.vertices[1]);
-        this.group.add(lineY);
-        this.group.add(arrowY);
+        this.mesh.add(lineY);
+        this.mesh.add(arrowY);
 
         // z
         const geometryZ = new THREE.Geometry();
@@ -87,12 +66,25 @@ export class SelectionView implements DiagramElementView {
         );
         arrowZ.position.copy(geometryZ.vertices[1]);
         arrowZ.rotateX(Math.PI / 2);
-        this.group.add(lineZ);
-        this.group.add(arrowZ);
+        this.mesh.add(lineZ);
+        this.mesh.add(arrowZ);
 
         this.boundingBox = new THREE.Box3();
-        this.boundingBox.setFromObject(this.group);
+        this.boundingBox.setFromObject(this.mesh);
 
+        this.overlay = null;
         this.update();
+    }
+
+    public getBoundingBox(): THREE.Box3 {
+        return this.boundingBox;
+    }
+
+    public update() {
+        const isWidgetVisible = Boolean(this.model.focusNode);
+        this.mesh.visible = isWidgetVisible;
+
+        const position = isWidgetVisible ? this.model.focusNode.position : { x: 0, y: 0, z: 0 };
+        this.mesh.position.set(position.x, position.y, position.z);
     }
 }
