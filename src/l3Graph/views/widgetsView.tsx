@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { DiagramElementView } from './diagramElementView';
-import { SelectionView } from './selectionView';
 import { Selection } from '../models/selection';
 import { WidgetsModel } from '../models/widgetsModel';
 import { Widget } from '../models/widget';
+import { SelectionView } from './selectionView';
 
 export interface WidgetsViewProps {
     widgetsModel: WidgetsModel;

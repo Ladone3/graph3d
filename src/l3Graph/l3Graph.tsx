@@ -9,6 +9,7 @@ import { DiagramView } from './views/diagramView';
 import { Link } from './models/link';
 import { Node } from './models/node';
 import { isTypesEqual } from './utils';
+import { Vector2D, Vector3D } from './models/primitives';
 
 export interface GraphElements {
     nodes: Node[];
@@ -43,6 +44,7 @@ export interface State {
 
 export class L3Graph extends React.Component<L3GraphProps, State> {
     public model: DiagramModel;
+    private view: DiagramView;
     private keyHandler: KeyHandler;
     private viewControllers: ViewController[] = [];
     private mouseEditor: MouseEditor;
@@ -88,14 +90,18 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         this.onBlur();
     }
 
+    clientPosTo3dPos(position: Vector2D, distanceFromScreen: number = 600): Vector3D {
+        return this.view.clientPosTo3dPos(position, distanceFromScreen);
+    }
+
     private updateGraph(update: GraphUpdate) {
         const {newNodes, newLinks, nodesToRemove, linksToRemove, linksToUpdate, nodesToUpdate} = update;
         if (newNodes) { this.model.addElements(newNodes); }
         if (newLinks) { this.model.addElements(newLinks); }
-        if (linksToRemove) { this.model.removeLinksByIds(linksToRemove.map(l => l.id)); }
-        if (nodesToRemove) { this.model.removeNodesByIds(nodesToRemove.map(n => n.id)); }
-        if (nodesToUpdate) { this.model.updateElements(nodesToUpdate); }
-        if (linksToUpdate) { this.model.updateElements(linksToUpdate); }
+        if (linksToRemove && linksToRemove.length > 0) { this.model.removeLinksByIds(linksToRemove.map(l => l.id)); }
+        if (nodesToRemove && nodesToRemove.length > 0) { this.model.removeNodesByIds(nodesToRemove.map(n => n.id)); }
+        if (nodesToUpdate && nodesToUpdate.length > 0) { this.model.updateElements(nodesToUpdate); }
+        if (linksToUpdate && linksToUpdate.length > 0) { this.model.updateElements(linksToUpdate); }
     }
 
     private merge(newGraphModel: GraphElements): GraphUpdate {
@@ -118,7 +124,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                 const curNode = graph.nodes.get(id);
                 const needUpdateView =
                     curNode.data !== node.data ||
-                    isTypesEqual(curNode.types, node.types);
+                    !isTypesEqual(curNode.types, node.types);
 
                 if (needUpdateView) {
                     nodesToUpdate.push(node);
@@ -173,6 +179,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
     }
 
     private onViewMount = (view: DiagramView) => {
+        this.view = view;
         const controllersSet = this.props.viewControllers || DEFAULT_VIEW_CONTROLLERS_SET;
         this.viewControllers = controllersSet.map(controller => controller(view));
         this.viewController = this.viewControllers[0];

@@ -5,10 +5,10 @@ import { Node } from '../models/node';
 import { Selection } from '../models/selection';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
+import { Vector3D, Vector2D } from '../models/primitives';
 
 export class MouseEditor {
     private raycaster: THREE.Raycaster;
-    private helperPlane: THREE.Mesh;
     private selection: Selection;
 
     constructor(
@@ -16,40 +16,35 @@ export class MouseEditor {
         private diagramView: DiagramView,
     ) {
         this.raycaster = new THREE.Raycaster();
-        this.helperPlane = new THREE.Mesh(
-            new THREE.PlaneBufferGeometry(500, 500, 8, 8),
-            new THREE.MeshBasicMaterial({alphaTest: 0, visible: false}),
-        );
-        this.diagramView.scene.add(this.helperPlane);
         this.selection = new Selection();
         this.diagramhModel.widgets.registerWidget(this.selection);
     }
 
     onMouseDown(event: MouseEvent) {
-        const viewDirection = this.getViewDirection(event);
-        const draggedNode = this.getIntersectedObject(viewDirection);
-
+        const clickPoint = this.calcRay(event);
+        const draggedNode = this.getIntersectedObject(clickPoint);
+        const helperPlane = this.diagramView.helperPlane;
         if (draggedNode) {
-            this.helperPlane.position.copy(vector3DToTreeVector3(draggedNode.position));
-            this.helperPlane.lookAt(this.diagramView.camera.position);
+            this.diagramView.helperPlane.position.copy(vector3DToTreeVector3(draggedNode.position));
+            helperPlane.lookAt(this.diagramView.camera.position);
             this.selection.focusNode = draggedNode;
             this.diagramView.renderGraph();
 
-            let planeIntersects = this.raycaster.intersectObject(this.helperPlane);
+            let planeIntersects = this.raycaster.intersectObject(helperPlane);
             const startPoint = new THREE.Vector3().copy(
                 planeIntersects[0].point
-            ).sub(this.helperPlane.position);
+            ).sub(helperPlane.position);
 
             handleDragging(event, (dragEvent, offset) => {
-                this.helperPlane.position.copy(vector3DToTreeVector3(draggedNode.position));
-                const newDirection = this.getViewDirection(dragEvent);
+                helperPlane.position.copy(vector3DToTreeVector3(draggedNode.position));
+                const newDirection = this.calcRay(dragEvent);
 
                 this.raycaster.set(
                     this.diagramView.camera.position,
                     newDirection.sub(this.diagramView.camera.position).normalize(),
                 );
 
-                planeIntersects = this.raycaster.intersectObject(this.helperPlane);
+                planeIntersects = this.raycaster.intersectObject(helperPlane);
                 const curPoint = planeIntersects[0].point.sub(startPoint);
                 draggedNode.position = treeVector3ToVector3D(curPoint);
             }, () => {
@@ -97,17 +92,19 @@ export class MouseEditor {
         }
     }
 
-    private getViewDirection(event: MouseEvent) {
-        const screenParameters = this.diagramView.screenParameters;
-        const bbox = this.diagramView.meshHtmlContainer.getBoundingClientRect();
-        const mpouseX = event.clientX - bbox.left;
-        const mpouseY = event.clientY - bbox.top;
+    calcRay(event: MouseEvent): THREE.Vector3 {
+        const view = this.diagramView;
+        const bbox = view.meshHtmlContainer.getBoundingClientRect();
+        const position: Vector2D = {
+            x: event.clientX - bbox.left,
+            y: event.clientY - bbox.top,
+        };
+        const screenParameters = view.screenParameters;
         const vector = new THREE.Vector3(
-            (mpouseX / screenParameters.WIDTH) * 2 - 1,
-            1 - (mpouseY / screenParameters.HEIGHT) * 2,
+            (position.x / screenParameters.WIDTH) * 2 - 1,
+            1 - (position.y / screenParameters.HEIGHT) * 2,
             1
         );
-
-        return vector.unproject(this.diagramView.camera);
+        return vector.unproject(view.camera);
     }
 }

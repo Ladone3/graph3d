@@ -3,9 +3,6 @@ import { Subscribable } from '../utils/subscribeable';
 import { Widget, WidgetEvents } from './widget';
 import { Node } from './node';
 
-export const DEFAULT_SELECTION_TYPE_ID = 'o3d-selection';
-export const DEFAULT_NODE_SIZE: Vector3D = { x: 1, y: 1, z: 1 };
-
 export interface SelectionParameters {
     focusNode?: Node;
 }

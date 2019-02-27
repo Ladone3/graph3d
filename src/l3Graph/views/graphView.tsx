@@ -34,23 +34,9 @@ export class GraphView {
         this.graphModel = props.graphModel;
         this.graphModel.nodes.forEach(node => this.addElementView(node));
         this.graphModel.links.forEach(link => this.addElementView(link));
-        this.subscribeOnModel();
     }
 
-    private subscribeOnModel() {
-        this.graphModel.on('add:elements', event => {
-            for (const element of event.data) {
-                this.addElementView(element);
-            }
-        });
-        this.graphModel.on('remove:elements', event => {
-            for (const element of event.data) {
-                this.removeElementView(element);
-            }
-        });
-    }
-
-    private addElementView(element: Element) {
+    public addElementView(element: Element) {
         const view = this.findViewForElement(element);
 
         if (view) {
@@ -67,7 +53,7 @@ export class GraphView {
         }
     }
 
-    private removeElementView(element: Element) {
+    public removeElementView(element: Element) {
         const view = this.views.get(element.id);
 
         if (view) {

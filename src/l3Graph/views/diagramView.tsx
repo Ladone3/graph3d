@@ -1,12 +1,13 @@
 import * as React from 'react';
 import * as THREE from 'three';
-import { Vector3D } from '../models/primitives';
+import { Vector3D, Vector2D } from '../models/primitives';
 import { NodeTemplateProvider, LinkTemplateProvider } from '../templates';
 import { GraphView } from './graphView';
 import { DiagramModel } from '../models/diagramModel';
 import { Element } from '../models/graphModel';
 import { WidgetsView } from './widgetsView';
 import { Widget } from '../models/widget';
+import { treeVector3ToVector3D } from '../utils';
 
 export interface DiagramViewProps {
     model: DiagramModel;
@@ -21,11 +22,12 @@ export interface CameraState {
     focusDirection?: Vector3D;
 }
 
-export const CAMERA_DIST = 100;
+export const DEFAULT_CAMERA_DIST = 100;
 
 export class DiagramView extends React.Component<DiagramViewProps> {
     private renderer: THREE.WebGLRenderer;
     private overlayRenderer: THREE.CSS3DRenderer;
+    public helperPlane: THREE.Mesh;
 
     graphView: GraphView;
     widgetsView: WidgetsView;
@@ -55,6 +57,38 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         if (this.props.onViewMount) {
             this.props.onViewMount(this);
         }
+    }
+
+    mouseTo3dPos(event: MouseEvent, distanceFromScreen: number = 600): Vector3D {
+        const bbox = this.meshHtmlContainer.getBoundingClientRect();
+        return this.clientPosTo3dPos({
+            x: event.clientX + bbox.left,
+            y: event.clientY + bbox.top,
+        }, distanceFromScreen);
+    }
+
+    clientPosTo3dPos(position: Vector2D, distanceFromScreen: number = 600): Vector3D {
+        const cameraPos = this.camera.position;
+        const screenParameters = this.screenParameters;
+        const vector = new THREE.Vector3(
+            (position.x / screenParameters.WIDTH) * 2 - 1,
+            1 - (position.y / screenParameters.HEIGHT) * 2,
+            1
+        );
+        const point = vector.unproject(this.camera);
+        const distance = point.distanceTo(cameraPos);
+        const k = distanceFromScreen / distance;
+
+        const relativePoint: Vector3D = {
+            x: point.x - cameraPos.x,
+            y: point.y - cameraPos.y,
+            z: point.z - cameraPos.z,
+        };
+        return {
+            x: relativePoint.x * k + cameraPos.x,
+            y: relativePoint.y * k + cameraPos.y,
+            z: relativePoint.z * k + cameraPos.z,
+        };
     }
 
     get cameraState(): CameraState {
@@ -105,19 +139,9 @@ export class DiagramView extends React.Component<DiagramViewProps> {
             this.screenParameters.NEAR,
             this.screenParameters.FAR,
         );
-        this.camera.position.set(0, 0, CAMERA_DIST);
+        this.camera.position.set(0, 0, DEFAULT_CAMERA_DIST);
         this.camera.lookAt(this.scene.position);
         this.scene.add(this.camera);
-
-        // Helper plane
-        const planeGeometry = new THREE.PlaneGeometry(200, 200, 10, 10);
-        const planeMaterial = new THREE.MeshBasicMaterial({wireframe: true, color: 0x000000});
-        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-        plane.rotation.x = -0.5 * Math.PI;
-        plane.position.x = 0;
-        plane.position.y = -100;
-        plane.position.z = 0;
-        this.scene.add(plane);
 
         // Add lights
         const dirLight = new THREE.DirectionalLight(0xffffff);
@@ -132,7 +156,6 @@ export class DiagramView extends React.Component<DiagramViewProps> {
             this.screenParameters.WIDTH,
             this.screenParameters.HEIGHT,
         );
-        this.renderer.render(this.scene, this.camera);
         this.renderer.setClearColor(this.scene.fog.color);
 
         // Prepare sprite renderer (css3d)
@@ -141,10 +164,30 @@ export class DiagramView extends React.Component<DiagramViewProps> {
             this.screenParameters.WIDTH,
             this.screenParameters.HEIGHT,
         );
-        this.overlayRenderer.render(this.scene, this.camera);
 
         this.meshHtmlContainer.appendChild(this.renderer.domElement);
         this.overlayHtmlContainer.appendChild(this.overlayRenderer.domElement);
+
+        // Helper planes
+        const planeGeometry = new THREE.PlaneGeometry(200, 200, 10, 10);
+        const planeMaterial = new THREE.MeshBasicMaterial({wireframe: true, color: 0x000000});
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -0.5 * Math.PI;
+        plane.position.x = 0;
+        plane.position.y = -100;
+        plane.position.z = 0;
+        this.scene.add(plane);
+
+        this.helperPlane = new THREE.Mesh(
+            new THREE.PlaneBufferGeometry(1000, 1000, 8, 8),
+            new THREE.MeshBasicMaterial({alphaTest: 0, visible: false}),
+        );
+        this.scene.add(this.helperPlane);
+
+        // Finalize
+
+        this.renderer.render(this.scene, this.camera);
+        this.overlayRenderer.render(this.scene, this.camera);
     }
 
     private initSubViews() {
@@ -177,6 +220,19 @@ export class DiagramView extends React.Component<DiagramViewProps> {
             this.graphView.update(updatedElementIds);
             this.widgetsView.update(updatedWidgetIds);
 
+            this.renderGraph();
+        });
+
+        this.props.model.graph.on('add:elements', event => {
+            for (const element of event.data) {
+                this.graphView.addElementView(element);
+            }
+            this.renderGraph();
+        });
+        this.props.model.graph.on('remove:elements', event => {
+            for (const element of event.data) {
+                this.graphView.removeElementView(element);
+            }
             this.renderGraph();
         });
     }

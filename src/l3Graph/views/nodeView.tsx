@@ -86,6 +86,7 @@ export class NodeView implements DiagramElementView<Node> {
         } else {
             this.overlay = null;
         }
+        this.update();
     }
 
     public getMesh(): THREE.Object3D | undefined {
