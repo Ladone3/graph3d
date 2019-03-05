@@ -47,7 +47,8 @@ export class NodeView implements DiagramElementView<Node> {
                 const colors = mesh.colors || [];
                 const loader = new THREE.OBJLoader();
                 this.mesh = loader.parse(obj);
-                this.mesh.scale.set(DEFAULT_SCALE, DEFAULT_SCALE, DEFAULT_SCALE);
+                const scale = mesh.scale || DEFAULT_SCALE;
+                this.mesh.scale.set(scale, scale, scale);
 
                 let counter = 0;
                 const fallbackColor = colors[0] || getColorByTypes(this.model.types);

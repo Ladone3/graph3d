@@ -7,6 +7,7 @@ export * from './defaultOverlay';
 
 export interface MeshObj {
     obj: string;
+    scale?: number;
     colors?: (string | number)[];
 }
 

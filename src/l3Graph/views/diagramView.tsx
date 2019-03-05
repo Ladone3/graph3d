@@ -169,12 +169,12 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.overlayHtmlContainer.appendChild(this.overlayRenderer.domElement);
 
         // Helper planes
-        const planeGeometry = new THREE.PlaneGeometry(200, 200, 10, 10);
+        const planeGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
         const planeMaterial = new THREE.MeshBasicMaterial({wireframe: true, color: 0x000000});
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.rotation.x = -0.5 * Math.PI;
         plane.position.x = 0;
-        plane.position.y = -100;
+        plane.position.y = -1000;
         plane.position.z = 0;
         this.scene.add(plane);
 

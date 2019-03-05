@@ -225,7 +225,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                         key={`controller-button-${index}`}
                         className={this.viewController === viewController ? 'o3d-selected' : ''}
                         onClick={() => { this.viewController = viewController; }}>
-                        {viewController.label}
+                        {viewController.label[0]}
                     </button>;
                 })}
             </div>

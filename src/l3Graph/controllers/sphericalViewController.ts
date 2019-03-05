@@ -79,6 +79,8 @@ export class SphericalViewController implements ViewController {
                 Math.cos(y) * this.cameraDistance
             )
         );
+
+        // Here is a hack, because I don't really like math.
         if (
             Math.round(position.x) !== Math.round(Math.cos(x) * this.cameraDistance * Math.cos(y)) ||
             Math.round(position.z) !== Math.round(Math.sin(x) * this.cameraDistance * Math.cos(y))

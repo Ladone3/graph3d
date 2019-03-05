@@ -57,7 +57,7 @@ const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    const graphElements = generateData(2);
+    const graphElements = generateData(20);
     ReactDOM.render(React.createElement(L3Graph, {
         viewOptions: {
             nodeTemplateProvider: (types: string[]) => {

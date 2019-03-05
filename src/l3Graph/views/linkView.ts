@@ -10,6 +10,9 @@ export class LinkView implements DiagramElementView<Link> {
     public readonly mesh: THREE.Object3D;
     public readonly overlay: THREE.CSS3DObject | null;
 
+    private htmlOverlay: HTMLElement;
+    private htmlBody: HTMLElement;
+
     private lineGeometry: THREE.Geometry;
     private lineMaterial: THREE.LineBasicMaterial;
     private line: THREE.Line;
@@ -42,7 +45,19 @@ export class LinkView implements DiagramElementView<Link> {
         this.mesh.add(this.line);
         this.mesh.add(this.arrow);
 
-        this.overlay = null;
+        if (this.model.label) {
+            this.htmlOverlay = document.createElement('DIV');
+            this.htmlOverlay.className = 'o3d-link-html-container';
+
+            this.htmlBody = document.createElement('DIV');
+            this.htmlBody.className = 'o3d-link-html-view';
+            this.htmlOverlay.appendChild(this.htmlBody);
+            this.htmlBody.innerText = this.model.label;
+
+            this.overlay = new THREE.CSS3DSprite(this.htmlOverlay);
+        } else {
+            this.overlay = null;
+        }
 
         this.update();
     }
@@ -67,6 +82,11 @@ export class LinkView implements DiagramElementView<Link> {
 
         this.arrow.lookAt(targetPos.x + 0.00001, targetPos.y + 0.00001, targetPos.z + 0.00001);
         this.arrow.rotateX(Math.PI / 2);
+
+        // Update overlay
+        if (this.overlay) {
+            this.overlay.position.copy(position);
+        }
     }
 
     private calculateVertices(
