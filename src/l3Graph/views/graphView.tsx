@@ -79,14 +79,16 @@ export class GraphView {
         }
     }
 
-    update(specificIds?: string[]) {
+    update(specificIds: string[]) {
+        // const selection = this
         const updateView = (elementId: string) => {
             if (this.graphModel.fullUpdateList.has(elementId)) {
                 const element = this.graphModel.getElementById(elementId);
                 this.removeElementView(element);
                 this.addElementView(element);
             }
-            this.views.get(elementId).update();
+            const view = this.views.get(elementId);
+            view.update();
         };
         if (!specificIds) {
             specificIds = [];

@@ -2,32 +2,42 @@ import * as THREE from 'three';
 
 import { handleDragging, vector3DToTreeVector3, treeVector3ToVector3D } from '../utils';
 import { Node } from '../models/node';
-import { Selection } from '../models/selection';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
-import { Vector3D, Vector2D } from '../models/primitives';
+import { Vector2D } from '../models/primitives';
+import { ArrowHelper } from '../models/arrowHelper';
+import { Element } from '../models/graphModel';
 
 export class MouseEditor {
     private raycaster: THREE.Raycaster;
-    private selection: Selection;
+    private arrowHelper: ArrowHelper;
+    private helperPlane: THREE.Mesh;
 
     constructor(
         private diagramhModel: DiagramModel,
         private diagramView: DiagramView,
     ) {
         this.raycaster = new THREE.Raycaster();
-        this.selection = new Selection();
-        this.diagramhModel.widgets.registerWidget(this.selection);
+        this.arrowHelper = new ArrowHelper();
+        this.helperPlane = new THREE.Mesh(
+            new THREE.PlaneBufferGeometry(1000, 1000, 8, 8),
+            new THREE.MeshBasicMaterial({alphaTest: 0, visible: false}),
+        );
+        this.diagramView.scene.add(this.helperPlane);
+        this.diagramhModel.widgets.registerWidget(this.arrowHelper);
     }
 
     onMouseDown(event: MouseEvent) {
         const clickPoint = this.calcRay(event);
         const draggedNode = this.getIntersectedObject(clickPoint);
-        const helperPlane = this.diagramView.helperPlane;
+        const helperPlane = this.helperPlane;
         if (draggedNode) {
-            this.diagramView.helperPlane.position.copy(vector3DToTreeVector3(draggedNode.position));
+            const selection = new Set<Element>();
+            selection.add(draggedNode);
+            this.diagramhModel.selection = selection;
+            this.helperPlane.position.copy(vector3DToTreeVector3(draggedNode.position));
             helperPlane.lookAt(this.diagramView.camera.position);
-            this.selection.focusNode = draggedNode;
+            this.arrowHelper.focusNode = draggedNode;
             this.diagramView.renderGraph();
 
             let planeIntersects = this.raycaster.intersectObject(helperPlane);
@@ -48,7 +58,7 @@ export class MouseEditor {
                 const curPoint = planeIntersects[0].point.sub(startPoint);
                 draggedNode.position = treeVector3ToVector3D(curPoint);
             }, () => {
-                this.selection.focusNode = undefined;
+                this.arrowHelper.focusNode = undefined;
             });
             return false;
         }

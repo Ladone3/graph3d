@@ -4,28 +4,44 @@ import { Node } from '../models/node';
 import { Link } from '../models/link';
 import { Widget } from './widget';
 import { WidgetsModel } from './widgetsModel';
+import { Selection } from './selection';
 
 export interface DiagramModelEvents {
     'syncupdate': {
         graphEvents: Map<string, Element>;
         widgetEvents: Map<string, Widget>;
     };
+    'change:selection': Set<Element>;
 }
 
 export class DiagramModel extends Subscribable<DiagramModelEvents> {
     public graph: GraphModel;
     public widgets: WidgetsModel;
+    private deprecatedSelection: Set<Element> = new Set();
     private animationFrame: number;
 
     private graphEvents: Map<string, Element> = new Map();
     private widgetEvents: Map<string, Widget> = new Map();
 
+    private _selection: Selection;
+
     constructor() {
         super();
         this.graph = new GraphModel();
         this.widgets = new WidgetsModel();
+        this.initSelectionWidget();
         this.graph.on('change:element', this.onElementUpdate);
         this.widgets.on('widget:update', this.onWidgetUpdate);
+    }
+
+    public get selection(): Set<Element> {
+        return this._selection.selection;
+    }
+
+    public set selection(newSelection: Set<Element>) {
+        const oldSelection = this._selection.selection;
+        this._selection.selection = newSelection;
+        this.trigger('change:selection', oldSelection);
     }
 
     public get nodes(): Map<string, Node> {
@@ -56,6 +72,20 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         this.graph.updateElements(elements);
     }
 
+    public performSyncUpdate = () => {
+        cancelAnimationFrame(this.animationFrame);
+        this.animationFrame = requestAnimationFrame(() => {
+            const events = {
+                graphEvents: this.graphEvents,
+                widgetEvents: this.widgetEvents,
+                deprecatedSelection: this.deprecatedSelection,
+            };
+            this.graphEvents = new Map();
+            this.widgetEvents = new Map();
+            this.trigger('syncupdate', events);
+        });
+    }
+
     private onElementUpdate = (event: EventObject<'change:element', Element>) => {
         const element = event.data;
         this.graphEvents.set(element.id, element);
@@ -68,16 +98,8 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         this.performSyncUpdate();
     }
 
-    public performSyncUpdate = () => {
-        cancelAnimationFrame(this.animationFrame);
-        this.animationFrame = requestAnimationFrame(() => {
-            const events = {
-                graphEvents: this.graphEvents,
-                widgetEvents: this.widgetEvents,
-            };
-            this.graphEvents = new Map();
-            this.widgetEvents = new Map();
-            this.trigger('syncupdate', events);
-        });
+    private initSelectionWidget() {
+        this._selection = new Selection();
+        this.widgets.registerWidget(this._selection);
     }
 }

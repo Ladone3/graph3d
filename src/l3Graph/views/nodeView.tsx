@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { createElement } from 'react';
-import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Node } from '../models/node';
 import { DiagramElementView } from './diagramElementView';

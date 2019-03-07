@@ -7,7 +7,6 @@ import { DiagramModel } from '../models/diagramModel';
 import { Element } from '../models/graphModel';
 import { WidgetsView } from './widgetsView';
 import { Widget } from '../models/widget';
-import { treeVector3ToVector3D } from '../utils';
 
 export interface DiagramViewProps {
     model: DiagramModel;
@@ -27,7 +26,6 @@ export const DEFAULT_CAMERA_DIST = 100;
 export class DiagramView extends React.Component<DiagramViewProps> {
     private renderer: THREE.WebGLRenderer;
     private overlayRenderer: THREE.CSS3DRenderer;
-    public helperPlane: THREE.Mesh;
 
     graphView: GraphView;
     widgetsView: WidgetsView;
@@ -177,12 +175,6 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         plane.position.y = -1000;
         plane.position.z = 0;
         this.scene.add(plane);
-
-        this.helperPlane = new THREE.Mesh(
-            new THREE.PlaneBufferGeometry(1000, 1000, 8, 8),
-            new THREE.MeshBasicMaterial({alphaTest: 0, visible: false}),
-        );
-        this.scene.add(this.helperPlane);
 
         // Finalize
 
