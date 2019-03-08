@@ -1,7 +1,8 @@
 import { LinkViewTemplate, LinkTemplateProvider } from '.';
 
 export const DEFAULT_LINK_TEMPLATE: LinkViewTemplate = {
-    color: 'blue',
+    color: 'gray',
+    thickness: 1,
 };
 
 export const DEFAULT_LINK_TEMPLATE_PROVIDER: LinkTemplateProvider = (types: string[]) => {

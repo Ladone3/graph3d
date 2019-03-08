@@ -78,3 +78,29 @@ export function createUUID(): string {
 export function isTypesEqual(types1: string[], types2: string[]): boolean {
     return types1.sort().join('') === types2.sort().join('');
 }
+
+export function calcBounds(points: Vector3D[]) {
+    const averagePos: Vector3D = {x: 0, y: 0, z: 0};
+    const minPos: Vector3D = {x: Infinity, y: Infinity, z: Infinity};
+    const maxPos: Vector3D = {x: -Infinity, y: -Infinity, z: -Infinity};
+    for (const p of points) {
+        averagePos.x += p.x;
+        averagePos.y += p.y;
+        averagePos.z += p.z;
+        minPos.x = Math.min(minPos.x, p.x);
+        minPos.y = Math.min(minPos.y, p.y);
+        minPos.z = Math.min(minPos.z, p.z);
+        maxPos.x = Math.max(maxPos.x, p.x);
+        maxPos.y = Math.max(maxPos.y, p.y);
+        maxPos.z = Math.max(maxPos.z, p.z);
+    }
+    averagePos.x /= points.length;
+    averagePos.y /= points.length;
+    averagePos.z /= points.length;
+
+    return {
+        min: minPos,
+        max: maxPos,
+        average: averagePos,
+    };
+}

@@ -4,7 +4,8 @@ require('./js/LoaderSupport.js');
 require('./js/OBJLoader.js');
 require('./js/OBJLoader2.js');
 
-export { L3Graph, ViewOptions, L3GraphProps, GraphElements } from './l3Graph/l3Graph';
+export { L3Graph, L3GraphProps, GraphElements } from './l3Graph/l3Graph';
+export { ViewOptions } from './l3Graph/views/diagramView';
 export { Node } from './l3Graph/models/node';
 export { Link } from './l3Graph/models/link';
 
@@ -25,5 +26,5 @@ export { ViewController } from './l3Graph/controllers/viewController';
 
 export * from './l3Graph/utils/subscribeable';
 
-export { applyForceLayout3d } from './l3Graph/layout/forceLayout';
+export { applyForceLayout3d } from './l3Graph/layout/layouts';
 export * from './l3Graph/utils/colorUtils';

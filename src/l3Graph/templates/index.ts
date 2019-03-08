@@ -64,6 +64,7 @@ export type NodeTemplateProvider = (types: string[]) => NodeViewTemplate;
 
 export interface LinkViewTemplate {
     color: number | string;
+    thickness?: number;
 }
 
 export type LinkTemplateProvider = (types: string[]) => LinkViewTemplate;

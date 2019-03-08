@@ -89,14 +89,6 @@ export class NodeView implements DiagramElementView<Node> {
         this.update();
     }
 
-    public getMesh(): THREE.Object3D | undefined {
-        return this.mesh;
-    }
-
-    public getOverlay(): THREE.CSS3DSprite | undefined {
-        return this.overlay;
-    }
-
     public getBoundingBox(): THREE.Box3 {
         return this.boundingBox;
     }

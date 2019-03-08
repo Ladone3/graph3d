@@ -5,11 +5,12 @@ import { KeyHandler } from './utils/keyHandler';
 import { NodeTemplateProvider, LinkTemplateProvider } from './templates';
 import { MouseEditor } from './editors/mouseEditor';
 import { DiagramModel } from './models/diagramModel';
-import { DiagramView } from './views/diagramView';
+import { DiagramView, ViewOptions } from './views/diagramView';
 import { Link } from './models/link';
 import { Node } from './models/node';
 import { isTypesEqual } from './utils';
 import { Vector2D, Vector3D } from './models/primitives';
+import { applyForceLayout3d, applyRandomLayout } from './layout/layouts';
 
 export interface GraphElements {
     nodes: Node[];
@@ -31,11 +32,6 @@ export interface L3GraphProps {
     viewControllers?: ViewControllersSet;
     onComponentMount?: (graph: L3Graph) => void;
     onComponentUnmount?: (graph: L3Graph) => void;
-}
-
-export interface ViewOptions {
-    nodeTemplateProvider?: NodeTemplateProvider;
-    linkTemplateProvider?: LinkTemplateProvider;
 }
 
 export interface State {
@@ -175,6 +171,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
     private onMouseDown(event: React.MouseEvent<HTMLDivElement>) {
         if (this.mouseEditor.onMouseDown(event.nativeEvent)) {
             this.viewController.onMouseDown(event.nativeEvent);
+            this.model.selection = new Set();
         }
     }
 
@@ -215,19 +212,31 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                 <DiagramView
                     model={this.model}
                     onViewMount={this.onViewMount}
-                    nodeTemplateProvider={viewOptions.nodeTemplateProvider}
-                    linkTemplateProvider={viewOptions.linkTemplateProvider}>
+                    viewOptions={viewOptions}>
                 </DiagramView>
             </div>
             <div className='o3d-toolbar'>
                 {this.viewControllers.map((viewController, index) => {
                     return <button
+                        title={viewController.label}
                         key={`controller-button-${index}`}
                         className={this.viewController === viewController ? 'o3d-selected' : ''}
                         onClick={() => { this.viewController = viewController; }}>
                         {viewController.label[0]}
                     </button>;
                 })}
+                <button
+                    id='o3d-force-layout-button'
+                    title='Force layaout'
+                    onClick={() => { applyForceLayout3d(this.model.graph); }}>
+                    FL
+                </button>
+                <button
+                    id='o3d-random-layout-button'
+                    title='Random layaout'
+                    onClick={() => { applyRandomLayout(this.model.graph); }}>
+                    RL
+                </button>
             </div>
         </div>;
     }

@@ -4,7 +4,7 @@ import { Node } from '../models/node';
 import { Selection } from '../models/selection';
 import { isNode } from '../models/graphModel';
 import { Vector3D } from '../models/primitives';
-import { vector3DToTreeVector3 } from '../utils';
+import { vector3DToTreeVector3, calcBounds } from '../utils';
 
 const SELECTION_PADDING = 15;
 
@@ -32,38 +32,21 @@ export class SelectionView implements DiagramElementView<Selection> {
     }
 
     public update() {
-        const selecedNodes: Node[] = []; // for a while
-        this.model.selection.forEach(el => {
-            if (isNode(el)) {
-                selecedNodes.push(el);
+        const points: Vector3D[] = []; // for a while
+        this.model.selection.forEach(element => {
+            if (isNode(element)) {
+                points.push(element.position);
             }
         });
-        if (selecedNodes.length > 0) {
+        if (points.length > 0) {
             this.mesh.visible = true;
-            const averagePos: Vector3D = {x: 0, y: 0, z: 0};
-            const minPos: Vector3D = {x: Infinity, y: Infinity, z: Infinity};
-            const maxPos: Vector3D = {x: -Infinity, y: -Infinity, z: -Infinity};
-            for (const node of selecedNodes) {
-                const p = node.position;
-                averagePos.x += p.x;
-                averagePos.y += p.y;
-                averagePos.z += p.z;
-                minPos.x = Math.min(minPos.x, p.x);
-                minPos.y = Math.min(minPos.y, p.y);
-                minPos.z = Math.min(minPos.z, p.z);
-                maxPos.x = Math.max(maxPos.x, p.x);
-                maxPos.y = Math.max(maxPos.y, p.y);
-                maxPos.z = Math.max(maxPos.z, p.z);
-            }
-            averagePos.x /= selecedNodes.length;
-            averagePos.y /= selecedNodes.length;
-            averagePos.z /= selecedNodes.length;
+            const {min, max, average} = calcBounds(points);
 
-            this.mesh.position.set(averagePos.x, averagePos.y, averagePos.z);
+            this.mesh.position.set(average.x, average.y, average.z);
             this.mesh.scale.set(
-                maxPos.x - minPos.x + SELECTION_PADDING * 2,
-                maxPos.y - minPos.y + SELECTION_PADDING * 2,
-                maxPos.z - minPos.z + SELECTION_PADDING * 2
+                max.x - min.x + SELECTION_PADDING * 2,
+                max.y - min.y + SELECTION_PADDING * 2,
+                max.z - min.z + SELECTION_PADDING * 2
             );
         } else {
             this.mesh.visible = false;

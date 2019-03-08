@@ -5,13 +5,13 @@ import {
     applyForceLayout3d,
     MeshObj,
     NodeViewTemplate,
-    Node,
-    getColorByTypes,
 } from '../index';
 import { generateData } from './generateData';
 
 require('./example.scss');
-const shape3d = require<string>('./portalCube.obj');
+const cubePortal = require<string>('./portalCube.obj');
+const cat3d = require<string>('./cat.obj');
+const person3d = require<string>('./dummy_obj.obj');
 
 export interface NodeData {
     label: string;
@@ -30,23 +30,38 @@ export class NodeOverlay extends React.Component<NodeData> {
 const rootHtml = document.getElementById('rootHtml');
 
 const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
-    mesh: (node: {label: string}) => ({
-        shape: [
-            'cube',
-            'sphere',
-            'cone',
-            'cylinder',
-            'dodecahedron',
-            'torus',
-            'tetrahedron',
-            'plane',
-        ][Math.round(Math.random() * 7)],
-    }),
+    mesh: (node: {label: string}) => {
+        const shapeNumber = Math.round(Math.random() * 9);
+        if (shapeNumber === 0) {
+            return {
+                obj: person3d,
+                scale: 0.2,
+            };
+        } else if (shapeNumber === 1) {
+            return {
+                obj: cat3d,
+                scale: 1,
+            };
+        } else {
+            return {
+                shape: [
+                    'cube',
+                    'sphere',
+                    'cone',
+                    'cylinder',
+                    'dodecahedron',
+                    'torus',
+                    'tetrahedron',
+                    'plane',
+                ][Math.round(Math.random() * 7)],
+            };
+        }
+    },
 };
 
 const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
     mesh: (node: {label: string}): MeshObj => ({
-        obj: shape3d,
+        obj: cubePortal,
     }),
     overlay: {
         get: (node: {label: string}) => {
@@ -69,7 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             linkTemplateProvider: () => ({
                 color: 'green',
+                thickness: 2,
             }),
+            // simpleLinks: true,
         },
         graph: graphElements,
         onComponentMount: onComponentMount,

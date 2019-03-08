@@ -9,12 +9,14 @@ import {
     LinkTemplateProvider,
     DEFAULT_LINK_TEMPLATE_PROVIDER,
 } from '../templates';
+import { SimpleLinkView } from './simpleLinkView';
 
 export interface GraphViewProps {
     graphModel: GraphModel;
     scene: THREE.Scene;
     nodeTemplateProvider?: NodeTemplateProvider;
     linkTemplateProvider?: LinkTemplateProvider;
+    simpleLinks?: boolean;
 }
 
 export class GraphView {
@@ -73,7 +75,11 @@ export class GraphView {
             return new NodeView(model, templateProvider(model.types));
         } else if (isLink(model)) {
             const templateProvider = this.props.linkTemplateProvider || DEFAULT_LINK_TEMPLATE_PROVIDER;
-            return new LinkView(model, templateProvider(model.types));
+            if (this.props.simpleLinks) {
+                return new SimpleLinkView(model, templateProvider(model.types));
+            } else {
+                return new LinkView(model, templateProvider(model.types));
+            }
         } else {
             return undefined;
         }
