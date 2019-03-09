@@ -1,14 +1,16 @@
 import { Vector2D } from '../models/primitives';
-import { ViewController } from './viewController';
-import { handleDragging } from '../utils';
+import {
+    ViewController,
+    ROTATION_DECREASE_SPEED,
+    KEY_ROTATION_DECREASE_SPEED,
+    ZOOM_STEP_MULTIPLAYER,
+    LIMIT_OPACITY,
+    ZERO_POSITION,
+} from './viewController';
+import { handleDragging, vector3DToTreeVector3, KEY_CODES } from '../utils';
 
 import * as _ from 'lodash';
 import { DiagramView } from '../views/diagramView';
-
-const ZOOM_STEP_MULTIPLAYER = 0.3;
-const ROTATION_DECREASE_SPEED = 100;
-const KEY_ROTATION_DECREASE_SPEED = 10;
-const MAX_DISTANCE = 500;
 
 export class SphericalViewController implements ViewController {
     readonly id: string;
@@ -39,15 +41,20 @@ export class SphericalViewController implements ViewController {
         let x = 0;
         let y = 0;
 
-        if (keyMap.has(37) && !keyMap.has(39)) {
-            x = -1;
-        } else if (keyMap.has(39) && !keyMap.has(37)) {
+        if (keyMap.has(KEY_CODES.LEFT) && !keyMap.has(KEY_CODES.RIGHT)) {
             x = 1;
+        } else if (keyMap.has(KEY_CODES.RIGHT) && !keyMap.has(KEY_CODES.LEFT)) {
+            x = -1;
         }
-        if (keyMap.has(38) && !keyMap.has(40)) {
-            y = -1;
-        } else if (keyMap.has(40) && !keyMap.has(38)) {
+        if (keyMap.has(KEY_CODES.DOWN) && !keyMap.has(KEY_CODES.UP)) {
             y = 1;
+        } else if (keyMap.has(KEY_CODES.UP) && !keyMap.has(KEY_CODES.DOWN)) {
+            y = -1;
+        }
+        if (keyMap.has(KEY_CODES.MINUS) && !keyMap.has(KEY_CODES.PLUS)) {
+            this.zoom(-10);
+        } else if (keyMap.has(KEY_CODES.PLUS) && !keyMap.has(KEY_CODES.MINUS)) {
+            this.zoom(10);
         }
 
         this.setCameraAngle({
@@ -58,22 +65,23 @@ export class SphericalViewController implements ViewController {
 
     onMouseWheel(event: MouseWheelEvent) {
         const delta = event.deltaY || event.deltaX || event.deltaZ;
+        this.zoom(delta);
+    }
+
+    zoom(diff: number) {
         const curDistance = this.cameraDistance;
         this.setCameraDistance(
-            curDistance + delta * (curDistance / MAX_DISTANCE) * ZOOM_STEP_MULTIPLAYER,
+            curDistance + diff * ZOOM_STEP_MULTIPLAYER,
         );
     }
 
     refreshCamera() {
-        const {position, focusDirection} = this.view.cameraState;
-        this.cameraDistance = Math.sqrt(
-            Math.pow(position.x, 2) +
-            Math.pow(position.y, 2) +
-            Math.pow(position.z, 2)
-        );
+        const {position} = this.view.cameraState;
+        const curTreePos = vector3DToTreeVector3(position);
+        const distance = curTreePos.distanceTo(ZERO_POSITION);
+        this.cameraDistance = this.limitDistance(distance);
 
         const y = Math.asin(position.y / this.cameraDistance);
-        // x = Math.cos(this.cameraAngle.x) * this.cameraDistance * Math.cos(this.cameraAngle.y)
         let x = Math.acos(
             position.x / (
                 Math.cos(y) * this.cameraDistance
@@ -108,7 +116,7 @@ export class SphericalViewController implements ViewController {
     }
 
     protected setCameraDistance(distance: number) {
-        this.cameraDistance = Math.max(0.001, distance);
+        this.cameraDistance = this.limitDistance(distance);
         this.updateCameraPosition();
     }
 
@@ -122,5 +130,9 @@ export class SphericalViewController implements ViewController {
             position: cameraPosition,
             focusDirection: this.view.scene.position,
         };
+    }
+
+    protected limitDistance(distance: number) {
+        return Math.min(Math.max(0.001, distance), this.view.screenParameters.FAR / 2 - LIMIT_OPACITY);
     }
 }

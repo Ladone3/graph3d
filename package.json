@@ -15,10 +15,10 @@
     "lint": "./node_modules/.bin/tslint -c tslint.json 'src/**/*.ts' 'src/**/*.tsx' -t stylish"
   },
   "dependencies": {
-    "@types/lodash": "^4.14.110",
-    "@types/three": "^0.89.10",
-    "lodash": "~4.17.10",
-    "three": "^0.99.0",
+    "@types/lodash": "4.14.110",
+    "@types/three": "0.89.10",
+    "lodash": "4.17.10",
+    "three": "0.99.0",
     "webcola": "~3.3.8"
   },
   "peerDependencies": {

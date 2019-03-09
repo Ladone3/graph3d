@@ -104,3 +104,40 @@ export function calcBounds(points: Vector3D[]) {
         average: averagePos,
     };
 }
+
+export function normalize(vector: Vector3D): Vector3D {
+    const norma = Math.max(
+        Math.abs(vector.x),
+        Math.abs(vector.y),
+        Math.abs(vector.z),
+    );
+    return {
+        x: vector.x / norma,
+        y: vector.y / norma,
+        z: vector.z / norma,
+    };
+}
+
+export function inverse(vector: Vector3D): Vector3D {
+    return {
+        x: -vector.x,
+        y: -vector.y,
+        z: -vector.z,
+    };
+}
+
+export function miltiply(vector: Vector3D, k: number): Vector3D {
+    return {
+        x: vector.x * k,
+        y: vector.y * k,
+        z: vector.z * k,
+    };
+}
+
+export function sum(vector1: Vector3D, vector2: Vector3D): Vector3D {
+    return {
+        x: vector1.x + vector2.x,
+        y: vector1.y + vector2.y,
+        z: vector1.z + vector2.z,
+    };
+}

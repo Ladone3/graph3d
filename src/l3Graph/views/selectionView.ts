@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 import { DiagramElementView } from './diagramElementView';
-import { Node } from '../models/node';
 import { Selection } from '../models/selection';
 import { isNode } from '../models/graphModel';
 import { Vector3D } from '../models/primitives';
-import { vector3DToTreeVector3, calcBounds } from '../utils';
+import { calcBounds } from '../utils';
 
 const SELECTION_PADDING = 15;
 
@@ -32,7 +31,7 @@ export class SelectionView implements DiagramElementView<Selection> {
     }
 
     public update() {
-        const points: Vector3D[] = []; // for a while
+        const points: Vector3D[] = [];
         this.model.selection.forEach(element => {
             if (isNode(element)) {
                 points.push(element.position);

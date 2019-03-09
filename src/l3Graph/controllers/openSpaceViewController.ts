@@ -1,14 +1,15 @@
 import { Vector2D, Vector3D } from '../models/primitives';
-import { ViewController } from './viewController';
-import { handleDragging } from '../utils';
+import {
+    ViewController,
+    ROTATION_DECREASE_SPEED,
+    CAMERA_STEP_SPEED,
+    ZERO_POSITION,
+    LIMIT_OPACITY,
+} from './viewController';
+import { handleDragging, normalize, vector3DToTreeVector3, inverse, miltiply, sum, KEY_CODES } from '../utils';
 
 import * as _ from 'lodash';
 import { DiagramView } from '../views/diagramView';
-
-const ZOOM_STEP_MULTIPLAYER = 0.3;
-const ROTATION_DECREASE_SPEED = 300;
-const KEY_ROTATION_DECREASE_SPEED = 10;
-const CAMERA_STEP_SPEED = 20;
 
 export class OpenSpaceViewController implements ViewController {
     readonly id: string;
@@ -43,14 +44,14 @@ export class OpenSpaceViewController implements ViewController {
     }
 
     onKeyPressed(keyMap: Set<number>) {
-        if (keyMap.has(37) && !keyMap.has(39)) {
+        if (keyMap.has(KEY_CODES.LEFT) && !keyMap.has(KEY_CODES.RIGHT)) {
             this.stepLeft();
-        } else if (keyMap.has(39) && !keyMap.has(37)) {
+        } else if (keyMap.has(KEY_CODES.RIGHT) && !keyMap.has(KEY_CODES.LEFT)) {
             this.stepRight();
         }
-        if (keyMap.has(38) && !keyMap.has(40)) {
+        if (keyMap.has(KEY_CODES.DOWN) && !keyMap.has(KEY_CODES.UP)) {
             this.stepBack();
-        } else if (keyMap.has(40) && !keyMap.has(38)) {
+        } else if (keyMap.has(KEY_CODES.UP) && !keyMap.has(KEY_CODES.DOWN)) {
             this.stepForward();
         }
     }
@@ -66,42 +67,41 @@ export class OpenSpaceViewController implements ViewController {
 
     private stepLeft() {
         const cameraDirection = this.getCameraDirection();
-        const xAngle = 1 / cameraDirection.x;
-        this.position = {
+        this.position = this.limitPosition({
             x: this.position.x + cameraDirection.z * CAMERA_STEP_SPEED,
             y: this.position.y,
             z: this.position.z - cameraDirection.x * CAMERA_STEP_SPEED,
-        };
+        });
         this.updateCameraPosition();
     }
 
     private stepRight() {
         const cameraDirection = this.getCameraDirection();
-        this.position = {
+        this.position = this.limitPosition({
             x: this.position.x - cameraDirection.z * CAMERA_STEP_SPEED,
             y: this.position.y,
             z: this.position.z + cameraDirection.x * CAMERA_STEP_SPEED,
-        };
+        });
         this.updateCameraPosition();
     }
 
     private stepForward() {
         const cameraDirection = this.getCameraDirection();
-        this.position = {
+        this.position = this.limitPosition({
             x: this.position.x - cameraDirection.x * CAMERA_STEP_SPEED,
             y: this.position.y - cameraDirection.y * CAMERA_STEP_SPEED,
             z: this.position.z - cameraDirection.z * CAMERA_STEP_SPEED,
-        };
+        });
         this.updateCameraPosition();
     }
 
     private stepBack() {
         const cameraDirection = this.getCameraDirection();
-        this.position = {
+        this.position = this.limitPosition({
             x: this.position.x + cameraDirection.x * CAMERA_STEP_SPEED,
             y: this.position.y + cameraDirection.y * CAMERA_STEP_SPEED,
             z: this.position.z + cameraDirection.z * CAMERA_STEP_SPEED,
-        };
+        });
         this.updateCameraPosition();
     }
 
@@ -110,40 +110,17 @@ export class OpenSpaceViewController implements ViewController {
     }
 
     refreshCamera() {
-        const {position, focusDirection} = this.view.cameraState;
+        const {position} = this.view.cameraState;
+        this.position = position;
 
-        // const cameraDirection = {
-        //     x: Math.cos(this.cameraAngle.x) * Math.cos(this.cameraAngle.y),
-        //     y: Math.sin(this.cameraAngle.y),
-        //     z: Math.sin(this.cameraAngle.x) * Math.cos(this.cameraAngle.y),
-        // };
+        const curTreePos = vector3DToTreeVector3(position);
+        const distance = curTreePos.distanceTo(ZERO_POSITION);
 
-        // const cameraFocus = {
-        //     x: focusDirection.x - position.x,
-        //     y: focusDirection.y - position.y,
-        //     z: focusDirection.z - position.z,
-        // };
-        // const norma = Math.max(
-        //     Math.abs(cameraFocus.x),
-        //     Math.abs(cameraFocus.y),
-        //     Math.abs(cameraFocus.z),
-        // );
-        // const cameraDirection = {
-        //     x: cameraFocus.x / norma,
-        //     y: cameraFocus.y / norma,
-        //     z: cameraFocus.z / norma,
-        // };
-
-        // cameraDirection.x = Math.cos(this.cameraAngle.x) * Math.cos(this.cameraAngle.y);
-        // cameraDirection.y = Math.sin(this.cameraAngle.y);
-        // cameraDirection.z = Math.sin(this.cameraAngle.x) * Math.cos(this.cameraAngle.y)
-        // const y = Math.asin(cameraDirection.y);
-        // const x = Math.acos(cameraDirection.x / Math.cos(y)) || Math.asin(cameraDirection.z / Math.cos(y));
-        // this.cameraAngle = { x, y };
-
-        // this.cameraAngle = { x, y };
-        this.position = { x: 0, y: 0, z: 0 };
-        this.cameraAngle = { x: 10, y: 0 };
+        const y = -Math.asin(position.y / distance);
+        const viewDir = normalize(inverse(curTreePos));
+        const x = Math.atan2(viewDir.z, viewDir.x);
+        // const y = Math.atan2(x, viewDir.y) + Math.PI / 2;
+        this.cameraAngle = { x: x, y: y };
 
         this.updateCameraPosition();
     }
@@ -168,17 +145,18 @@ export class OpenSpaceViewController implements ViewController {
             focusDirection,
         };
     }
-}
 
-function normalize(vector: Vector3D): Vector3D {
-    const norma = Math.max(
-        Math.abs(vector.x),
-        Math.abs(vector.y),
-        Math.abs(vector.z),
-    );
-    return {
-        x: vector.x / norma,
-        y: vector.y / norma,
-        z: vector.z / norma,
-    };
+    protected limitPosition(targetPosition: Vector3D): Vector3D {
+        const maxRadius = this.view.screenParameters.FAR / 2 - LIMIT_OPACITY;
+        const curTreePos = vector3DToTreeVector3(targetPosition);
+        const distanceToTheCenter = curTreePos.distanceTo(ZERO_POSITION);
+        if (distanceToTheCenter > maxRadius) {
+            const directionFromTheCenter = normalize(targetPosition);
+            const directionToTheCenter = inverse(directionFromTheCenter);
+            const diffDirection = miltiply(directionToTheCenter, distanceToTheCenter - maxRadius);
+            return sum(targetPosition, diffDirection);
+        } else {
+            return targetPosition;
+        }
+    }
 }

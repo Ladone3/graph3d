@@ -8,10 +8,11 @@ import { Vector2D } from '../models/primitives';
 import { ArrowHelper } from '../models/arrowHelper';
 import { Element } from '../models/graphModel';
 
+const WHEEL_SPEED = 0.25;
+
 export class MouseEditor {
     private raycaster: THREE.Raycaster;
     private arrowHelper: ArrowHelper;
-    private helperPlane: THREE.Mesh;
 
     constructor(
         private diagramhModel: DiagramModel,
@@ -19,47 +20,35 @@ export class MouseEditor {
     ) {
         this.raycaster = new THREE.Raycaster();
         this.arrowHelper = new ArrowHelper();
-        this.helperPlane = new THREE.Mesh(
-            new THREE.PlaneBufferGeometry(1000, 1000, 8, 8),
-            new THREE.MeshBasicMaterial({alphaTest: 0, visible: false}),
-        );
-        this.diagramView.scene.add(this.helperPlane);
         this.diagramhModel.widgets.registerWidget(this.arrowHelper);
     }
 
     onMouseDown(event: MouseEvent) {
         const clickPoint = this.calcRay(event);
         const draggedNode = this.getIntersectedObject(clickPoint);
-        const helperPlane = this.helperPlane;
         if (draggedNode) {
-            const selection = new Set<Element>();
-            selection.add(draggedNode);
-            this.diagramhModel.selection = selection;
-            this.helperPlane.position.copy(vector3DToTreeVector3(draggedNode.position));
-            helperPlane.lookAt(this.diagramView.camera.position);
+            const nodeTreePos = vector3DToTreeVector3(draggedNode.position);
+            const cameraPos = this.diagramView.camera.position;
+            let distanceToNode = nodeTreePos.distanceTo(cameraPos);
+
+            this.diagramhModel.selection = new Set<Element>([draggedNode]);
             this.arrowHelper.focusNode = draggedNode;
-            this.diagramView.renderGraph();
 
-            let planeIntersects = this.raycaster.intersectObject(helperPlane);
-            const startPoint = new THREE.Vector3().copy(
-                planeIntersects[0].point
-            ).sub(helperPlane.position);
+            const onWheel = (wheelEvent: Event) => {
+                const e = wheelEvent as MouseWheelEvent;
+                distanceToNode -= (e.deltaX || e.deltaY || e.deltaZ) * WHEEL_SPEED;
+                wheelEvent.stopPropagation();
+                draggedNode.position = this.diagramView.mouseTo3dPos(e, distanceToNode);
+            };
+            document.body.addEventListener('mousewheel', onWheel);
 
-            handleDragging(event, (dragEvent, offset) => {
-                helperPlane.position.copy(vector3DToTreeVector3(draggedNode.position));
-                const newDirection = this.calcRay(dragEvent);
-
-                this.raycaster.set(
-                    this.diagramView.camera.position,
-                    newDirection.sub(this.diagramView.camera.position).normalize(),
-                );
-
-                planeIntersects = this.raycaster.intersectObject(helperPlane);
-                const curPoint = planeIntersects[0].point.sub(startPoint);
-                draggedNode.position = treeVector3ToVector3D(curPoint);
+            handleDragging(event, (dragEvent) => {
+                draggedNode.position = this.diagramView.mouseTo3dPos(dragEvent, distanceToNode);
             }, () => {
                 this.arrowHelper.focusNode = undefined;
+                document.body.removeEventListener('mousewheel', onWheel);
             });
+
             return false;
         }
         return true;

@@ -64,8 +64,8 @@ export class DiagramView extends React.Component<DiagramViewProps> {
     mouseTo3dPos(event: MouseEvent, distanceFromScreen: number = 600): Vector3D {
         const bbox = this.meshHtmlContainer.getBoundingClientRect();
         return this.clientPosTo3dPos({
-            x: event.clientX + bbox.left,
-            y: event.clientY + bbox.top,
+            x: event.clientX - bbox.left,
+            y: event.clientY - bbox.top,
         }, distanceFromScreen);
     }
 
@@ -170,17 +170,24 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.meshHtmlContainer.appendChild(this.renderer.domElement);
         this.overlayHtmlContainer.appendChild(this.overlayRenderer.domElement);
 
-        // Helper planes
-        const planeGeometry = new THREE.PlaneGeometry(800, 800, 10, 10);
-        const planeMaterial = new THREE.MeshBasicMaterial({
-            wireframe: true, color: 0x000000, transparent: true, opacity: 0.5,
+        // Helper plane
+        // const planeGeometry = new THREE.PlaneGeometry(800, 800, 10, 10);
+        // const planeMaterial = new THREE.MeshBasicMaterial({
+        //     wireframe: true, color: 0x000000, transparent: true, opacity: 0.5,
+        // });
+        // const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        // plane.rotation.x = -0.5 * Math.PI;
+        // plane.position.set(0, -300, 0);
+        // this.scene.add(plane);
+
+        // Helper sphere
+        const sphereGeometry = new THREE.SphereGeometry(this.screenParameters.FAR / 2, 50, 50);
+        const sphereMaterial = new THREE.MeshBasicMaterial({
+            wireframe: true, color: 0x000000, transparent: true, opacity: 0.1,
         });
-        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-        plane.rotation.x = -0.5 * Math.PI;
-        plane.position.x = 0;
-        plane.position.y = -300;
-        plane.position.z = 0;
-        this.scene.add(plane);
+        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.position.set(0, 0, 0);
+        this.scene.add(sphere);
 
         // Finalize
 

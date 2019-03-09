@@ -181,7 +181,9 @@ export function applyRandomLayout(graph: GraphModel, maxDist: number = 500) {
     });
 }
 
-export function applyForceLayout3d(graph: GraphModel, iterations?: number, linkLength?: number) {
+export function applyForceLayout3d(
+    graph: GraphModel, iterations: number = 1, linkLength: number = PREFFERED_LINK_LENGTH,
+) {
     const { nodes, links } = graph;
     const proccessMap: { [ id: string]: number } = {};
     const layoutNodes: LayoutNode3D[] = [];

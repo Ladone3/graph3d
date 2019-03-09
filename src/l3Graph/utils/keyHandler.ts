@@ -6,6 +6,15 @@ export interface KeyHandlerEvents {
     'keyUp': Set<number>;
 }
 
+export const KEY_CODES = {
+    UP: 40,
+    DOWN: 38,
+    LEFT: 37,
+    RIGHT: 39,
+    PLUS: 109,
+    MINUS: 107,
+};
+
 export class KeyHandler extends Subscribable<KeyHandlerEvents> {
     private keyMap: Set<number> = new Set();
     private cancellation: Cancellation | undefined;
@@ -27,7 +36,7 @@ export class KeyHandler extends Subscribable<KeyHandlerEvents> {
         this.keyMap.add(key);
 
         const newSize = this.keyMap.size;
-        if (newSize > 0 && !this.cancellation) {
+        if (newSize > size && !this.cancellation) {
             this.cancellation = this.start();
             this.trigger('keyDown', this.keyMap);
         }

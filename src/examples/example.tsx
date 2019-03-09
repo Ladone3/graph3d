@@ -93,6 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }), rootHtml);
 
     function onComponentMount(graph: L3Graph) {
-        applyForceLayout3d(graph.model.graph, 30);
+        applyForceLayout3d(graph.model.graph, 30, 100);
     }
 });
