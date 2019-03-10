@@ -27,17 +27,14 @@ export class WidgetsView {
         this.views = new Map();
         this.widgetsModel = props.widgetsModel;
         this.scene = props.scene;
-        this.widgetsModel.widgets.forEach(widget => this.addWidget(widget));
-        this.subscribeOnModel();
+        this.widgetsModel.widgets.forEach(widget => this.addWidgetView(widget));
     }
 
-    private subscribeOnModel() {
-        this.widgetsModel.on('add:widget', event => {
-            this.addWidget(event.data);
-        });
-    }
-
-    private addWidget(widget: Widget) {
+    public addWidgetView(widget: Widget) {
+        const widgetViewExists = this.views.get(widget.widgetId);
+        if (widgetViewExists) {
+            return; // We already have view for this widget
+        }
         const view = this.findViewForWidget(widget);
 
         if (view) {
@@ -49,6 +46,20 @@ export class WidgetsView {
             }
             this.views.set(widget.widgetId, view);
         }
+    }
+
+    public removeWidgetView(widget: Widget) {
+        const view = this.views.get(widget.widgetId);
+        if (view) {
+            if (view.mesh) {
+                this.scene.remove(view.mesh);
+            }
+
+            if (view.overlay) {
+                this.scene.remove(view.overlay);
+            }
+        }
+        this.views.delete(widget.widgetId);
     }
 
     private findViewForWidget(model: Widget): DiagramElementView<any> | undefined {
@@ -64,7 +75,10 @@ export class WidgetsView {
     update(specificIds?: string[]) {
         if (specificIds) {
             for (const id of specificIds) {
-                this.views.get(id).update();
+                const view = this.views.get(id);
+                if (view) { // View is added asynchronously
+                    view.update();
+                }
             }
         } else {
             this.views.forEach(view => {

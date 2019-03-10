@@ -69,3 +69,7 @@ export class Link extends Subscribable<LinkEvents> {
         this.trigger('remove');
     }
 }
+
+export function getGroupId(link: Link): string {
+    return [link._sourceId, link._targetId].sort().join('<==>') + `:${LINK_HASH_POSTFIX}`;
+}

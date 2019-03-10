@@ -1,5 +1,5 @@
 import { Node } from './node';
-import { Link } from './link';
+import { Link, getGroupId } from './link';
 import { Subscribable } from '../utils/subscribeable';
 
 export type Element = Node | Link;
@@ -12,17 +12,54 @@ export function isLink(element: Element): element is Link {
     return element instanceof Link;
 }
 
+export interface LinkGroup { targetId: string; sourceId: string; links: Link[]; }
+
 export interface GraphModelEvents {
     'add:elements': Element[];
     'remove:elements': Element[];
-    'change:element': Element;
-    'refresh:element': Element;
+    'update:element': Element;
 }
 
 export class GraphModel extends Subscribable<GraphModelEvents> {
     public nodes: Map<string, Node> = new Map();
     public links: Map<string, Link> = new Map();
     public fullUpdateList: Set<string> = new Set();
+
+    public alignedLinksMap: Map<string, LinkGroup> = new Map();
+    public getGroup(link: Link): LinkGroup {
+        const groupId = getGroupId(link);
+        return this.alignedLinksMap.get(groupId);
+    }
+    public addToGroup(link: Link) {
+        const groupId = getGroupId(link);
+        if (!this.alignedLinksMap.has(groupId)) {
+            this.alignedLinksMap.set(groupId, {
+                sourceId: link._sourceId,
+                targetId: link._targetId,
+                links: [link],
+            });
+        } else {
+            const group = this.alignedLinksMap.get(groupId);
+            group.links.push(link);
+            for (const l of group.links) {
+                if (l !== link) {
+                    this.fullUpdateList.add(l.id);
+                    l.forceUpdate();
+                }
+            }
+        }
+    }
+    public removeFromGroup(link: Link) {
+        const groupId = getGroupId(link);
+        if (this.alignedLinksMap.has(groupId)) {
+            const alignedLinks = this.alignedLinksMap.get(groupId);
+            const index = alignedLinks.links.indexOf(link);
+            alignedLinks.links.splice(index, 1);
+            if (alignedLinks.links.length === 0) {
+                this.alignedLinksMap.delete(groupId);
+            }
+        }
+    }
 
     public getElementById(id: string) {
         return this.nodes.get(id) || this.links.get(id);
@@ -36,6 +73,7 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
                 this.subscribeOnNode(element);
                 newElements.push(element);
             } else if (isLink(element) && !this.links.has(element.id)) {
+                this.addToGroup(element);
                 element.source = this.nodes.get(element._sourceId);
                 element.target = this.nodes.get(element._targetId);
                 if (element.source && element.target) {
@@ -50,7 +88,7 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         this.trigger('add:elements', newElements);
     }
 
-    public updateElements(elements: Element[]) {
+    public updateElementsData(elements: Element[]) {
         for (const element of elements) {
             this.fullUpdateList.add(element.id);
             if (isNode(element)) {
@@ -66,14 +104,14 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
     }
 
     private subscribeOnNode(element: Node) {
-        element.on('force-update', event => this.performNodeUpdate(element));
-        element.on('change:position', event => this.performNodeUpdate(element));
-        element.on('remove', event => this.removeElements([element]));
+        element.on('force-update', () => this.performNodeUpdate(element));
+        element.on('change:position', () => this.performNodeUpdate(element));
+        element.on('remove', () => this.removeElements([element]));
     }
 
     private subscribeOnLink(element: Link) {
-        element.on('force-update', event => this.performLinkUpdate(element));
-        element.on('remove', event => this.removeElements([element]));
+        element.on('force-update', () => this.performLinkUpdate(element));
+        element.on('remove', () => this.removeElements([element]));
     }
 
     private unsubscribeFromElement(element: Element) {
@@ -85,17 +123,17 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
     }
 
     public performNodeUpdate(node: Node) {
-        this.trigger('change:element', node);
+        this.trigger('update:element', node);
         node.incomingLinks.forEach(link => {
-            this.trigger('change:element', link);
+            this.trigger('update:element', link);
         });
         node.outgoingLinks.forEach(link => {
-            this.trigger('change:element', link);
+            this.trigger('update:element', link);
         });
     }
 
     public performLinkUpdate(link: Link) {
-        this.trigger('change:element', link);
+        this.trigger('update:element', link);
     }
 
     public removeNodesByIds(nodeIds: string[]) {
@@ -121,13 +159,13 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
     }
 
     public removeElements(elements: Element[]) {
-        const elementsMap: { [id: string]: boolean } = {};
         for (const element of elements) {
             this.unsubscribeFromElement(element);
             if (isNode(element)) {
                 this.nodes.delete(element.id);
             } else if (isLink(element)) {
                 this.links.delete(element.id);
+                this.removeFromGroup(element);
             }
         }
         this.trigger('remove:elements', elements);

@@ -7,6 +7,7 @@ export const ZERO_POSITION = new Vector3(0, 0, 0);
 export const ZOOM_STEP_MULTIPLAYER = 1;
 export const KEY_ROTATION_DECREASE_SPEED = 10;
 export const LIMIT_OPACITY = 100;
+export const MIN_DRAG_OFFSET = 5;
 
 export interface ViewController {
     id: string;

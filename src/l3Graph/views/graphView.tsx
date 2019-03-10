@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GraphModel, Element, isNode, isLink } from '../models/graphModel';
+import { GraphModel, Element, isNode, isLink, LinkGroup } from '../models/graphModel';
 import { DiagramElementView } from './diagramElementView';
 import { NodeView } from './nodeView';
 import { LinkView } from './linkView';
@@ -10,6 +10,9 @@ import {
     DEFAULT_LINK_TEMPLATE_PROVIDER,
 } from '../templates';
 import { SimpleLinkView } from './simpleLinkView';
+import { Subscribable } from '../utils';
+import { Node } from '../models/node';
+import { Link } from '../models/link';
 
 export interface GraphViewProps {
     graphModel: GraphModel;
@@ -19,7 +22,11 @@ export interface GraphViewProps {
     simpleLinks?: boolean;
 }
 
-export class GraphView {
+export interface GraphViewEvents {
+    'click:overlay': {event: MouseEvent; target: Element};
+}
+
+export class GraphView extends Subscribable<GraphViewEvents> {
     camera: THREE.PerspectiveCamera;
     scene: THREE.Scene;
     views: Map<string, DiagramElementView<Element>>;
@@ -31,6 +38,7 @@ export class GraphView {
     overlayHtmlContainer: HTMLElement;
 
     constructor(private props: GraphViewProps) {
+        super();
         this.views = new Map();
         this.scene = props.scene;
         this.graphModel = props.graphModel;
@@ -39,16 +47,28 @@ export class GraphView {
     }
 
     public addElementView(element: Element) {
-        const view = this.findViewForElement(element);
-
+        const elementViewExists = this.views.get(element.id);
+        if (elementViewExists) {
+            return; // We already have view for this element
+        }
+        let view: DiagramElementView<Element>;
+        if (isNode(element)) {
+            view = this.createNodeView(element);
+        } else {
+            const group = this.graphModel.getGroup(element);
+            view = this.createLinkView(element, group);
+        }
         if (view) {
             const mesh = view.mesh;
             if (mesh) {
                 this.scene.add(mesh);
             }
-
             const overlay = view.overlay;
             if (overlay) {
+                const htmlElement: HTMLElement = overlay.element.firstChild;
+                htmlElement.addEventListener('mousedown', (event: Event) => {
+                    this.trigger('click:overlay', {event: event as MouseEvent, target: element});
+                });
                 this.scene.add(overlay);
             }
             this.views.set(element.id, view);
@@ -57,7 +77,6 @@ export class GraphView {
 
     public removeElementView(element: Element) {
         const view = this.views.get(element.id);
-
         if (view) {
             if (view.mesh) {
                 this.scene.remove(view.mesh);
@@ -67,21 +86,24 @@ export class GraphView {
                 this.scene.remove(view.overlay);
             }
         }
+        this.views.delete(element.id);
     }
 
-    private findViewForElement(model: Element): DiagramElementView<Element> | undefined {
-        if (isNode(model)) {
-            const templateProvider =  this.props.nodeTemplateProvider || DEFAULT_NODE_TEMPLATE_PROVIDER;
-            return new NodeView(model, templateProvider(model.types));
-        } else if (isLink(model)) {
-            const templateProvider = this.props.linkTemplateProvider || DEFAULT_LINK_TEMPLATE_PROVIDER;
-            if (this.props.simpleLinks) {
-                return new SimpleLinkView(model, templateProvider(model.types));
-            } else {
-                return new LinkView(model, templateProvider(model.types));
-            }
+    private createNodeView(node: Node): DiagramElementView<Node> {
+        const templateProvider =  this.props.nodeTemplateProvider || DEFAULT_NODE_TEMPLATE_PROVIDER;
+        return new NodeView(node, templateProvider(node.types));
+    }
+
+    private createLinkView(link: Link, group: LinkGroup): DiagramElementView<Link> | undefined {
+        const templateProvider = this.props.linkTemplateProvider || DEFAULT_LINK_TEMPLATE_PROVIDER;
+        if (this.props.simpleLinks) {
+            return new SimpleLinkView(link, templateProvider(link.types));
         } else {
-            return undefined;
+            return new LinkView(
+                link,
+                group,
+                templateProvider(link.types),
+            );
         }
     }
 
@@ -94,7 +116,9 @@ export class GraphView {
                 this.addElementView(element);
             }
             const view = this.views.get(elementId);
-            view.update();
+            if (view) { // View is added asynchronously
+                view.update();
+            }
         };
         if (!specificIds) {
             specificIds = [];

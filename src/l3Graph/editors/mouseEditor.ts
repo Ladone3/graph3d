@@ -6,7 +6,7 @@ import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
 import { Vector2D } from '../models/primitives';
 import { ArrowHelper } from '../models/arrowHelper';
-import { Element } from '../models/graphModel';
+import { Element, isLink } from '../models/graphModel';
 
 const WHEEL_SPEED = 0.25;
 
@@ -52,6 +52,32 @@ export class MouseEditor {
             return false;
         }
         return true;
+    }
+
+    // todo: improve mouse proccessing pipline
+    onOverlayDown(event: MouseEvent, target: Element) {
+        if (isLink(target)) { return; }
+        const nodeTreePos = vector3DToTreeVector3(target.position);
+        const cameraPos = this.diagramView.camera.position;
+        let distanceToNode = nodeTreePos.distanceTo(cameraPos);
+
+        this.diagramhModel.selection = new Set<Element>([target]);
+        this.arrowHelper.focusNode = target;
+
+        const onWheel = (wheelEvent: Event) => {
+            const e = wheelEvent as MouseWheelEvent;
+            distanceToNode -= (e.deltaX || e.deltaY || e.deltaZ) * WHEEL_SPEED;
+            wheelEvent.stopPropagation();
+            target.position = this.diagramView.mouseTo3dPos(e, distanceToNode);
+        };
+        document.body.addEventListener('mousewheel', onWheel);
+
+        handleDragging(event, (dragEvent) => {
+            target.position = this.diagramView.mouseTo3dPos(dragEvent, distanceToNode);
+        }, () => {
+            this.arrowHelper.focusNode = undefined;
+            document.body.removeEventListener('mousewheel', onWheel);
+        });
     }
 
     private getIntersectedObject(viewDirection: THREE.Vector3): Node | undefined {

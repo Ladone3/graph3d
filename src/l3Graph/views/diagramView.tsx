@@ -4,9 +4,11 @@ import { Vector3D, Vector2D } from '../models/primitives';
 import { NodeTemplateProvider, LinkTemplateProvider } from '../templates';
 import { GraphView } from './graphView';
 import { DiagramModel } from '../models/diagramModel';
-import { Element } from '../models/graphModel';
+import { Element, GraphModelEvents } from '../models/graphModel';
 import { WidgetsView } from './widgetsView';
 import { Widget } from '../models/widget';
+import { vector3DToTreeVector3, Subscribable, EventObject } from '../utils';
+import { WidgetsModelEvents } from '../models/widgetsModel';
 
 export interface ViewOptions {
     nodeTemplateProvider?: NodeTemplateProvider;
@@ -56,6 +58,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.initScene();
         this.initSubViews();
         this.subscribeOnModel();
+        this.renderGraph();
         if (this.props.onViewMount) {
             this.props.onViewMount(this);
         }
@@ -93,6 +96,16 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         };
     }
 
+    pos3dToClientPos(position: Vector3D): Vector2D {
+        const treePos = vector3DToTreeVector3(position);
+        const screenParameters = this.screenParameters;
+        const vector = treePos.project(this.camera);
+        return {
+            x: (vector.x + 1) * screenParameters.WIDTH / 2,
+            y: (1 - vector.y) * screenParameters.HEIGHT / 2,
+        };
+    }
+
     get cameraState(): CameraState {
         const focusDirection = new THREE.Vector3(0, 0, - 1);
         focusDirection.applyQuaternion(this.camera.quaternion);
@@ -115,7 +128,6 @@ export class DiagramView extends React.Component<DiagramViewProps> {
                 focusDirection.z,
             ));
         }
-
         this.renderGraph();
     }
 
@@ -170,20 +182,10 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.meshHtmlContainer.appendChild(this.renderer.domElement);
         this.overlayHtmlContainer.appendChild(this.overlayRenderer.domElement);
 
-        // Helper plane
-        // const planeGeometry = new THREE.PlaneGeometry(800, 800, 10, 10);
-        // const planeMaterial = new THREE.MeshBasicMaterial({
-        //     wireframe: true, color: 0x000000, transparent: true, opacity: 0.5,
-        // });
-        // const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-        // plane.rotation.x = -0.5 * Math.PI;
-        // plane.position.set(0, -300, 0);
-        // this.scene.add(plane);
-
         // Helper sphere
-        const sphereGeometry = new THREE.SphereGeometry(this.screenParameters.FAR / 2, 50, 50);
+        const sphereGeometry = new THREE.SphereGeometry(this.screenParameters.FAR / 2, 35, 35);
         const sphereMaterial = new THREE.MeshBasicMaterial({
-            wireframe: true, color: 0x000000, transparent: true, opacity: 0.1,
+            wireframe: true, color: 0xf0f0f0,
         });
         const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
         sphere.position.set(0, 0, 0);
@@ -215,31 +217,44 @@ export class DiagramView extends React.Component<DiagramViewProps> {
             const events = combinedEvent.data;
 
             const updatedElementIds: string[] = [];
-            events.graphEvents.forEach((event: Element, id: string) => {
-                updatedElementIds.push(id);
+            events.graphEvents.forEach((event: EventObject<keyof GraphModelEvents, any>) => {
+                switch (event.eventId) {
+                    case 'add:elements':
+                        for (const el of event.data) {
+                            this.graphView.addElementView(el);
+                        }
+                        break;
+                    case 'remove:elements':
+                        for (const el of event.data) {
+                            this.graphView.removeElementView(el);
+                        }
+                        break;
+                    case 'update:element':
+                        const element: Element = event.data;
+                        updatedElementIds.push(element.id);
+                        break;
+                }
             });
 
             const updatedWidgetIds: string[] = [];
-            events.widgetEvents.forEach((event: Widget, id: string) => {
-                updatedWidgetIds.push(id);
+            events.widgetEvents.forEach((event: EventObject<keyof WidgetsModelEvents, any>) => {
+                switch (event.eventId) {
+                    case 'add:widget':
+                        this.widgetsView.addWidgetView(event.data);
+                        break;
+                    case 'remove:widget':
+                        this.widgetsView.removeWidgetView(event.data);
+                        break;
+                    case 'update:widget':
+                        const widget: Widget = event.data;
+                        updatedWidgetIds.push(widget.widgetId);
+                        break;
+                }
             });
 
             this.graphView.update(updatedElementIds);
             this.widgetsView.update(updatedWidgetIds);
 
-            this.renderGraph();
-        });
-
-        this.props.model.graph.on('add:elements', event => {
-            for (const element of event.data) {
-                this.graphView.addElementView(element);
-            }
-            this.renderGraph();
-        });
-        this.props.model.graph.on('remove:elements', event => {
-            for (const element of event.data) {
-                this.graphView.removeElementView(element);
-            }
             this.renderGraph();
         });
     }

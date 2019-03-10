@@ -1,16 +1,16 @@
 import * as React from 'react';
-import { ViewController, ViewControllersSet } from './controllers/viewController';
+import { ViewController, ViewControllersSet, MIN_DRAG_OFFSET } from './controllers/viewController';
 import { DEFAULT_VIEW_CONTROLLERS_SET } from './controllers/defaultViewControllers';
 import { KeyHandler } from './utils/keyHandler';
-import { NodeTemplateProvider, LinkTemplateProvider } from './templates';
 import { MouseEditor } from './editors/mouseEditor';
 import { DiagramModel } from './models/diagramModel';
 import { DiagramView, ViewOptions } from './views/diagramView';
 import { Link } from './models/link';
 import { Node } from './models/node';
-import { isTypesEqual } from './utils';
+import { isTypesEqual, handleDragging, EventObject } from './utils';
 import { Vector2D, Vector3D } from './models/primitives';
 import { applyForceLayout3d, applyRandomLayout } from './layout/layouts';
+import { Element } from './models/graphModel';
 
 export interface GraphElements {
     nodes: Node[];
@@ -27,7 +27,7 @@ interface GraphUpdate {
 }
 
 export interface L3GraphProps {
-    graph: GraphElements;
+    elements: GraphElements;
     viewOptions?: ViewOptions;
     viewControllers?: ViewControllersSet;
     onComponentMount?: (graph: L3Graph) => void;
@@ -51,15 +51,15 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         this.state = {};
         this.keyHandler = new KeyHandler();
         this.updateGraph({
-            newNodes: props.graph.nodes,
-            newLinks: props.graph.links,
+            newNodes: this.props.elements.nodes,
+            newLinks: this.props.elements.links,
         });
     }
 
     componentWillUpdate(props: L3GraphProps) {
-        const {graph} = props;
+        const {elements} = props;
         this.updateGraph(
-            this.merge(graph),
+            this.merge(elements),
         );
     }
 
@@ -88,6 +88,10 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
 
     clientPosTo3dPos(position: Vector2D, distanceFromScreen: number = 600): Vector3D {
         return this.view.clientPosTo3dPos(position, distanceFromScreen);
+    }
+
+    pos3dToClientPos(position: Vector3D): Vector2D {
+        return this.view.pos3dToClientPos(position);
     }
 
     private updateGraph(update: GraphUpdate) {
@@ -166,13 +170,30 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
 
     private onWheel(e: React.WheelEvent<HTMLDivElement>) {
         this.viewController.onMouseWheel(e.nativeEvent);
+        e.preventDefault();
     }
 
+    // todo: improve mouse proccessing pipline
     private onMouseDown(event: React.MouseEvent<HTMLDivElement>) {
-        if (this.mouseEditor.onMouseDown(event.nativeEvent)) {
+        const elementNotCaptured = this.mouseEditor.onMouseDown(event.nativeEvent);
+        if (elementNotCaptured) {
             this.viewController.onMouseDown(event.nativeEvent);
-            this.model.selection = new Set();
+            handleDragging(event.nativeEvent, () => {
+                // do nothing
+            }, (dragEvent, offset) => {
+                const dist = Math.sqrt(offset.x * offset.x + offset.y * offset.y);
+                if (dist < MIN_DRAG_OFFSET) {
+                    this.model.selection = new Set();
+                }
+            });
         }
+    }
+
+    // todo: improve mouse proccessing pipline
+    private onOverlayDown(event: EventObject<'click:overlay', {event: MouseEvent; target: Element}>) {
+        event.data.event.stopPropagation();
+        event.data.event.preventDefault();
+        this.mouseEditor.onOverlayDown(event.data.event, event.data.target);
     }
 
     private onViewMount = (view: DiagramView) => {
@@ -181,6 +202,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         this.viewControllers = controllersSet.map(controller => controller(view));
         this.viewController = this.viewControllers[0];
         this.mouseEditor = new MouseEditor(this.model, view);
+        this.view.graphView.on('click:overlay', (event) => this.onOverlayDown(event));
         this.forceUpdate();
     }
 

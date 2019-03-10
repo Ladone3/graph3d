@@ -4,7 +4,7 @@ import { Widget } from './widget';
 export interface WidgetsModelEvents {
     'add:widget': Widget;
     'remove:widget': Widget;
-    'widget:update': Widget;
+    'update:widget': Widget;
 }
 
 export class WidgetsModel extends Subscribable<WidgetsModelEvents> {
@@ -23,7 +23,7 @@ export class WidgetsModel extends Subscribable<WidgetsModelEvents> {
     }
 
     private subscribeOnWidget(widget: Widget) {
-        widget.on('widget:update', event => this.performUpdate(widget));
+        widget.on('update:widget', () => this.trigger('update:widget', widget));
     }
 
     private unsubscribeFromElement(widget: Widget) {
@@ -32,9 +32,5 @@ export class WidgetsModel extends Subscribable<WidgetsModelEvents> {
         // } else if (isLink(widget)) {
 
         // }
-    }
-
-    public performUpdate(widget: Widget) {
-        this.trigger('widget:update', widget);
     }
 }

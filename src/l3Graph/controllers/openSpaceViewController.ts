@@ -6,7 +6,19 @@ import {
     ZERO_POSITION,
     LIMIT_OPACITY,
 } from './viewController';
-import { handleDragging, normalize, vector3DToTreeVector3, inverse, miltiply, sum, KEY_CODES } from '../utils';
+import {
+    handleDragging,
+    normalize,
+    vector3DToTreeVector3,
+    inverse,
+    multiply,
+    sum,
+    KEY_CODES,
+    normalLeft,
+    normalRight,
+    normalUp,
+    normalDown,
+} from '../utils';
 
 import * as _ from 'lodash';
 import { DiagramView } from '../views/diagramView';
@@ -54,6 +66,11 @@ export class OpenSpaceViewController implements ViewController {
         } else if (keyMap.has(KEY_CODES.UP) && !keyMap.has(KEY_CODES.DOWN)) {
             this.stepForward();
         }
+        if (keyMap.has(KEY_CODES.SPACE) && !keyMap.has(KEY_CODES.CTRL)) {
+            this.stepUp();
+        } else if (keyMap.has(KEY_CODES.CTRL) && !keyMap.has(KEY_CODES.SPACE)) {
+            this.stepDown();
+        }
     }
 
     onMouseWheel(event: MouseWheelEvent) {
@@ -67,21 +84,33 @@ export class OpenSpaceViewController implements ViewController {
 
     private stepLeft() {
         const cameraDirection = this.getCameraDirection();
-        this.position = this.limitPosition({
-            x: this.position.x + cameraDirection.z * CAMERA_STEP_SPEED,
-            y: this.position.y,
-            z: this.position.z - cameraDirection.x * CAMERA_STEP_SPEED,
-        });
+        const dir = normalLeft(cameraDirection);
+        const newPos = sum(this.position, multiply(dir, CAMERA_STEP_SPEED));
+        this.position = this.limitPosition(newPos);
         this.updateCameraPosition();
     }
 
     private stepRight() {
         const cameraDirection = this.getCameraDirection();
-        this.position = this.limitPosition({
-            x: this.position.x - cameraDirection.z * CAMERA_STEP_SPEED,
-            y: this.position.y,
-            z: this.position.z + cameraDirection.x * CAMERA_STEP_SPEED,
-        });
+        const dir = normalRight(cameraDirection);
+        const newPos = sum(this.position, multiply(dir, CAMERA_STEP_SPEED));
+        this.position = this.limitPosition(newPos);
+        this.updateCameraPosition();
+    }
+
+    private stepUp() {
+        const cameraDirection = this.getCameraDirection();
+        const dir = normalUp(cameraDirection);
+        const newPos = sum(this.position, multiply(dir, CAMERA_STEP_SPEED));
+        this.position = this.limitPosition(newPos);
+        this.updateCameraPosition();
+    }
+
+    private stepDown() {
+        const cameraDirection = this.getCameraDirection();
+        const dir = normalDown(cameraDirection);
+        const newPos = sum(this.position, multiply(dir, CAMERA_STEP_SPEED));
+        this.position = this.limitPosition(newPos);
         this.updateCameraPosition();
     }
 
@@ -153,7 +182,7 @@ export class OpenSpaceViewController implements ViewController {
         if (distanceToTheCenter > maxRadius) {
             const directionFromTheCenter = normalize(targetPosition);
             const directionToTheCenter = inverse(directionFromTheCenter);
-            const diffDirection = miltiply(directionToTheCenter, distanceToTheCenter - maxRadius);
+            const diffDirection = multiply(directionToTheCenter, distanceToTheCenter - maxRadius);
             return sum(targetPosition, diffDirection);
         } else {
             return targetPosition;

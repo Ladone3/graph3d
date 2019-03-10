@@ -4,7 +4,11 @@ export interface NodeData {
     label: string;
 }
 
-export function generateData(nodeNumber: number = 50, positionRange: number = 100): GraphElements {
+export function generateData(
+    nodeNumber: number = 50,
+    linkDublicationNumber: number = 1,
+    positionRange: number = 100,
+): GraphElements {
     const data: GraphElements = {
         nodes: [],
         links: [],
@@ -27,14 +31,16 @@ export function generateData(nodeNumber: number = 50, positionRange: number = 10
         const sourceIndex = i;
         const targetIndex = Math.round(Math.random() * (data.nodes.length - 1));
         const key = `${sourceIndex}~${targetIndex}`;
-        const key2 = `${targetIndex}~${sourceIndex}`;
-        if (!linkMap.has(key) && !linkMap.has(key2) && sourceIndex !== targetIndex) {
+        if (!linkMap.has(key) && sourceIndex !== targetIndex) {
             linkMap.add(key);
-            data.links.push(new Link({
-                label: 'Link ' + i,
-                sourceId: data.nodes[sourceIndex].id,
-                targetId: data.nodes[targetIndex].id,
-            }));
+            for (let j = 0; j < linkDublicationNumber; j++) {
+                data.links.push(new Link({
+                    label: `Link_${i}_${j}`,
+                    sourceId: data.nodes[sourceIndex].id,
+                    targetId: data.nodes[targetIndex].id,
+                    types: [`Link_${j}`],
+                }));
+            }
         }
     }
 

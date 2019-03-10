@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { MeshPrimitive, isMeshPrimitive } from '../templates';
+import { Vector3D } from '../models/primitives';
+import { sum, multiply } from './geometry';
 
 export function getPrimitive(primitive: MeshPrimitive): THREE.Mesh {
     if (!isMeshPrimitive(primitive)) {

@@ -8,8 +8,8 @@ import { Selection } from './selection';
 
 export interface DiagramModelEvents {
     'syncupdate': {
-        graphEvents: Map<string, Element>;
-        widgetEvents: Map<string, Widget>;
+        graphEvents: Set<EventObject>;
+        widgetEvents: Set<EventObject>;
     };
     'change:selection': Set<Element>;
 }
@@ -20,8 +20,8 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
     private deprecatedSelection: Set<Element> = new Set();
     private animationFrame: number;
 
-    private graphEvents: Map<string, Element> = new Map();
-    private widgetEvents: Map<string, Widget> = new Map();
+    private graphEvents: Set<EventObject> = new Set();
+    private widgetEvents: Set<EventObject> = new Set();
 
     private _selection: Selection;
 
@@ -30,8 +30,14 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         this.graph = new GraphModel();
         this.widgets = new WidgetsModel();
         this.initSelectionWidget();
-        this.graph.on('change:element', this.onElementUpdate);
-        this.widgets.on('widget:update', this.onWidgetUpdate);
+
+        this.graph.on('add:elements', this.groupGraphEvents);
+        this.graph.on('remove:elements', this.groupGraphEvents);
+        this.graph.on('update:element', this.groupGraphEvents);
+
+        this.widgets.on('add:widget', this.groupWidgetEvents);
+        this.widgets.on('remove:widget', this.groupWidgetEvents);
+        this.widgets.on('update:widget', this.groupWidgetEvents);
     }
 
     public get selection(): Set<Element> {
@@ -69,7 +75,7 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
     }
 
     public updateElements(elements: Element[]) {
-        this.graph.updateElements(elements);
+        this.graph.updateElementsData(elements);
     }
 
     public performSyncUpdate = () => {
@@ -80,21 +86,19 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
                 widgetEvents: this.widgetEvents,
                 deprecatedSelection: this.deprecatedSelection,
             };
-            this.graphEvents = new Map();
-            this.widgetEvents = new Map();
+            this.graphEvents = new Set();
+            this.widgetEvents = new Set();
             this.trigger('syncupdate', events);
         });
     }
 
-    private onElementUpdate = (event: EventObject<'change:element', Element>) => {
-        const element = event.data;
-        this.graphEvents.set(element.id, element);
+    private groupGraphEvents = (event: EventObject) => {
+        this.graphEvents.add(event);
         this.performSyncUpdate();
     }
 
-    private onWidgetUpdate = (event: EventObject<'widget:update', Widget>) => {
-        const widget = event.data;
-        this.widgetEvents.set(widget.widgetId, widget);
+    private groupWidgetEvents = (event: EventObject) => {
+        this.widgetEvents.add(event);
         this.performSyncUpdate();
     }
 

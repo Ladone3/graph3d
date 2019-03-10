@@ -40,6 +40,6 @@ export class ArrowHelper extends Subscribable<ArrowHelperEvents> implements Widg
     }
 
     private updateView = () => {
-        this.trigger('widget:update', this);
+        this.trigger('update:widget', this);
     }
 }

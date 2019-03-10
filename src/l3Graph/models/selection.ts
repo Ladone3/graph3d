@@ -48,6 +48,6 @@ export class Selection extends Subscribable<SelectionEvents> implements Widget {
     }
 
     private updateView = () => {
-        this.trigger('widget:update', this);
+        this.trigger('update:widget', this);
     }
 }
