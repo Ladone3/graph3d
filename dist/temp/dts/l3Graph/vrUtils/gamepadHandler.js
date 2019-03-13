@@ -19,11 +19,11 @@ var OCULUS_BUTTON_CODES = {
 var GAMEPAD_BUTTON;
 (function (GAMEPAD_BUTTON) {
     GAMEPAD_BUTTON["LEFT_NIPPLE"] = "LEFT_NIPPLE";
-    GAMEPAD_BUTTON["NIPPLE"] = "NIPPLE";
+    GAMEPAD_BUTTON["RIGHT_NIPPLE"] = "RIGHT_NIPPLE";
     GAMEPAD_BUTTON["LEFT_TRIGGER"] = "LEFT_TRIGGER";
-    GAMEPAD_BUTTON["TRIGGER"] = "TRIGGER";
+    GAMEPAD_BUTTON["RIGHT_TRIGGER"] = "RIGHT_TRIGGER";
     GAMEPAD_BUTTON["LEFT_GRUBBER"] = "LEFT_GRUBBER";
-    GAMEPAD_BUTTON["GRUBBER"] = "GRUBBER";
+    GAMEPAD_BUTTON["RIGHT_GRUBBER"] = "RIGHT_GRUBBER";
     GAMEPAD_BUTTON["A"] = "A";
     GAMEPAD_BUTTON["B"] = "B";
     GAMEPAD_BUTTON["X"] = "X";
@@ -231,21 +231,21 @@ function getOculusButton(gamepadId, buttonCode) {
                 return GAMEPAD_BUTTON.LEFT_TRIGGER;
             }
             else {
-                return GAMEPAD_BUTTON.TRIGGER;
+                return GAMEPAD_BUTTON.RIGHT_TRIGGER;
             }
         case OCULUS_BUTTON_CODES.GRUBBER:
             if (gamepadId === exports.OCULUS_CONTROLLERS.LEFT_CONTROLLER) {
                 return GAMEPAD_BUTTON.LEFT_GRUBBER;
             }
             else {
-                return GAMEPAD_BUTTON.GRUBBER;
+                return GAMEPAD_BUTTON.RIGHT_GRUBBER;
             }
         case OCULUS_BUTTON_CODES.NIPPLE:
             if (gamepadId === exports.OCULUS_CONTROLLERS.LEFT_CONTROLLER) {
                 return GAMEPAD_BUTTON.LEFT_NIPPLE;
             }
             else {
-                return GAMEPAD_BUTTON.NIPPLE;
+                return GAMEPAD_BUTTON.RIGHT_NIPPLE;
             }
         case OCULUS_BUTTON_CODES.A_X:
             if (gamepadId === exports.OCULUS_CONTROLLERS.LEFT_CONTROLLER) {

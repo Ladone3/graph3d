@@ -1124,6 +1124,9 @@ var L3Graph = (function (_super) {
             React.createElement("div", { className: 'l3graph-main__touch-panel', onMouseMove: function (event) {
                     _this.mouseHandler.onMouseMoveEvent(event.nativeEvent);
                 }, onMouseDown: function (event) {
+                    if (event.currentTarget !== event.target) {
+                        return;
+                    }
                     _this.mouseHandler.onMouseDownEvent(event.nativeEvent);
                 }, onTouchStart: function (event) {
                     if (event.currentTarget !== event.target) {
