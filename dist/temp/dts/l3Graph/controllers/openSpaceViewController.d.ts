@@ -1,0 +1,35 @@
+import { Vector2d, Vector3d } from '../models/structures';
+import { ViewController, ViewControllerEvents } from './viewController';
+import { Subscribable } from '../utils';
+import { KeyHandler } from '../input/keyHandler';
+import { MouseHandler } from '../input/mouseHandler';
+import { Core } from '../core';
+export declare class OpenSpaceViewController extends Subscribable<ViewControllerEvents> implements ViewController {
+    protected core: Core;
+    protected mouseHandler: MouseHandler;
+    protected keyHandler: KeyHandler;
+    readonly id: string;
+    label: string;
+    protected cameraAngle: Vector2d;
+    protected position: Vector3d;
+    protected startAngle: Vector2d;
+    constructor(core: Core, mouseHandler: MouseHandler, keyHandler: KeyHandler);
+    switchOn(): void;
+    switchOff(): void;
+    focusOn(element: Element): void;
+    private refreshCamera;
+    protected setCameraDirection(anglePoint: Vector2d): void;
+    protected updateCameraPosition(): void;
+    protected limitPosition(targetPosition: Vector3d): Vector3d;
+    private onMouseDragStart;
+    private onMouseDrag;
+    private onMouseWheel;
+    private onKeyPressed;
+    private stepLeft;
+    private stepRight;
+    private stepUp;
+    private stepDown;
+    private stepForward;
+    private stepBack;
+    private getCameraDirection;
+}
