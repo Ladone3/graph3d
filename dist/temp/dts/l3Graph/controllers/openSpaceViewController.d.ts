@@ -1,0 +1,35 @@
+import { Vector2d, Vector3d } from '../models/structures';
+import { ViewController, ViewControllerEvents } from './viewController';
+import { KeyHandler, Subscribable } from '../utils';
+import { DiagramView } from '../views/diagramView';
+import { MouseHandler } from '../utils/mouseHandler';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
+export declare class OpenSpaceViewController<Descriptor extends GraphDescriptor> extends Subscribable<ViewControllerEvents> implements ViewController {
+    protected view: DiagramView<Descriptor>;
+    protected mouseHandler: MouseHandler<Descriptor>;
+    protected keyHandler: KeyHandler;
+    readonly id: string;
+    label: string;
+    protected cameraAngle: Vector2d;
+    protected position: Vector3d;
+    protected startAngle: Vector2d;
+    constructor(view: DiagramView<Descriptor>, mouseHandler: MouseHandler<Descriptor>, keyHandler: KeyHandler);
+    switchOn(): void;
+    switchOff(): void;
+    focusOn(element: Element): void;
+    private refreshCamera;
+    protected setCameraDirection(anglePoint: Vector2d): void;
+    protected updateCameraPosition(): void;
+    protected limitPosition(targetPosition: Vector3d): Vector3d;
+    private onMouseDragStart;
+    private onMouseDrag;
+    private onMouseWheel;
+    private onKeyPressed;
+    private stepLeft;
+    private stepRight;
+    private stepUp;
+    private stepDown;
+    private stepForward;
+    private stepBack;
+    private getCameraDirection;
+}

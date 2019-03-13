@@ -1,0 +1,10 @@
+import { SelectionWidget } from './models/widgets/selectionWidget';
+import { ArrowHelper } from './models/widgets/arrowHelper';
+import { WidgetFactory } from './models/widgets/widget';
+import { GamepadsWidget } from './models/widgets/gamepadsWidget';
+import { GraphDescriptor } from './models/graph/graphDescriptor';
+export declare const selectionWidgetFactory: WidgetFactory<SelectionWidget<any>, any>;
+export declare const arrowHelperWidgetFactory: WidgetFactory<ArrowHelper<any>, any>;
+export declare const gamepadsWidgetFactory: WidgetFactory<GamepadsWidget<any>, any>;
+export declare const testToolFactory: WidgetFactory<any, any>;
+export declare function DEFAULT_MESH_WIDGET_SET<Descriptor extends GraphDescriptor>(): WidgetFactory<any, Descriptor>[];

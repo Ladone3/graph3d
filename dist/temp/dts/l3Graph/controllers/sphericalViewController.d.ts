@@ -1,0 +1,30 @@
+import { Vector2d } from '../models/structures';
+import { ViewController, ViewControllerEvents } from './viewController';
+import { KeyHandler, Subscribable } from '../utils';
+import { DiagramView } from '../views/diagramView';
+import { MouseHandler } from '../utils/mouseHandler';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
+export declare class SphericalViewController<Descriptor extends GraphDescriptor> extends Subscribable<ViewControllerEvents> implements ViewController {
+    protected view: DiagramView<Descriptor>;
+    protected mouseHandler: MouseHandler<Descriptor>;
+    protected keyHandler: KeyHandler;
+    readonly id: string;
+    label: string;
+    protected cameraAngle: Vector2d;
+    protected cameraDistance: number;
+    protected startAngle: Vector2d;
+    constructor(view: DiagramView<Descriptor>, mouseHandler: MouseHandler<Descriptor>, keyHandler: KeyHandler);
+    switchOn(): void;
+    switchOff(): void;
+    private refreshCamera;
+    focusOn(element: Element): void;
+    protected setCameraAngle(anglePoint: Vector2d): void;
+    protected setCameraDistance(distance: number): void;
+    protected updateCameraPosition(): void;
+    protected limitDistance(distance: number): number;
+    private onMouseDragStart;
+    private onMouseDrag;
+    private onMouseWheel;
+    private onKeyPressed;
+    private zoom;
+}
