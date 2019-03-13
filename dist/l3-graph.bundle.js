@@ -103,11 +103,11 @@ var tslib_1 = __webpack_require__(1);
 __webpack_require__(2);
 var l3Graph_1 = __webpack_require__(7);
 exports.L3Graph = l3Graph_1.L3Graph;
-var node_1 = __webpack_require__(61);
+var node_1 = __webpack_require__(50);
 exports.Node = node_1.Node;
-var link_1 = __webpack_require__(60);
+var link_1 = __webpack_require__(49);
 exports.Link = link_1.Link;
-var customization_1 = __webpack_require__(52);
+var customization_1 = __webpack_require__(56);
 exports.MeshKind = customization_1.MeshKind;
 exports.DEFAULT_NODE_TEMPLATE = customization_1.DEFAULT_NODE_TEMPLATE;
 exports.DEFAULT_NODE_TEMPLATE_PROVIDER = customization_1.DEFAULT_NODE_TEMPLATE_PROVIDER;
@@ -116,22 +116,22 @@ exports.DEFAULT_LINK_TEMPLATE_PROVIDER = customization_1.DEFAULT_LINK_TEMPLATE_P
 var layouts_1 = __webpack_require__(247);
 exports.applyForceLayout3d = layouts_1.applyForceLayout3d;
 tslib_1.__exportStar(__webpack_require__(47), exports);
-tslib_1.__exportStar(__webpack_require__(49), exports);
-var widget_1 = __webpack_require__(240);
+tslib_1.__exportStar(__webpack_require__(53), exports);
+var widget_1 = __webpack_require__(237);
 exports.MeshWidget = widget_1.Widget;
-var gamepadsWidget_1 = __webpack_require__(244);
+var gamepadsWidget_1 = __webpack_require__(241);
 exports.GamepadsWidget = gamepadsWidget_1.GamepadsWidget;
-var gamepadsWidgetView_1 = __webpack_require__(245);
+var gamepadsWidgetView_1 = __webpack_require__(242);
 exports.GamepadsWidgetView = gamepadsWidgetView_1.GamepadsWidgetView;
-tslib_1.__exportStar(__webpack_require__(246), exports);
+tslib_1.__exportStar(__webpack_require__(243), exports);
 var focusNodeWidget_1 = __webpack_require__(267);
 exports.FocusNodeWidget = focusNodeWidget_1.FocusNodeWidget;
 var reactNodeWidgetView_1 = __webpack_require__(268);
 exports.ReactNodeWidgetView = reactNodeWidgetView_1.ReactNodeWidgetView;
-tslib_1.__exportStar(__webpack_require__(238), exports);
-var gamepadHandler_1 = __webpack_require__(230);
+tslib_1.__exportStar(__webpack_require__(235), exports);
+var gamepadHandler_1 = __webpack_require__(227);
 exports.GAMEPAD_BUTTON = gamepadHandler_1.GAMEPAD_BUTTON;
-var htmlToSprite_1 = __webpack_require__(220);
+var htmlToSprite_1 = __webpack_require__(219);
 exports.htmlToImage = htmlToSprite_1.htmlToImage;
 tslib_1.__exportStar(__webpack_require__(269), exports);
 
@@ -975,14 +975,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
 var React = __webpack_require__(8);
 var keyHandler_1 = __webpack_require__(46);
-var defaultEditor_1 = __webpack_require__(59);
+var defaultEditor_1 = __webpack_require__(48);
 var diagramModel_1 = __webpack_require__(63);
 var diagramView_1 = __webpack_require__(67);
-var mouseHandler_1 = __webpack_require__(229);
-var gamepadHandler_1 = __webpack_require__(230);
-var gamepadEditor_1 = __webpack_require__(231);
-var defaultViewControllers_1 = __webpack_require__(232);
-var defaultWidgetsSet_1 = __webpack_require__(238);
+var mouseHandler_1 = __webpack_require__(226);
+var gamepadHandler_1 = __webpack_require__(227);
+var gamepadEditor_1 = __webpack_require__(228);
+var defaultViewControllers_1 = __webpack_require__(229);
+var defaultWidgetsSet_1 = __webpack_require__(235);
+var core_1 = __webpack_require__(244);
 var L3Graph = (function (_super) {
     tslib_1.__extends(L3Graph, _super);
     function L3Graph(props) {
@@ -995,7 +996,7 @@ var L3Graph = (function (_super) {
                 return _this.mouseHandler.onMouseDownEvent(event, target);
             });
             _this.mouseHandler = new mouseHandler_1.MouseHandler(_this.diagramModel, _this.view);
-            _this.keyHandler = new keyHandler_1.KeyHandler();
+            _this.keyHandler = new keyHandler_1.KeyHandler(_this.core);
             _this.keyHandler.switchOn();
             _this.gamepadHandler = new gamepadHandler_1.GamepadHandler(_this.diagramModel, _this.view);
             _this.configureViewControllers();
@@ -1014,6 +1015,7 @@ var L3Graph = (function (_super) {
             _this.keyHandler.switchOff();
         };
         _this.diagramModel = new diagramModel_1.DiagramModel();
+        _this.core = new core_1.Core();
         _this.state = {};
         return _this;
     }
@@ -1026,7 +1028,7 @@ var L3Graph = (function (_super) {
     });
     L3Graph.prototype.resize = function () {
         if (this.view) {
-            this.view.resize();
+            this.core.resize();
         }
     };
     L3Graph.prototype.getViewControllers = function () {
@@ -1069,16 +1071,16 @@ var L3Graph = (function (_super) {
     };
     L3Graph.prototype.clientPosTo3dPos = function (position, distanceFromScreen) {
         if (distanceFromScreen === void 0) { distanceFromScreen = 600; }
-        return this.view.clientPosTo3dPos(position, distanceFromScreen);
+        return this.core.clientPosTo3dPos(position, distanceFromScreen);
     };
     L3Graph.prototype.pos3dToClientPos = function (position) {
-        return this.view.pos3dToClientPos(position);
+        return this.core.pos3dToClientPos(position);
     };
     L3Graph.prototype.configureViewControllers = function () {
         var _this = this;
         this.viewControllers =
             (this.props.viewControllers || defaultViewControllers_1.DEFAULT_VIEW_CONTROLLERS_SET())
-                .map(function (makeController) { return makeController(_this.view, _this.mouseHandler, _this.keyHandler, _this.gamepadHandler); });
+                .map(function (makeController) { return makeController(_this.core, _this.mouseHandler, _this.keyHandler, _this.gamepadHandler); });
         this.setViewController(this.viewControllers[0]);
         var _loop_1 = function (vc) {
             vc.on('switched:off', function () {
@@ -1095,7 +1097,7 @@ var L3Graph = (function (_super) {
     };
     L3Graph.prototype.registerWidget = function (widgetResolver) {
         var widgetModel = widgetResolver.getModel({
-            vrManager: this.view.vrManager,
+            vrManager: this.core.vrManager,
             diagramModel: this.diagramModel,
             keyHandler: this.keyHandler,
             mouseHandler: this.mouseHandler,
@@ -1124,6 +1126,9 @@ var L3Graph = (function (_super) {
             React.createElement("div", { className: 'l3graph-main__touch-panel', onMouseMove: function (event) {
                     _this.mouseHandler.onMouseMoveEvent(event.nativeEvent);
                 }, onMouseDown: function (event) {
+                    if (event.currentTarget !== event.target) {
+                        return;
+                    }
                     _this.mouseHandler.onMouseDownEvent(event.nativeEvent);
                 }, onTouchStart: function (event) {
                     if (event.currentTarget !== event.target) {
@@ -1131,7 +1136,7 @@ var L3Graph = (function (_super) {
                     }
                     _this.mouseHandler.onMouseDownEvent(event.nativeEvent);
                 }, onWheel: function (event) { return _this.mouseHandler.onScrollEvent(event.nativeEvent); } },
-                React.createElement(diagramView_1.DiagramView, { model: this.diagramModel, onViewMount: this.onViewMount, viewOptions: viewOptions, dragHandlers: dragHandlers.length > 0 ? dragHandlers : undefined })),
+                React.createElement(diagramView_1.DiagramView, { model: this.diagramModel, core: this.core, onViewMount: this.onViewMount, viewOptions: viewOptions, dragHandlers: dragHandlers.length > 0 ? dragHandlers : undefined })),
             this.props.children);
     };
     return L3Graph;
@@ -6142,7 +6147,6 @@ module.exports = onlyChild;
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
 var subscribable_1 = __webpack_require__(47);
-var utils_1 = __webpack_require__(48);
 exports.KEY_CODES = {
     UP: 40,
     DOWN: 38,
@@ -6157,8 +6161,9 @@ exports.KEY_CODES = {
 };
 var KeyHandler = (function (_super) {
     tslib_1.__extends(KeyHandler, _super);
-    function KeyHandler() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
+    function KeyHandler(core) {
+        var _this = _super.call(this) || this;
+        _this.core = core;
         _this.keyMap = new Set();
         _this.onKeyDown = function (event) {
             var size = _this.keyMap.size;
@@ -6191,7 +6196,7 @@ var KeyHandler = (function (_super) {
     };
     KeyHandler.prototype.start = function () {
         var _this = this;
-        return utils_1.animationFrameInterval(function () {
+        return this.core.animationFrameInterval(function () {
             _this.trigger('keyPressed', _this.keyMap);
         });
     };
@@ -6273,42 +6278,228 @@ exports.default = Subscribable;
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = __webpack_require__(1);
-var subscribable_1 = __webpack_require__(47);
-tslib_1.__exportStar(__webpack_require__(49), exports);
-tslib_1.__exportStar(__webpack_require__(50), exports);
-tslib_1.__exportStar(__webpack_require__(47), exports);
-tslib_1.__exportStar(__webpack_require__(58), exports);
-var Cancellation = (function (_super) {
-    tslib_1.__extends(Cancellation, _super);
-    function Cancellation() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.isCancelled = false;
-        return _this;
+var keyHandler_1 = __webpack_require__(46);
+var link_1 = __webpack_require__(49);
+var node_1 = __webpack_require__(50);
+var DefaultEditor = (function () {
+    function DefaultEditor(diagramModel, mouseHandler, keyHandler, gamepadHandler) {
+        var _this = this;
+        this.diagramModel = diagramModel;
+        this.mouseHandler = mouseHandler;
+        this.keyHandler = keyHandler;
+        this.mouseHandler.on('elementClick', function (e) {
+            if (e.data.element instanceof node_1.Node && !_this.diagramModel.selection.elements.has(e.data.element)) {
+                _this.diagramModel.selection.setSelection(new Set([e.data.element]));
+            }
+        });
+        this.mouseHandler.on('paperClick', function (e) {
+            _this.diagramModel.selection.setSelection(new Set());
+        });
+        this.keyHandler.on('keyPressed', function (e) { return _this.onKeyPressed(e.data); });
+        this.subscribeOnDragHandler(mouseHandler);
+        this.subscribeOnDragHandler(gamepadHandler);
     }
-    Cancellation.prototype.stop = function () {
-        this.isCancelled = true;
-        this.trigger('cancel');
+    DefaultEditor.prototype.subscribeOnDragHandler = function (dragHandler) {
+        var _this = this;
+        dragHandler.on('elementDragStart', function (e) {
+            _this.onElementDrag(e.data.target, e.data.position);
+        });
+        dragHandler.on('elementDrag', function (e) {
+            _this.onElementDrag(e.data.target, e.data.position);
+        });
+        dragHandler.on('elementDragEnd', function (e) {
+            _this.onElementDragEnd(e.data.target, e.data.position);
+        });
     };
-    return Cancellation;
-}(subscribable_1.default));
-exports.Cancellation = Cancellation;
-function animationFrameInterval(intervalCallback) {
-    var cancellation = new Cancellation();
-    var animationFrameId;
-    var animate = function (time) {
-        if (!cancellation.isCancelled) {
-            intervalCallback();
-            animationFrameId = requestAnimationFrame(animate);
+    DefaultEditor.prototype.onKeyPressed = function (keyMap) {
+        if (keyMap.has(keyHandler_1.KEY_CODES.DELETE) && this.diagramModel.selection.elements.size > 0) {
+            var nodesToDelete_1 = [];
+            var linksToDelete_1 = [];
+            this.diagramModel.selection.elements.forEach(function (el) {
+                if (el instanceof node_1.Node) {
+                    nodesToDelete_1.push(el);
+                }
+                else {
+                    linksToDelete_1.push(el);
+                }
+            });
+            this.diagramModel.graph.removeLinks(linksToDelete_1);
+            this.diagramModel.graph.removeNodes(nodesToDelete_1);
         }
     };
-    requestAnimationFrame(animate);
-    cancellation.on('cancel', function () {
-        cancelAnimationFrame(animationFrameId);
+    DefaultEditor.prototype.onElementDrag = function (target, position) {
+        if (target instanceof link_1.Link) {
+            return;
+        }
+        if (!position) {
+            throw new Error('Position can\'t be undefined!');
+        }
+        target.setPosition(position);
+    };
+    DefaultEditor.prototype.onElementDragEnd = function (target, position) {
+        this.onElementDrag(target, position);
+    };
+    return DefaultEditor;
+}());
+exports.DefaultEditor = DefaultEditor;
+
+
+/***/ }),
+/* 49 */
+/***/ (function(module, exports, __webpack_require__) {
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var tslib_1 = __webpack_require__(1);
+var subscribable_1 = __webpack_require__(47);
+exports.DEFAULT_LINK_ID = 'l3graph-link';
+var Link = (function (_super) {
+    tslib_1.__extends(Link, _super);
+    function Link(model, parameters) {
+        var _this = _super.call(this) || this;
+        _this.model = model;
+        _this.modelIsChanged = false;
+        _this.source = parameters.source;
+        _this.target = parameters.target;
+        return _this;
+    }
+    Object.defineProperty(Link.prototype, "id", {
+        get: function () {
+            return this.model.id;
+        },
+        enumerable: true,
+        configurable: true
     });
-    return cancellation;
-}
-exports.animationFrameInterval = animationFrameInterval;
+    Object.defineProperty(Link.prototype, "data", {
+        get: function () {
+            return this.model.data;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Link.prototype.setData = function (data) {
+        this.model.data = data;
+        this.modelIsChanged = true;
+        this.forceUpdate();
+    };
+    Link.prototype.forceUpdate = function () {
+        this.trigger('force-update');
+    };
+    return Link;
+}(subscribable_1.Subscribable));
+exports.Link = Link;
+
+
+/***/ }),
+/* 50 */
+/***/ (function(module, exports, __webpack_require__) {
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var tslib_1 = __webpack_require__(1);
+var point_1 = __webpack_require__(51);
+var SIZE_VALUE = 40;
+var DEFAULT_NODE_PARAMETERS = {
+    position: { x: 0, y: 0, z: 0 },
+    size: { x: SIZE_VALUE, y: SIZE_VALUE, z: SIZE_VALUE, placeholder: true },
+};
+var Node = (function (_super) {
+    tslib_1.__extends(Node, _super);
+    function Node(_model, parameters) {
+        if (parameters === void 0) { parameters = DEFAULT_NODE_PARAMETERS; }
+        var _this = _super.call(this, parameters) || this;
+        _this._model = _model;
+        _this.incomingLinks = new Set();
+        _this.outgoingLinks = new Set();
+        _this.modelIsChanged = false;
+        _this._size = parameters.size || DEFAULT_NODE_PARAMETERS.size;
+        return _this;
+    }
+    Object.defineProperty(Node.prototype, "id", {
+        get: function () {
+            return this._model.id;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Node.prototype, "data", {
+        get: function () {
+            return this._model.data;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Node.prototype.setData = function (data) {
+        this._model.data = data;
+        this.modelIsChanged = true;
+        this.forceUpdate();
+    };
+    Object.defineProperty(Node.prototype, "model", {
+        get: function () {
+            return this._model;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Node.prototype, "size", {
+        get: function () {
+            return this._size;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Node.prototype.setSize = function (size) {
+        var previous = this._size;
+        this._size = size;
+        this.trigger('change:size', previous);
+    };
+    Node.prototype.forceUpdate = function () {
+        this.trigger('force-update');
+    };
+    return Node;
+}(point_1.Point));
+exports.Node = Node;
+
+
+/***/ }),
+/* 51 */
+/***/ (function(module, exports, __webpack_require__) {
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var tslib_1 = __webpack_require__(1);
+var utils_1 = __webpack_require__(52);
+var Point = (function (_super) {
+    tslib_1.__extends(Point, _super);
+    function Point(parameters) {
+        var _this = _super.call(this) || this;
+        _this._position = parameters.position;
+        return _this;
+    }
+    Object.defineProperty(Point.prototype, "position", {
+        get: function () {
+            return this._position;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Point.prototype.setPosition = function (position) {
+        var previous = this._position;
+        this._position = position;
+        this.trigger('change:position', previous);
+    };
+    return Point;
+}(utils_1.Subscribable));
+exports.Point = Point;
+
+
+/***/ }),
+/* 52 */
+/***/ (function(module, exports, __webpack_require__) {
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var tslib_1 = __webpack_require__(1);
+tslib_1.__exportStar(__webpack_require__(53), exports);
+tslib_1.__exportStar(__webpack_require__(54), exports);
+tslib_1.__exportStar(__webpack_require__(47), exports);
+tslib_1.__exportStar(__webpack_require__(62), exports);
 function generate128BitID() {
     function random32BitDigits() {
         return Math.floor((1 + Math.random()) * 0x100000000)
@@ -6320,7 +6511,7 @@ exports.generate128BitID = generate128BitID;
 
 
 /***/ }),
-/* 49 */
+/* 53 */
 /***/ (function(module, exports) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -6414,13 +6605,13 @@ exports.hashFnv32a = hashFnv32a;
 
 
 /***/ }),
-/* 50 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var THREE = __webpack_require__(51);
-var customization_1 = __webpack_require__(52);
-var OBJLoader_1 = __webpack_require__(57);
+var THREE = __webpack_require__(55);
+var customization_1 = __webpack_require__(56);
+var OBJLoader_1 = __webpack_require__(61);
 function preparePrimitive(primitive) {
     if (primitive.type !== customization_1.MeshKind.Primitive) {
         throw new Error('Not a prmitive mesh was passed into function!');
@@ -6519,7 +6710,7 @@ exports.restoreColors = restoreColors;
 
 
 /***/ }),
-/* 51 */
+/* 55 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -58011,23 +58202,23 @@ if ( typeof __THREE_DEVTOOLS__ !== 'undefined' ) {
 
 
 /***/ }),
-/* 52 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-tslib_1.__exportStar(__webpack_require__(53), exports);
-tslib_1.__exportStar(__webpack_require__(55), exports);
-tslib_1.__exportStar(__webpack_require__(54), exports);
-tslib_1.__exportStar(__webpack_require__(56), exports);
+tslib_1.__exportStar(__webpack_require__(57), exports);
+tslib_1.__exportStar(__webpack_require__(59), exports);
+tslib_1.__exportStar(__webpack_require__(58), exports);
+tslib_1.__exportStar(__webpack_require__(60), exports);
 
 
 /***/ }),
-/* 53 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var defaultOverlay_1 = __webpack_require__(54);
+var defaultOverlay_1 = __webpack_require__(58);
 exports.DEFAULT_LINK_TEMPLATE = {
     color: 'gray',
     thickness: 1,
@@ -58039,7 +58230,7 @@ exports.DEFAULT_LINK_TEMPLATE_PROVIDER = function () {
 
 
 /***/ }),
-/* 54 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -58104,12 +58295,12 @@ exports.enrichOverlay = enrichOverlay;
 
 
 /***/ }),
-/* 55 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var defaultOverlay_1 = __webpack_require__(54);
-var mesh_1 = __webpack_require__(56);
+var defaultOverlay_1 = __webpack_require__(58);
+var mesh_1 = __webpack_require__(60);
 exports.DEFAULT_NODE_TEMPLATE = {
     mesh: function () { return ({
         type: mesh_1.MeshKind.Primitive,
@@ -58123,7 +58314,7 @@ exports.DEFAULT_NODE_TEMPLATE_PROVIDER = function () {
 
 
 /***/ }),
-/* 56 */
+/* 60 */
 /***/ (function(module, exports) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -58136,11 +58327,11 @@ var MeshKind;
 
 
 /***/ }),
-/* 57 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var THREE = __webpack_require__(51);
+var THREE = __webpack_require__(55);
 var OBJECT_PATTERN = /^[og]\s*(.+)?/;
 var MATERIAL_LIBRARY_PATTERN = /^mtllib /;
 var MATERIAL_USE_PATTERN = /^usemtl /;
@@ -58596,12 +58787,12 @@ exports.OBJLoader = OBJLoader;
 
 
 /***/ }),
-/* 58 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var THREE = __webpack_require__(51);
+var THREE = __webpack_require__(55);
 function vector3dToTreeVector3(v) {
     var x = v.x, y = v.y, z = v.z;
     return new THREE.Vector3(x, y, z);
@@ -58688,6 +58879,14 @@ function sum(vector1, vector2) {
     };
 }
 exports.sum = sum;
+function sumScalar(vector1, scalar) {
+    return {
+        x: vector1.x + scalar,
+        y: vector1.y + scalar,
+        z: vector1.z + scalar,
+    };
+}
+exports.sumScalar = sumScalar;
 function sub(vector1, vector2) {
     return {
         x: vector1.x - vector2.x,
@@ -58761,223 +58960,6 @@ function getModelFittingBox(_a) {
     };
 }
 exports.getModelFittingBox = getModelFittingBox;
-
-
-/***/ }),
-/* 59 */
-/***/ (function(module, exports, __webpack_require__) {
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var keyHandler_1 = __webpack_require__(46);
-var link_1 = __webpack_require__(60);
-var node_1 = __webpack_require__(61);
-var DefaultEditor = (function () {
-    function DefaultEditor(diagramModel, mouseHandler, keyHandler, gamepadHandler) {
-        var _this = this;
-        this.diagramModel = diagramModel;
-        this.mouseHandler = mouseHandler;
-        this.keyHandler = keyHandler;
-        this.mouseHandler.on('elementClick', function (e) {
-            if (e.data.element instanceof node_1.Node && !_this.diagramModel.selection.elements.has(e.data.element)) {
-                _this.diagramModel.selection.setSelection(new Set([e.data.element]));
-            }
-        });
-        this.mouseHandler.on('paperClick', function (e) {
-            _this.diagramModel.selection.setSelection(new Set());
-        });
-        this.keyHandler.on('keyPressed', function (e) { return _this.onKeyPressed(e.data); });
-        this.subscribeOnDragHandler(mouseHandler);
-        this.subscribeOnDragHandler(gamepadHandler);
-    }
-    DefaultEditor.prototype.subscribeOnDragHandler = function (dragHandler) {
-        var _this = this;
-        dragHandler.on('elementDragStart', function (e) {
-            _this.onElementDrag(e.data.target, e.data.position);
-        });
-        dragHandler.on('elementDrag', function (e) {
-            _this.onElementDrag(e.data.target, e.data.position);
-        });
-        dragHandler.on('elementDragEnd', function (e) {
-            _this.onElementDragEnd(e.data.target, e.data.position);
-        });
-    };
-    DefaultEditor.prototype.onKeyPressed = function (keyMap) {
-        if (keyMap.has(keyHandler_1.KEY_CODES.DELETE) && this.diagramModel.selection.elements.size > 0) {
-            var nodesToDelete_1 = [];
-            var linksToDelete_1 = [];
-            this.diagramModel.selection.elements.forEach(function (el) {
-                if (el instanceof node_1.Node) {
-                    nodesToDelete_1.push(el);
-                }
-                else {
-                    linksToDelete_1.push(el);
-                }
-            });
-            this.diagramModel.graph.removeLinks(linksToDelete_1);
-            this.diagramModel.graph.removeNodes(nodesToDelete_1);
-        }
-    };
-    DefaultEditor.prototype.onElementDrag = function (target, position) {
-        if (target instanceof link_1.Link) {
-            return;
-        }
-        if (!position) {
-            throw new Error('Position can\'t be undefined!');
-        }
-        target.setPosition(position);
-    };
-    DefaultEditor.prototype.onElementDragEnd = function (target, position) {
-        this.onElementDrag(target, position);
-    };
-    return DefaultEditor;
-}());
-exports.DefaultEditor = DefaultEditor;
-
-
-/***/ }),
-/* 60 */
-/***/ (function(module, exports, __webpack_require__) {
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = __webpack_require__(1);
-var subscribable_1 = __webpack_require__(47);
-exports.DEFAULT_LINK_ID = 'l3graph-link';
-var Link = (function (_super) {
-    tslib_1.__extends(Link, _super);
-    function Link(model, parameters) {
-        var _this = _super.call(this) || this;
-        _this.model = model;
-        _this.modelIsChanged = false;
-        _this.source = parameters.source;
-        _this.target = parameters.target;
-        return _this;
-    }
-    Object.defineProperty(Link.prototype, "id", {
-        get: function () {
-            return this.model.id;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Link.prototype, "data", {
-        get: function () {
-            return this.model.data;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Link.prototype.setData = function (data) {
-        this.model.data = data;
-        this.modelIsChanged = true;
-        this.forceUpdate();
-    };
-    Link.prototype.forceUpdate = function () {
-        this.trigger('force-update');
-    };
-    return Link;
-}(subscribable_1.Subscribable));
-exports.Link = Link;
-
-
-/***/ }),
-/* 61 */
-/***/ (function(module, exports, __webpack_require__) {
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = __webpack_require__(1);
-var point_1 = __webpack_require__(62);
-var SIZE_VALUE = 40;
-var DEFAULT_NODE_PARAMETERS = {
-    position: { x: 0, y: 0, z: 0 },
-    size: { x: SIZE_VALUE, y: SIZE_VALUE, z: SIZE_VALUE, placeholder: true },
-};
-var Node = (function (_super) {
-    tslib_1.__extends(Node, _super);
-    function Node(_model, parameters) {
-        if (parameters === void 0) { parameters = DEFAULT_NODE_PARAMETERS; }
-        var _this = _super.call(this, parameters) || this;
-        _this._model = _model;
-        _this.incomingLinks = new Set();
-        _this.outgoingLinks = new Set();
-        _this.modelIsChanged = false;
-        _this._size = parameters.size || DEFAULT_NODE_PARAMETERS.size;
-        return _this;
-    }
-    Object.defineProperty(Node.prototype, "id", {
-        get: function () {
-            return this._model.id;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Node.prototype, "data", {
-        get: function () {
-            return this._model.data;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Node.prototype.setData = function (data) {
-        this._model.data = data;
-        this.modelIsChanged = true;
-        this.forceUpdate();
-    };
-    Object.defineProperty(Node.prototype, "model", {
-        get: function () {
-            return this._model;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Node.prototype, "size", {
-        get: function () {
-            return this._size;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Node.prototype.setSize = function (size) {
-        var previous = this._size;
-        this._size = size;
-        this.trigger('change:size', previous);
-    };
-    Node.prototype.forceUpdate = function () {
-        this.trigger('force-update');
-    };
-    return Node;
-}(point_1.Point));
-exports.Node = Node;
-
-
-/***/ }),
-/* 62 */
-/***/ (function(module, exports, __webpack_require__) {
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = __webpack_require__(1);
-var utils_1 = __webpack_require__(48);
-var Point = (function (_super) {
-    tslib_1.__extends(Point, _super);
-    function Point(parameters) {
-        var _this = _super.call(this) || this;
-        _this._position = parameters.position;
-        return _this;
-    }
-    Object.defineProperty(Point.prototype, "position", {
-        get: function () {
-            return this._position;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Point.prototype.setPosition = function (position) {
-        var previous = this._position;
-        this._position = position;
-        this.trigger('change:position', previous);
-    };
-    return Point;
-}(utils_1.Subscribable));
-exports.Point = Point;
 
 
 /***/ }),
@@ -59128,8 +59110,8 @@ exports.DiagramModel = DiagramModel;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var node_1 = __webpack_require__(61);
-var link_1 = __webpack_require__(60);
+var node_1 = __webpack_require__(50);
+var link_1 = __webpack_require__(49);
 var subscribable_1 = __webpack_require__(47);
 var GraphModel = (function (_super) {
     tslib_1.__extends(GraphModel, _super);
@@ -59393,13 +59375,9 @@ exports.Selection = Selection;
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
 var React = __webpack_require__(8);
-var THREE = __webpack_require__(51);
 var graphView_1 = __webpack_require__(68);
-var widgetsView_1 = __webpack_require__(225);
-var utils_1 = __webpack_require__(48);
-var vrManager_1 = __webpack_require__(226);
-var CSS3DRenderer_1 = __webpack_require__(218);
-var highlighter_1 = __webpack_require__(228);
+var widgetsView_1 = __webpack_require__(224);
+var highlighter_1 = __webpack_require__(225);
 exports.DEFAULT_CAMERA_DIST = 100;
 exports.DEFAULT_SCREEN_PARAMETERS = {
     VIEW_ANGLE: 45,
@@ -59410,20 +59388,19 @@ var DiagramView = (function (_super) {
     tslib_1.__extends(DiagramView, _super);
     function DiagramView(props) {
         var _this = _super.call(this, props) || this;
+        _this.core = props.core;
         _this.highlighter = new highlighter_1.ElementHighlighter(_this);
         return _this;
     }
     DiagramView.prototype.componentDidMount = function () {
         var _this = this;
-        this.initScene();
-        this.vrManager = new vrManager_1.VrManager(this);
-        this.vrManager.on('connection:state:changed', function () {
+        this.core.vrManager.on('connection:state:changed', function () {
             _this.widgetsView.update();
         });
         this.initSubViews();
         this.subscribeOnModel();
         this.subscribeOnHandlers();
-        this.renderGraph();
+        this.core.attachTo(this.meshHtmlContainer, this.overlayHtmlContainer);
         if (this.props.onViewMount) {
             this.props.onViewMount(this);
         }
@@ -59431,118 +59408,20 @@ var DiagramView = (function (_super) {
     DiagramView.prototype.componentDidUpdate = function () {
         this.subscribeOnHandlers();
     };
-    DiagramView.prototype.mouseTo3dPos = function (event, distanceFromScreen) {
-        if (distanceFromScreen === void 0) { distanceFromScreen = 600; }
-        var bBox = this.meshHtmlContainer.getBoundingClientRect();
-        return this.clientPosTo3dPos(utils_1.eventToPosition(event, bBox) || { x: 0, y: 0 }, distanceFromScreen);
-    };
-    DiagramView.prototype.clientPosTo3dPos = function (position, distanceFromScreen) {
-        if (distanceFromScreen === void 0) { distanceFromScreen = 600; }
-        var cameraPos = this.camera.position;
-        var screenParameters = this.screenParameters;
-        var vector = new THREE.Vector3((position.x / screenParameters.WIDTH) * 2 - 1, 1 - (position.y / screenParameters.HEIGHT) * 2, 1);
-        var point = vector.unproject(this.camera);
-        var distance = point.distanceTo(cameraPos);
-        var k = distanceFromScreen / distance;
-        var relativePoint = {
-            x: point.x - cameraPos.x,
-            y: point.y - cameraPos.y,
-            z: point.z - cameraPos.z,
-        };
-        return {
-            x: relativePoint.x * k + cameraPos.x,
-            y: relativePoint.y * k + cameraPos.y,
-            z: relativePoint.z * k + cameraPos.z,
-        };
-    };
-    DiagramView.prototype.pos3dToClientPos = function (position) {
-        var treePos = utils_1.vector3dToTreeVector3(position);
-        var screenParameters = this.screenParameters;
-        var vector = treePos.project(this.camera);
-        return {
-            x: (vector.x + 1) * screenParameters.WIDTH / 2,
-            y: (1 - vector.y) * screenParameters.HEIGHT / 2,
-        };
-    };
-    Object.defineProperty(DiagramView.prototype, "cameraState", {
-        get: function () {
-            var focusDirection = new THREE.Vector3(0, 0, -1);
-            focusDirection.applyQuaternion(this.camera.quaternion);
-            return {
-                position: this.camera.position,
-                focusDirection: focusDirection,
-            };
-        },
-        set: function (cameraState) {
-            var position = cameraState.position, focusDirection = cameraState.focusDirection;
-            this.camera.position.x = position.x;
-            this.camera.position.y = position.y;
-            this.camera.position.z = position.z;
-            if (focusDirection) {
-                this.camera.lookAt(new THREE.Vector3(focusDirection.x, focusDirection.y, focusDirection.z));
-            }
-            this.renderGraph();
-        },
-        enumerable: true,
-        configurable: true
-    });
-    DiagramView.prototype.resize = function () {
-        this.screenParameters = tslib_1.__assign(tslib_1.__assign({}, this.screenParameters), { WIDTH: this.meshHtmlContainer.clientWidth, HEIGHT: this.meshHtmlContainer.clientHeight, ASPECT: this.meshHtmlContainer.clientWidth / this.meshHtmlContainer.clientHeight });
-        this.renderer.setSize(this.screenParameters.WIDTH, this.screenParameters.HEIGHT);
-        this.overlayRenderer.setSize(this.screenParameters.WIDTH, this.screenParameters.HEIGHT);
-        this.camera.aspect = this.screenParameters.ASPECT;
-        this.camera.updateProjectionMatrix();
-        this.renderGraph();
-    };
-    DiagramView.prototype.initScene = function () {
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(255, 255, 255);
-        this.screenParameters = tslib_1.__assign(tslib_1.__assign({}, exports.DEFAULT_SCREEN_PARAMETERS), { WIDTH: this.meshHtmlContainer.clientWidth, HEIGHT: this.meshHtmlContainer.clientHeight, ASPECT: this.meshHtmlContainer.clientWidth / this.meshHtmlContainer.clientHeight });
-        this.camera = new THREE.PerspectiveCamera(this.screenParameters.VIEW_ANGLE, this.screenParameters.ASPECT, this.screenParameters.NEAR, this.screenParameters.FAR);
-        this.camera.position.set(0, 0, exports.DEFAULT_CAMERA_DIST);
-        this.camera.lookAt(this.scene.position);
-        this.scene.add(this.camera);
-        var dirLight = new THREE.DirectionalLight(0xffffff);
-        dirLight.position.set(200, 200, 1000).normalize();
-        this.scene.add(new THREE.AmbientLight(0x444444));
-        this.camera.add(dirLight);
-        this.camera.add(dirLight.target);
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.renderer.setSize(this.screenParameters.WIDTH, this.screenParameters.HEIGHT);
-        this.renderer.setClearColor('white');
-        this.renderer.xr.enabled = true;
-        this.overlayRenderer = new CSS3DRenderer_1.CSS3DRenderer();
-        this.overlayRenderer.setSize(this.screenParameters.WIDTH, this.screenParameters.HEIGHT);
-        this.meshHtmlContainer.appendChild(this.renderer.domElement);
-        this.overlayHtmlContainer.appendChild(this.overlayRenderer.domElement);
-        var sphereGeometry = new THREE.SphereGeometry(this.screenParameters.FAR / 2, 35, 35);
-        var sphereMaterial = new THREE.MeshBasicMaterial({
-            wireframe: true, color: 0xf0f0f0,
-        });
-        var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-        sphere.position.set(0, 0, 0);
-        this.scene.add(sphere);
-        this.renderer.render(this.scene, this.camera);
-        this.overlayRenderer.render(this.scene, this.camera);
-        this.setAnimationLoop();
-    };
     DiagramView.prototype.initSubViews = function () {
-        var _this = this;
         var viewOptions = this.props.viewOptions || {};
         this.graphView = new graphView_1.GraphView({
-            vrManager: this.vrManager,
+            vrManager: this.core.vrManager,
             graphModel: this.props.model.graph,
             nodeTemplateProvider: viewOptions.nodeTemplateProvider,
             linkTemplateProvider: viewOptions.linkTemplateProvider,
-            onAdd3dObject: function (object) { return _this.scene.add(object); },
-            onRemove3dObject: function (object) { return _this.scene.remove(object); },
+            core: this.props.core,
         });
         this.widgetsView = new widgetsView_1.WidgetsView({
             diagramView: this,
-            vrManager: this.vrManager,
+            vrManager: this.core.vrManager,
             widgetsModel: this.props.model.widgetRegistry,
-            onAdd3dObject: function (object) { return _this.scene.add(object); },
-            onRemove3dObject: function (object) { return _this.scene.remove(object); },
+            core: this.props.core,
         });
     };
     DiagramView.prototype.subscribeOnModel = function () {
@@ -59595,44 +59474,33 @@ var DiagramView = (function (_super) {
             });
             _this.graphView.update({ updatedNodeIds: updatedNodeIds, updatedLinkIds: updatedLinkIds });
             _this.widgetsView.update(updatedWidgetIds);
-            _this.renderGraph();
+            _this.core.forceRender();
         });
     };
     DiagramView.prototype.subscribeOnHandlers = function () {
         var _this = this;
-        var dragHandlers = this.props.dragHandlers;
+        var _a = this.props, dragHandlers = _a.dragHandlers, core = _a.core;
         if (!dragHandlers || this.dragHandlers) {
             return;
         }
         this.dragHandlers = dragHandlers;
-        for (var _i = 0, _a = this.dragHandlers; _i < _a.length; _i++) {
-            var dragHandler = _a[_i];
+        for (var _i = 0, _b = this.dragHandlers; _i < _b.length; _i++) {
+            var dragHandler = _b[_i];
             dragHandler.on('elementHoverStart', function (e) {
                 _this.highlighter.highlight(e.data.target);
-            });
-            dragHandler.on('elementHover', function (e) {
-                _this.highlighter.highlight(e.data.target);
+                _this.core.forceRender();
             });
             dragHandler.on('elementHoverEnd', function (e) {
                 _this.highlighter.clear(e.data.target);
+                _this.core.forceRender();
             });
         }
-    };
-    DiagramView.prototype.renderGraph = function () {
-        this.renderer.render(this.scene, this.camera);
-        this.overlayRenderer.render(this.scene, this.camera);
     };
     DiagramView.prototype.render = function () {
         var _this = this;
         return React.createElement("div", { className: 'l3graph-main_screen' },
             React.createElement("div", { className: 'l3graph-main_screen__mesh-layer', ref: function (div) { return _this.meshHtmlContainer = div; } }),
             React.createElement("div", { className: 'l3graph-main_screen__overlay-layer', ref: function (div) { return _this.overlayHtmlContainer = div; } }));
-    };
-    DiagramView.prototype.setAnimationLoop = function () {
-        var _this = this;
-        this.renderer.setAnimationLoop(function () {
-            _this.renderer.render(_this.scene, _this.camera);
-        });
     };
     return DiagramView;
 }(React.Component));
@@ -59646,10 +59514,10 @@ exports.DiagramView = DiagramView;
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
 var nodeView_1 = __webpack_require__(69);
-var linkView_1 = __webpack_require__(223);
-var customization_1 = __webpack_require__(52);
-var utils_1 = __webpack_require__(48);
-var linkRouter_1 = __webpack_require__(224);
+var linkView_1 = __webpack_require__(222);
+var customization_1 = __webpack_require__(56);
+var utils_1 = __webpack_require__(52);
+var linkRouter_1 = __webpack_require__(223);
 var GraphView = (function (_super) {
     tslib_1.__extends(GraphView, _super);
     function GraphView(props) {
@@ -59657,18 +59525,28 @@ var GraphView = (function (_super) {
         _this.props = props;
         _this.nodeViews = new Map();
         _this.linkViews = new Map();
+        _this.anchors3d = new Map();
         _this.graphModel = props.graphModel;
         _this.linkRouter = new linkRouter_1.DefaultLinkRouter();
         _this.graphModel.nodes.forEach(function (node) { return _this.registerNode(node); });
         _this.graphModel.links.forEach(function (link) { return _this.registerLink(link); });
-        _this.anchors3d = new Set();
         _this.vrManager = props.vrManager;
         _this.vrManager.on('connection:state:changed', function () {
             if (_this.vrManager.isConnected) {
-                _this.anchors3d.forEach(function (sprite) { return _this.onAdd3dObject(sprite.mesh); });
+                for (var _i = 0, _a = Array.from(_this.anchors3d.keys()); _i < _a.length; _i++) {
+                    var anchor = _a[_i];
+                    var anchor3d = anchor.createAnchor3d();
+                    _this.anchors3d.set(anchor, anchor3d);
+                    _this.add3dObject(anchor3d.mesh);
+                }
             }
             else {
-                _this.anchors3d.forEach(function (sprite) { return _this.onRemove3dObject(sprite.mesh); });
+                for (var _b = 0, _c = Array.from(_this.anchors3d.keys()); _b < _c.length; _b++) {
+                    var anchor = _c[_b];
+                    var anchor3d = _this.anchors3d.get(anchor);
+                    _this.anchors3d.set(anchor, undefined);
+                    _this.remove3dObject(anchor3d.mesh);
+                }
             }
         });
         return _this;
@@ -59714,7 +59592,7 @@ var GraphView = (function (_super) {
     GraphView.prototype.registerView = function (view) {
         var _this = this;
         if (view.mesh) {
-            this.onAdd3dObject(view.mesh);
+            this.add3dObject(view.mesh);
         }
         if (view.overlayAnchor) {
             view.overlayAnchor.html.addEventListener('mousedown', function (e) {
@@ -59723,33 +59601,29 @@ var GraphView = (function (_super) {
             view.overlayAnchor.html.addEventListener('touchstart', function (e) {
                 _this.trigger('overlay:down', { event: e, target: view.model });
             }, false);
-            this.onAdd3dObject(view.overlayAnchor.sprite);
-        }
-        if (view.overlayAnchor3d) {
-            this.anchors3d.add(view.overlayAnchor3d);
-            if (this.vrManager.isConnected) {
-                this.onAdd3dObject(view.overlayAnchor3d.mesh);
-            }
+            this.add3dObject(view.overlayAnchor.sprite);
+            this.anchors3d.set(view.overlayAnchor, undefined);
         }
         return view;
     };
     GraphView.prototype.unsubscribeFromView = function (view) {
         if (view.mesh) {
-            this.onRemove3dObject(view.mesh);
+            this.remove3dObject(view.mesh);
         }
         if (view.overlayAnchor) {
-            this.onRemove3dObject(view.overlayAnchor.sprite);
-        }
-        if (view.overlayAnchor3d) {
-            this.onRemove3dObject(view.overlayAnchor3d.mesh);
-            this.anchors3d.delete(view.overlayAnchor3d);
+            this.remove3dObject(view.overlayAnchor.sprite);
+            var overlayAnchor3d = this.anchors3d.get(view.overlayAnchor);
+            if (overlayAnchor3d) {
+                this.remove3dObject(overlayAnchor3d.mesh);
+                this.anchors3d.delete(view.overlayAnchor);
+            }
         }
     };
-    GraphView.prototype.onAdd3dObject = function (object) {
-        this.props.onAdd3dObject(object);
+    GraphView.prototype.add3dObject = function (object) {
+        this.props.core.scene.add(object);
     };
-    GraphView.prototype.onRemove3dObject = function (object) {
-        this.props.onRemove3dObject(object);
+    GraphView.prototype.remove3dObject = function (object) {
+        this.props.core.scene.remove(object);
     };
     GraphView.prototype.update = function (_a) {
         var _this = this;
@@ -59798,6 +59672,10 @@ var GraphView = (function (_super) {
         var view = this.linkViews.get(link);
         if (view) {
             view.update();
+            var anchor3d = this.anchors3d.get(view.overlayAnchor);
+            if (anchor3d) {
+                anchor3d.update();
+            }
         }
     };
     GraphView.prototype.updateNodeView = function (node) {
@@ -59815,6 +59693,10 @@ var GraphView = (function (_super) {
         var view = this.nodeViews.get(node);
         if (view) {
             view.update();
+            var anchor3d = this.anchors3d.get(view.overlayAnchor);
+            if (anchor3d) {
+                anchor3d.update();
+            }
         }
     };
     return GraphView;
@@ -59828,13 +59710,12 @@ exports.GraphView = GraphView;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var THREE = __webpack_require__(51);
-var customization_1 = __webpack_require__(52);
-var shapeUtils_1 = __webpack_require__(50);
-var utils_1 = __webpack_require__(48);
+var THREE = __webpack_require__(55);
+var customization_1 = __webpack_require__(56);
+var shapeUtils_1 = __webpack_require__(54);
+var utils_1 = __webpack_require__(52);
 var overlayAnchor_1 = __webpack_require__(70);
-var overlay3DAnchor_1 = __webpack_require__(219);
-var selectionView_1 = __webpack_require__(222);
+var selectionView_1 = __webpack_require__(221);
 var NodeView = (function () {
     function NodeView(model, template) {
         this.model = model;
@@ -59867,7 +59748,6 @@ var NodeView = (function () {
         if (template.overlay) {
             this.overlayAnchor.setOverlay(template.overlay, 'e');
         }
-        this.overlayAnchor3d = new NodeOverlayAnchor3d(this.model, this, this.overlayAnchor);
         this.update();
     }
     NodeView.prototype.getBoundingBox = function () {
@@ -59884,7 +59764,6 @@ var NodeView = (function () {
             this.mesh.position.set(position.x + this.meshOffset.x * scale.x, position.y + this.meshOffset.y * scale.y, position.z + this.meshOffset.z * scale.z);
         }
         this.overlayAnchor.update();
-        this.overlayAnchor3d.update();
     };
     NodeView.prototype.calcScale = function () {
         var size = this.meshOriginalSize;
@@ -59920,6 +59799,9 @@ var NodeOverlayAnchor = (function (_super) {
     NodeOverlayAnchor.prototype.enrichOverlay = function (poorOverlay) {
         return customization_1.enrichOverlay(poorOverlay, this.meshModel);
     };
+    NodeOverlayAnchor.prototype.createAnchor3d = function () {
+        return new NodeOverlayAnchor3d(this.meshModel, this.meshView, this);
+    };
     return NodeOverlayAnchor;
 }(overlayAnchor_1.AbstractOverlayAnchor));
 exports.NodeOverlayAnchor = NodeOverlayAnchor;
@@ -59949,11 +59831,11 @@ var NodeOverlayAnchor3d = (function (_super) {
             z: 0,
         };
         spritesByPositions.forEach(function (sprites, position) {
-            var offset = overlay3DAnchor_1.applyOffset({ x: 0, y: 0, z: 0 }, initialOffset, position);
+            var offset = overlayAnchor_1.applyOffset({ x: 0, y: 0, z: 0 }, initialOffset, position);
             for (var _i = 0, sprites_1 = sprites; _i < sprites_1.length; _i++) {
                 var renderedSprite = sprites_1[_i];
                 renderedSprite.sprite.position.set(offset.x, offset.y, offset.z);
-                offset = overlay3DAnchor_1.applyOffset(offset, {
+                offset = overlayAnchor_1.applyOffset(offset, {
                     x: selectionView_1.SELECTION_PADDING + renderedSprite.size.x,
                     y: selectionView_1.SELECTION_PADDING + renderedSprite.size.y,
                     z: 0,
@@ -59962,7 +59844,7 @@ var NodeOverlayAnchor3d = (function (_super) {
         });
     };
     return NodeOverlayAnchor3d;
-}(overlay3DAnchor_1.AbstractOverlayAnchor3d));
+}(overlayAnchor_1.AbstractOverlayAnchor3d));
 exports.NodeOverlayAnchor3d = NodeOverlayAnchor3d;
 
 
@@ -59974,9 +59856,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
 var ReactDOM = __webpack_require__(71);
 var React = __webpack_require__(8);
-var customization_1 = __webpack_require__(52);
-var utils_1 = __webpack_require__(48);
+var THREE = __webpack_require__(55);
+var customization_1 = __webpack_require__(56);
+var utils_1 = __webpack_require__(52);
 var CSS3DRenderer_1 = __webpack_require__(218);
+var htmlToSprite_1 = __webpack_require__(219);
 var AbstractOverlayAnchor = (function (_super) {
     tslib_1.__extends(AbstractOverlayAnchor, _super);
     function AbstractOverlayAnchor(meshModel, meshView) {
@@ -59993,6 +59877,7 @@ var AbstractOverlayAnchor = (function (_super) {
         _this.sprite = new CSS3DRenderer_1.CSS3DSprite(_this.html);
         _this.overlaysByPosition = new Map();
         _this._overlayPositions = new Map();
+        _this.redraw();
         return _this;
     }
     Object.defineProperty(AbstractOverlayAnchor.prototype, "overlays", {
@@ -60082,6 +59967,86 @@ var AbstractOverlayAnchor = (function (_super) {
     return AbstractOverlayAnchor;
 }(utils_1.Subscribable));
 exports.AbstractOverlayAnchor = AbstractOverlayAnchor;
+var AbstractOverlayAnchor3d = (function () {
+    function AbstractOverlayAnchor3d(meshModel, meshView, overlayAnchor) {
+        var _this = this;
+        this.meshModel = meshModel;
+        this.meshView = meshView;
+        this.overlayAnchor = overlayAnchor;
+        var spriteGroup = new THREE.Sprite();
+        var superAfterRender = spriteGroup.onAfterRender;
+        spriteGroup.onAfterRender = function (renderer, scene, camera, geometry, material, group) {
+            spriteGroup.lookAt(camera.position);
+            superAfterRender(renderer, scene, camera, geometry, material, group);
+        };
+        this.mesh = spriteGroup;
+        this.renderSprites();
+        overlayAnchor.on('anchor:changed', function () { return _this.renderSprites(); });
+    }
+    AbstractOverlayAnchor3d.prototype.update = function () {
+        this.updatePosition();
+    };
+    AbstractOverlayAnchor3d.prototype.renderSprites = function () {
+        var _this = this;
+        var spritePromises = [];
+        this.overlayAnchor._renderedOverlays.forEach(function (html, id) {
+            var position = _this.overlayAnchor._overlayPositions.get(id);
+            if (html && position) {
+                spritePromises.push(htmlToSprite_1.createSprite(html, position));
+            }
+        });
+        Promise.all(spritePromises).then(function (renderedSprites) {
+            if (_this.sprites) {
+                for (var _i = 0, _a = _this.sprites; _i < _a.length; _i++) {
+                    var renderedSprite = _a[_i];
+                    _this.mesh.remove(renderedSprite.sprite);
+                }
+            }
+            _this.placeSprites(renderedSprites);
+            for (var _b = 0, renderedSprites_1 = renderedSprites; _b < renderedSprites_1.length; _b++) {
+                var renderedSprite = renderedSprites_1[_b];
+                _this.mesh.add(renderedSprite.sprite);
+            }
+            _this.sprites = renderedSprites;
+            _this.forceUpdate();
+        });
+    };
+    return AbstractOverlayAnchor3d;
+}());
+exports.AbstractOverlayAnchor3d = AbstractOverlayAnchor3d;
+function applyOffset(basicVector, offset, position) {
+    var xOffset = offset.x, yOffset = offset.y;
+    var offsetByPossition;
+    switch (position) {
+        case 'e':
+            offsetByPossition = { x: xOffset, y: 0, z: 0 };
+            break;
+        case 'w':
+            offsetByPossition = { x: -xOffset, y: 0, z: 0 };
+            break;
+        case 'n':
+            offsetByPossition = { x: 0, y: -yOffset, z: 0 };
+            break;
+        case 's':
+            offsetByPossition = { x: 0, y: yOffset, z: 0 };
+            break;
+        case 'ne':
+            offsetByPossition = { x: xOffset, y: -yOffset, z: 0 };
+            break;
+        case 'se':
+            offsetByPossition = { x: xOffset, y: yOffset, z: 0 };
+            break;
+        case 'nw':
+            offsetByPossition = { x: -xOffset, y: -yOffset, z: 0 };
+            break;
+        case 'sw':
+            offsetByPossition = { x: -xOffset, y: yOffset, z: 0 };
+            break;
+        default: offsetByPossition = { x: 0, y: 0, z: 0 };
+    }
+    return utils_1.sum(basicVector, offsetByPossition);
+}
+exports.applyOffset = applyOffset;
 
 
 /***/ }),
@@ -77384,7 +77349,7 @@ module.exports = ReactDOMInvalidARIAHook;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var THREE = __webpack_require__(51);
+var THREE = __webpack_require__(55);
 var CSS3DObject = (function (_super) {
     tslib_1.__extends(CSS3DObject, _super);
     function CSS3DObject(element) {
@@ -77597,98 +77562,8 @@ function getCameraCSSMatrix(matrix) {
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var THREE = __webpack_require__(51);
-var htmlToSprite_1 = __webpack_require__(220);
-var utils_1 = __webpack_require__(48);
-var AbstractOverlayAnchor3d = (function () {
-    function AbstractOverlayAnchor3d(meshModel, meshView, overlayAnchor) {
-        var _this = this;
-        this.meshModel = meshModel;
-        this.meshView = meshView;
-        this.overlayAnchor = overlayAnchor;
-        var spriteGroup = new THREE.Sprite();
-        var superAfterRender = spriteGroup.onAfterRender;
-        spriteGroup.onAfterRender = function (renderer, scene, camera, geometry, material, group) {
-            spriteGroup.lookAt(camera.position);
-            superAfterRender(renderer, scene, camera, geometry, material, group);
-        };
-        this.mesh = spriteGroup;
-        this.renderSprites();
-        overlayAnchor.on('anchor:changed', function () { return _this.renderSprites(); });
-    }
-    AbstractOverlayAnchor3d.prototype.update = function () {
-        this.updatePosition();
-    };
-    AbstractOverlayAnchor3d.prototype.renderSprites = function () {
-        var _this = this;
-        var spritePromises = [];
-        this.overlayAnchor._renderedOverlays.forEach(function (html, id) {
-            var position = _this.overlayAnchor._overlayPositions.get(id);
-            if (html && position) {
-                spritePromises.push(htmlToSprite_1.createSprite(html, position));
-            }
-        });
-        Promise.all(spritePromises).then(function (renderedSprites) {
-            if (_this.sprites) {
-                for (var _i = 0, _a = _this.sprites; _i < _a.length; _i++) {
-                    var renderedSprite = _a[_i];
-                    _this.mesh.remove(renderedSprite.sprite);
-                }
-            }
-            _this.placeSprites(renderedSprites);
-            for (var _b = 0, renderedSprites_1 = renderedSprites; _b < renderedSprites_1.length; _b++) {
-                var renderedSprite = renderedSprites_1[_b];
-                _this.mesh.add(renderedSprite.sprite);
-            }
-            _this.sprites = renderedSprites;
-            _this.forceUpdate();
-        });
-    };
-    return AbstractOverlayAnchor3d;
-}());
-exports.AbstractOverlayAnchor3d = AbstractOverlayAnchor3d;
-function applyOffset(basicVector, offset, position) {
-    var xOffset = offset.x, yOffset = offset.y;
-    var offsetByPossition;
-    switch (position) {
-        case 'e':
-            offsetByPossition = { x: xOffset, y: 0, z: 0 };
-            break;
-        case 'w':
-            offsetByPossition = { x: -xOffset, y: 0, z: 0 };
-            break;
-        case 'n':
-            offsetByPossition = { x: 0, y: -yOffset, z: 0 };
-            break;
-        case 's':
-            offsetByPossition = { x: 0, y: yOffset, z: 0 };
-            break;
-        case 'ne':
-            offsetByPossition = { x: xOffset, y: -yOffset, z: 0 };
-            break;
-        case 'se':
-            offsetByPossition = { x: xOffset, y: yOffset, z: 0 };
-            break;
-        case 'nw':
-            offsetByPossition = { x: -xOffset, y: -yOffset, z: 0 };
-            break;
-        case 'sw':
-            offsetByPossition = { x: -xOffset, y: yOffset, z: 0 };
-            break;
-        default: offsetByPossition = { x: 0, y: 0, z: 0 };
-    }
-    return utils_1.sum(basicVector, offsetByPossition);
-}
-exports.applyOffset = applyOffset;
-
-
-/***/ }),
-/* 220 */
-/***/ (function(module, exports, __webpack_require__) {
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var THREE = __webpack_require__(51);
-var domtoimage = __webpack_require__(221);
+var THREE = __webpack_require__(55);
+var domtoimage = __webpack_require__(220);
 function createSprite(htmlOverlay, position) {
     var texture = new THREE.Texture();
     var materialParams = { map: texture, color: 0xffffff };
@@ -77746,7 +77621,7 @@ var ERROR_BASE_64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAA
 
 
 /***/ }),
-/* 221 */
+/* 220 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function (global) {
@@ -78521,12 +78396,12 @@ var ERROR_BASE_64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAA
 
 
 /***/ }),
-/* 222 */
+/* 221 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var THREE = __webpack_require__(51);
-var node_1 = __webpack_require__(61);
+var THREE = __webpack_require__(55);
+var node_1 = __webpack_require__(50);
 exports.SELECTION_PADDING = 5;
 var SelectionView = (function () {
     function SelectionView(parameters) {
@@ -78568,18 +78443,17 @@ exports.SelectionView = SelectionView;
 
 
 /***/ }),
-/* 223 */
+/* 222 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var THREE = __webpack_require__(51);
+var THREE = __webpack_require__(55);
 var React = __webpack_require__(8);
-var utils_1 = __webpack_require__(48);
+var utils_1 = __webpack_require__(52);
 var overlayAnchor_1 = __webpack_require__(70);
-var linkRouter_1 = __webpack_require__(224);
-var overlay3DAnchor_1 = __webpack_require__(219);
-var selectionView_1 = __webpack_require__(222);
+var linkRouter_1 = __webpack_require__(223);
+var selectionView_1 = __webpack_require__(221);
 var ARROW_LENGTH = 10;
 var LinkView = (function () {
     function LinkView(model, router, template) {
@@ -78599,7 +78473,6 @@ var LinkView = (function () {
         if (template.overlay) {
             this.overlayAnchor.setOverlay(template.overlay, 'c');
         }
-        this.overlayAnchor3d = new LinkOverlayAnchor3d(this.model, this, this.overlayAnchor);
         this.update();
     }
     LinkView.prototype.getBoundingBox = function () {
@@ -78631,7 +78504,6 @@ var LinkView = (function () {
         this.arrow.rotateX(Math.PI / 2);
         this.polyline = polyline;
         this.overlayAnchor.update();
-        this.overlayAnchor3d.update();
     };
     return LinkView;
 }());
@@ -78658,6 +78530,9 @@ var LinkOverlayAnchor = (function (_super) {
         else {
             return { x: 0, y: 0, z: 0, width: 0, height: 0, deep: 0 };
         }
+    };
+    LinkOverlayAnchor.prototype.createAnchor3d = function () {
+        return new LinkOverlayAnchor3d(this.meshModel, this.meshView, this);
     };
     return LinkOverlayAnchor;
 }(overlayAnchor_1.AbstractOverlayAnchor));
@@ -78690,11 +78565,11 @@ var LinkOverlayAnchor3d = (function (_super) {
             z: 0,
         };
         spritesByPositions.forEach(function (sprites, position) {
-            var offset = overlay3DAnchor_1.applyOffset({ x: 0, y: 0, z: 0 }, initialOffset, position);
+            var offset = overlayAnchor_1.applyOffset({ x: 0, y: 0, z: 0 }, initialOffset, position);
             for (var _i = 0, sprites_1 = sprites; _i < sprites_1.length; _i++) {
                 var renderedSprite = sprites_1[_i];
                 renderedSprite.sprite.position.set(offset.x, offset.y, offset.z);
-                offset = overlay3DAnchor_1.applyOffset(offset, {
+                offset = overlayAnchor_1.applyOffset(offset, {
                     x: selectionView_1.SELECTION_PADDING + renderedSprite.size.x,
                     y: selectionView_1.SELECTION_PADDING + renderedSprite.size.y,
                     z: 0,
@@ -78703,7 +78578,7 @@ var LinkOverlayAnchor3d = (function (_super) {
         });
     };
     return LinkOverlayAnchor3d;
-}(overlay3DAnchor_1.AbstractOverlayAnchor3d));
+}(overlayAnchor_1.AbstractOverlayAnchor3d));
 exports.LinkOverlayAnchor3d = LinkOverlayAnchor3d;
 function createLine(template) {
     var lineGeometry = new THREE.PlaneGeometry(1, 0.5 * template.thickness, 1, 1);
@@ -78727,11 +78602,11 @@ function stretchLineBetween(line, from, to) {
 
 
 /***/ }),
-/* 224 */
+/* 223 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var geometry_1 = __webpack_require__(58);
+var geometry_1 = __webpack_require__(62);
 var LINK_OFFSET = 30;
 var DefaultLinkRouter = (function () {
     function DefaultLinkRouter() {
@@ -78815,7 +78690,7 @@ exports.computePolylineLength = computePolylineLength;
 
 
 /***/ }),
-/* 225 */
+/* 224 */
 /***/ (function(module, exports) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -78841,13 +78716,10 @@ var WidgetsView = (function () {
         var view = this.findViewForWidget(widget);
         if (view) {
             if (view.mesh) {
-                this.onAdd3dObject(view.mesh);
+                this.add3dObject(view.mesh);
             }
             if (view.overlayAnchor) {
-                this.onAdd3dObject(view.overlayAnchor.sprite);
-            }
-            if (view.overlayAnchor3d) {
-                this.onAdd3dObject(view.overlayAnchor3d.mesh);
+                this.add3dObject(view.overlayAnchor.sprite);
             }
             this.views.set(widget.widgetId, view);
         }
@@ -78856,13 +78728,10 @@ var WidgetsView = (function () {
         var view = this.views.get(widget.widgetId);
         if (view) {
             if (view.mesh) {
-                this.onRemove3dObject(view.mesh);
+                this.remove3dObject(view.mesh);
             }
             if (view.overlayAnchor) {
-                this.onRemove3dObject(view.overlayAnchor.sprite);
-            }
-            if (view.overlayAnchor) {
-                this.onRemove3dObject(view.overlayAnchor3d.mesh);
+                this.remove3dObject(view.overlayAnchor.sprite);
             }
             if (view.onRemove) {
                 view.onRemove();
@@ -78870,11 +78739,11 @@ var WidgetsView = (function () {
         }
         this.views.delete(widget.widgetId);
     };
-    WidgetsView.prototype.onAdd3dObject = function (object) {
-        this.props.onAdd3dObject(object);
+    WidgetsView.prototype.add3dObject = function (object) {
+        this.props.core.scene.add(object);
     };
-    WidgetsView.prototype.onRemove3dObject = function (object) {
-        this.props.onRemove3dObject(object);
+    WidgetsView.prototype.remove3dObject = function (object) {
+        this.props.core.scene.remove(object);
     };
     WidgetsView.prototype.findViewForWidget = function (widget) {
         return this.viewRegistry.get(widget.widgetId)({
@@ -78910,108 +78779,12 @@ exports.WidgetsView = WidgetsView;
 
 
 /***/ }),
-/* 226 */
+/* 225 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = __webpack_require__(1);
-var subscribable_1 = __webpack_require__(47);
-var webVr_1 = __webpack_require__(227);
-var VrManager = (function (_super) {
-    tslib_1.__extends(VrManager, _super);
-    function VrManager(view) {
-        var _this = _super.call(this) || this;
-        _this.view = view;
-        return _this;
-    }
-    Object.defineProperty(VrManager.prototype, "camera", {
-        get: function () {
-            return this.view.renderer.xr.getCamera(this.view.camera);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(VrManager.prototype, "isConnected", {
-        get: function () {
-            return this._isConnected;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    VrManager.prototype.disconnect = function () {
-        if (this._session) {
-            this._session.end();
-        }
-    };
-    VrManager.prototype.connect = function () {
-        var _this = this;
-        return this.checkIfSupported().then(function (supported) {
-            return new Promise(function (resolve, reject) {
-                if (supported) {
-                    var sessionInit = { optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking'] };
-                    return navigator.xr.requestSession('immersive-vr', sessionInit).then(function (session) {
-                        var xr = _this.view.renderer.xr;
-                        var onSessionEnded = function (event) {
-                            session.removeEventListener('end', onSessionEnded);
-                            _this._isConnected = false;
-                            resolve();
-                            _this.trigger('connection:state:changed');
-                        };
-                        session.addEventListener('end', onSessionEnded);
-                        xr.setSession(session);
-                        _this._session = session;
-                        _this._isConnected = true;
-                        _this.trigger('connection:state:changed');
-                    });
-                }
-                else {
-                    reject(new Error('Vr mode is not supported! Neither xr no VR modes are supported by navigator.'));
-                }
-            });
-        });
-    };
-    VrManager.prototype.getController = function (id) {
-        return this.view.renderer.xr.getController(id);
-    };
-    VrManager.prototype.checkIfSupported = function () {
-        if (webVr_1.isXrNavigator(navigator)) {
-            return navigator.xr.isSessionSupported('immersive-vr');
-        }
-        else {
-            return Promise.resolve(false);
-        }
-    };
-    return VrManager;
-}(subscribable_1.default));
-exports.VrManager = VrManager;
-
-
-/***/ }),
-/* 227 */
-/***/ (function(module, exports) {
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function isXrNavigator(navigator) {
-    return 'xr' in navigator;
-}
-exports.isXrNavigator = isXrNavigator;
-function hasVrDisplays(navigator) {
-    return 'getVRDisplays' in navigator;
-}
-exports.hasVrDisplays = hasVrDisplays;
-function isWebkitNavigator(n) {
-    return Boolean('webkitGetGamepads' in n);
-}
-exports.isWebkitNavigator = isWebkitNavigator;
-
-
-/***/ }),
-/* 228 */
-/***/ (function(module, exports, __webpack_require__) {
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var node_1 = __webpack_require__(61);
-var _1 = __webpack_require__(48);
+var node_1 = __webpack_require__(50);
+var _1 = __webpack_require__(52);
 var SELECTION_COLOR = 'red';
 var DEFAULT_HIGHLIGHTER = function (mesh) {
     var backUp = _1.backupColors(mesh);
@@ -79047,16 +78820,16 @@ exports.ElementHighlighter = ElementHighlighter;
 
 
 /***/ }),
-/* 229 */
+/* 226 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var THREE = __webpack_require__(51);
+var THREE = __webpack_require__(55);
 var subscribable_1 = __webpack_require__(47);
-var geometry_1 = __webpack_require__(58);
-var link_1 = __webpack_require__(60);
-var node_1 = __webpack_require__(61);
+var geometry_1 = __webpack_require__(62);
+var link_1 = __webpack_require__(49);
+var node_1 = __webpack_require__(50);
 var MIN_DRAG_OFFSET = 5;
 var WHEEL_STEP = 100;
 var MIN_DISTANCE_TO_CAMERA = 10;
@@ -79100,7 +78873,7 @@ var MouseHandler = (function (_super) {
         var hoverTarget = this.getIntersectedObject(event);
         var prevTarget = this._hoverTarget;
         if (prevTarget) {
-            if (hoverTarget) {
+            if (hoverTarget && hoverTarget === prevTarget) {
                 this.trigger('elementHover', {
                     target: hoverTarget,
                     position: hoverTarget instanceof node_1.Node ?
@@ -79205,7 +78978,7 @@ var MouseHandler = (function (_super) {
             return target.position;
         }
         var nodeThreePos = geometry_1.vector3dToTreeVector3(target.position);
-        var cameraPos = this.diagramView.camera.position;
+        var cameraPos = this.diagramView.core.camera.position;
         var distanceToNode = nodeThreePos.distanceTo(cameraPos);
         if (isMouseWheelEvent(event)) {
             var delta = -(event.deltaX || event.deltaY || event.deltaZ);
@@ -79214,7 +78987,7 @@ var MouseHandler = (function (_super) {
         var size = target.size;
         var minDist = Math.max(size.x, size.y, size.z) / 2 + MIN_DISTANCE_TO_CAMERA;
         var limitedDistance = Math.max(distanceToNode, minDist);
-        return this.diagramView.mouseTo3dPos(event, limitedDistance);
+        return this.diagramView.core.mouseTo3dPos(event, limitedDistance);
     };
     MouseHandler.prototype.getIntersectedObject = function (event) {
         var _this = this;
@@ -79224,9 +78997,9 @@ var MouseHandler = (function (_super) {
         if (!position) {
             return undefined;
         }
-        var screenParameters = view.screenParameters;
+        var screenParameters = view.core.screenParameters;
         var vector = new THREE.Vector3((position.x / screenParameters.WIDTH) * 2 - 1, 1 - (position.y / screenParameters.HEIGHT) * 2, 1);
-        var viewDirection = vector.unproject(view.camera);
+        var viewDirection = vector.unproject(view.core.camera);
         var _a = mapMeshes(this.diagramModel, this.diagramView), meshes = _a.meshes, nodeMeshMap = _a.nodeMeshMap;
         this.diagramModel.nodes.forEach(function (node) {
             var nodeView = _this.diagramView.graphView.nodeViews.get(node);
@@ -79244,7 +79017,7 @@ var MouseHandler = (function (_super) {
                 }
             }
         });
-        this.raycaster.set(this.diagramView.camera.position, viewDirection.sub(this.diagramView.camera.position).normalize());
+        this.raycaster.set(this.diagramView.core.camera.position, viewDirection.sub(this.diagramView.core.camera.position).normalize());
         var intersections = this.raycaster.intersectObjects(meshes);
         if (intersections.length > 0) {
             var selectedMesh = intersections[0].object;
@@ -79326,17 +79099,16 @@ function isMouseWheelEvent(e) {
 
 
 /***/ }),
-/* 230 */
+/* 227 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var THREE = __webpack_require__(51);
+var THREE = __webpack_require__(55);
 var subscribable_1 = __webpack_require__(47);
-var utils_1 = __webpack_require__(48);
-var diagramView_1 = __webpack_require__(67);
-var mouseHandler_1 = __webpack_require__(229);
-var node_1 = __webpack_require__(61);
+var utils_1 = __webpack_require__(52);
+var mouseHandler_1 = __webpack_require__(226);
+var node_1 = __webpack_require__(50);
 exports.GAMEPAD_EXTRA_MOVE_STEP = 10;
 var GAMEPAD_BUTTON;
 (function (GAMEPAD_BUTTON) {
@@ -79356,11 +79128,20 @@ var GamepadHandler = (function (_super) {
         _this.diagramView = diagramView;
         _this._keyPressedMap = new Map();
         _this.targets = new Map();
-        _this.subscriptions = new Map();
+        _this.dragStates = new Map();
+        _this.draggedBy = function (element) {
+            var dragged;
+            _this.dragStates.forEach(function (dragState) {
+                if (element === dragState.target && !dragged) {
+                    dragged = dragState;
+                }
+            });
+            return dragged;
+        };
         _this.rayCaster = new THREE.Raycaster();
         _this.tempMatrix = new THREE.Matrix4();
-        _this.diagramView.vrManager.on('connection:state:changed', function () {
-            if (_this.diagramView.vrManager.isConnected) {
+        _this.diagramView.core.vrManager.on('connection:state:changed', function () {
+            if (_this.diagramView.core.vrManager.isConnected) {
                 _this.cancellation = _this.start();
                 _this.subscribeOnControllers();
             }
@@ -79375,7 +79156,7 @@ var GamepadHandler = (function (_super) {
         return _this;
     }
     GamepadHandler.prototype.getController = function (controllerId) {
-        return this.diagramView.vrManager.getController(controllerId);
+        return this.diagramView.core.vrManager.getController(controllerId);
     };
     Object.defineProperty(GamepadHandler.prototype, "keyPressedMap", {
         get: function () {
@@ -79387,37 +79168,41 @@ var GamepadHandler = (function (_super) {
     GamepadHandler.prototype.subscribeOnControllers = function () {
         var _this = this;
         var _loop_1 = function (controllerId) {
-            var controller = this_1.diagramView.vrManager.getController(controllerId);
+            var controller = this_1.diagramView.core.vrManager.getController(controllerId);
             if (!controller) {
                 return "continue";
             }
             this_1._keyPressedMap.set(controller, new Set());
-            var subscription = {
-                onDragStart: function () {
-                    _this._keyPressedMap.get(controller).add(GAMEPAD_BUTTON.TRIGGER);
-                    _this.trigger('keyDown', {
-                        controller: controller, button: GAMEPAD_BUTTON.TRIGGER,
-                    });
-                    if (!subscription.isDragging) {
-                        _this.onDragStartEvent(controller);
-                    }
-                },
-                onDrag: function () { return _this.onDragEvent(controller); },
-                onDragEnd: function () {
-                    _this._keyPressedMap.get(controller).delete(GAMEPAD_BUTTON.TRIGGER);
-                    _this.trigger('keyUp', {
-                        controller: controller, button: GAMEPAD_BUTTON.TRIGGER,
-                    });
-                    if (subscription.isDragging) {
-                        _this.onDragEndEvent(controller);
-                    }
+            var onDragStart = function () {
+                _this._keyPressedMap.get(controller).add(GAMEPAD_BUTTON.TRIGGER);
+                _this.trigger('keyDown', {
+                    controller: controller, button: GAMEPAD_BUTTON.TRIGGER,
+                });
+                if (!dragState.isDragging) {
+                    _this.onDragStartEvent(controller);
+                }
+            };
+            var onDragEnd = function () {
+                _this._keyPressedMap.get(controller).delete(GAMEPAD_BUTTON.TRIGGER);
+                _this.trigger('keyUp', {
+                    controller: controller, button: GAMEPAD_BUTTON.TRIGGER,
+                });
+                _this.onDragEndEvent(dragState);
+            };
+            var dragState = {
+                controller: controller,
+                unsubscribe: function () {
+                    controller.removeEventListener('selectstart', onDragStart);
+                    controller.removeEventListener('selectend', onDragEnd);
+                    controller.removeEventListener('squeezestart', onDragStart);
+                    controller.removeEventListener('squeezeend', onDragEnd);
                 },
             };
-            this_1.subscriptions.set(controller, subscription);
-            controller.addEventListener('selectstart', subscription.onDragStart);
-            controller.addEventListener('selectend', subscription.onDragEnd);
-            controller.addEventListener('squeezestart', subscription.onDragStart);
-            controller.addEventListener('squeezeend', subscription.onDragEnd);
+            this_1.dragStates.set(controller, dragState);
+            controller.addEventListener('selectstart', onDragStart);
+            controller.addEventListener('selectend', onDragEnd);
+            controller.addEventListener('squeezestart', onDragStart);
+            controller.addEventListener('squeezeend', onDragEnd);
         };
         var this_1 = this;
         for (var controllerId = 0; controllerId < exports.CONTROLLERS_NUMBER; controllerId++) {
@@ -79426,56 +79211,63 @@ var GamepadHandler = (function (_super) {
     };
     GamepadHandler.prototype.unsubscribeFromController = function () {
         for (var controllerId = 0; controllerId < exports.CONTROLLERS_NUMBER; controllerId++) {
-            var controller = this.diagramView.vrManager.getController(controllerId);
+            var controller = this.diagramView.core.vrManager.getController(controllerId);
             if (!controller) {
                 continue;
             }
-            var subscription = this.subscriptions.get(controller);
-            controller.removeEventListener('selectstart', subscription.onDragStart);
-            controller.removeEventListener('selectend', subscription.onDragEnd);
-            controller.removeEventListener('squeezestart', subscription.onDragStart);
-            controller.removeEventListener('squeezeend', subscription.onDragEnd);
-            this.subscriptions.delete(controller);
+            var dragState = this.dragStates.get(controller);
+            dragState.unsubscribe();
+            this.dragStates.delete(controller);
         }
     };
     GamepadHandler.prototype.onDragStartEvent = function (controller) {
         var target = this.targets.get(controller);
-        var subscription = this.subscriptions.get(controller);
+        var dragState = this.dragStates.get(controller);
         if (target) {
-            startDragging(target, this.diagramView, controller, subscription);
-            this.trigger('elementDragStart', {
-                target: target,
-                position: subscription.position,
-            });
+            var draggedBy = this.draggedBy(target);
+            if (draggedBy) {
+                startCompanionDragging(target, dragState, draggedBy);
+            }
+            else {
+                startDragging(target, this.diagramView, dragState);
+                this.trigger('elementDragStart', {
+                    target: target,
+                    position: dragState.position,
+                });
+            }
         }
     };
-    GamepadHandler.prototype.onDragEvent = function (controller) {
-        var subscription = this.subscriptions.get(controller);
-        dragElement(this.diagramView, 0, controller, subscription);
+    GamepadHandler.prototype.onDrag = function (dragState) {
+        if (!(dragState && dragState.isDragging && !dragState.dragCompanionFor)) {
+            return;
+        }
+        dragElement(this.diagramView, dragState);
         this.trigger('elementDrag', {
-            target: subscription.target,
-            position: subscription.position,
+            target: dragState.target,
+            position: dragState.position,
         });
     };
-    GamepadHandler.prototype.onDragEndEvent = function (controller) {
-        var subscription = this.subscriptions.get(controller);
-        var target = subscription.target;
-        stopDragging(subscription, this.diagramView, controller);
+    GamepadHandler.prototype.onDragEndEvent = function (dragState) {
+        stopDragging(dragState, this.diagramView);
+        if (!dragState.isDragging) {
+            return;
+        }
+        var target = dragState.target;
         this.trigger('elementDragEnd', {
             target: target,
-            position: subscription.position,
+            position: dragState.position,
         });
     };
     GamepadHandler.prototype.handlerTimeLoop = function () {
         for (var controllerId = 0; controllerId < exports.CONTROLLERS_NUMBER; controllerId++) {
-            var controller = this.diagramView.vrManager.getController(controllerId);
+            var controller = this.diagramView.core.vrManager.getController(controllerId);
             if (!controller) {
                 continue;
             }
             var prevTarget = this.targets.get(controller);
             var target = this.getTarget(controller);
             if (prevTarget) {
-                if (target) {
+                if (target && target === prevTarget) {
                     this.trigger('elementHover', {
                         target: target,
                         position: target instanceof node_1.Node ? target.position : undefined,
@@ -79498,10 +79290,8 @@ var GamepadHandler = (function (_super) {
                     });
                 }
             }
-            var subscription = this.subscriptions.get(controller);
-            if (subscription && subscription.isDragging) {
-                subscription.onDrag();
-            }
+            var dragState = this.dragStates.get(controller);
+            this.onDrag(dragState);
         }
     };
     GamepadHandler.prototype.getTarget = function (controller) {
@@ -79524,55 +79314,136 @@ var GamepadHandler = (function (_super) {
         if (this.cancellation) {
             return this.cancellation;
         }
-        return utils_1.animationFrameInterval(function () {
+        return this.diagramView.core.animationFrameInterval(function () {
             _this.handlerTimeLoop();
         });
     };
     return GamepadHandler;
 }(subscribable_1.Subscribable));
 exports.GamepadHandler = GamepadHandler;
-function startDragging(target, diagramView, controller, subscription) {
+function startDragging(target, diagramView, dragState) {
     if (target && target instanceof node_1.Node) {
-        var elementMesh = diagramView.graphView.nodeViews.get(target).mesh;
-        if (controller) {
-            var mockObject = elementMesh.clone();
-            mockObject.visible = false;
-            attach(mockObject, controller, diagramView.scene);
-            subscription.isDragging = true;
-            subscription.mockObject = mockObject;
-            subscription.targetParent = diagramView.scene;
-            subscription.target = target;
-            subscription.position = target.position;
-        }
+        var mockObject = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 'red' }));
+        mockObject.position.set(target.position.x, target.position.y, target.position.z);
+        mockObject.visible = false;
+        attach(mockObject, dragState.controller, diagramView.core.scene);
+        dragState.isDragging = true;
+        dragState.mockObject = mockObject;
+        dragState.targetParent = diagramView.core.scene;
+        dragState.target = target;
+        dragState.position = target.position;
+        dragState.dragCompanionFor = undefined;
+        dragState.startControllerPosition = utils_1.threeVector3ToVector3d(dragState.controller.position);
+        dragState.startTargetPosition = dragState.target.position;
     }
 }
-function dragElement(diagramView, zOffset, controller, subscription) {
-    if (subscription) {
-        if (controller) {
-            attach(subscription.mockObject, diagramView.scene, diagramView.scene);
-            subscription.position = utils_1.threeVector3ToVector3d(subscription.mockObject.position);
-            attach(subscription.mockObject, controller, diagramView.scene);
-            if (zOffset !== 0) {
-                var dist = subscription.mockObject.position.z + zOffset;
-                var fittingBox = utils_1.getModelFittingBox(subscription.target.size);
-                var limitedValue = Math.max(Math.min(Math.abs(dist), diagramView_1.DEFAULT_SCREEN_PARAMETERS.FAR), diagramView_1.DEFAULT_SCREEN_PARAMETERS.NEAR + fittingBox.deep / 2);
-                subscription.mockObject.position.setZ(dist > 0 ? limitedValue : -limitedValue);
-            }
-        }
+function startCompanionDragging(target, dragState, dragBase) {
+    if (target && target instanceof node_1.Node) {
+        dragBase.dragCompanion = dragState;
+        dragState.dragCompanionFor = dragBase;
+        dragState.startControllerPosition = utils_1.threeVector3ToVector3d(dragState.controller.position);
+        dragState.startTargetPosition = dragState.target.position;
     }
 }
-function stopDragging(subscription, diagramView, controller) {
-    if (subscription) {
-        if (controller) {
-            attach(subscription.mockObject, subscription.targetParent, diagramView.scene);
-            subscription.position = utils_1.threeVector3ToVector3d(subscription.mockObject.position);
-            detach(subscription.mockObject, subscription.mockObject.parent, diagramView.scene);
-            subscription.target = undefined;
-            subscription.mockObject = undefined;
-            subscription.targetParent = undefined;
-            subscription.isDragging = false;
+function dragElement(diagramView, dragState) {
+    if (dragState) {
+        attach(dragState.mockObject, diagramView.core.scene, diagramView.core.scene);
+        if (dragState.dragCompanion) {
+            dragState.position = getNewPosition(dragState, dragState.dragCompanion, diagramView.core.screenParameters.FAR);
+            dragState.mockObject.position.set(dragState.position.x, dragState.position.y, dragState.position.z);
+        }
+        else {
+            dragState.position = utils_1.threeVector3ToVector3d(dragState.mockObject.position);
+        }
+        attach(dragState.mockObject, dragState.controller, diagramView.core.scene);
+    }
+}
+function getNewPosition(baseState, companionState, maxDistance) {
+    var direction1 = utils_1.sub(utils_1.threeVector3ToVector3d(new THREE.Vector3(0, 0, -1)
+        .applyMatrix4(baseState.controller.matrixWorld)), utils_1.threeVector3ToVector3d(baseState.controller.position));
+    var direction2 = utils_1.sub(utils_1.threeVector3ToVector3d(new THREE.Vector3(0, 0, -1)
+        .applyMatrix4(companionState.controller.matrixWorld)), utils_1.threeVector3ToVector3d(companionState.controller.position));
+    var startDist = utils_1.distance(baseState.startControllerPosition, companionState.startControllerPosition);
+    var curDist = utils_1.distance(baseState.controller.position, companionState.controller.position);
+    var k = Math.pow(curDist / startDist, 2);
+    var initialTargetDist = utils_1.distance(baseState.startTargetPosition, baseState.startControllerPosition);
+    var p1 = utils_1.sum(baseState.controller.position, utils_1.multiply(direction1, Math.min(initialTargetDist * k, maxDistance)));
+    var p2 = utils_1.sum(baseState.controller.position, utils_1.multiply(direction2, Math.min(initialTargetDist * k, maxDistance)));
+    return {
+        x: (p1.x + p2.x) / 2,
+        y: (p1.y + p2.y) / 2,
+        z: (p1.z + p2.z) / 2,
+    };
+}
+function getNewPositionOld(baseState, companionState, maxDistance) {
+    var c1 = baseState.controller;
+    var c2 = companionState.controller;
+    var v1 = {
+        start: utils_1.threeVector3ToVector3d(c1.position),
+        end: utils_1.threeVector3ToVector3d(new THREE.Vector3(0, 0, -1)
+            .applyMatrix4(c1.matrixWorld)),
+    };
+    var v2 = {
+        start: utils_1.threeVector3ToVector3d(c2.position),
+        end: utils_1.threeVector3ToVector3d(new THREE.Vector3(0, 0, -1)
+            .applyMatrix4(c2.matrixWorld)),
+    };
+    return utils_1.sum(utils_1.multiply(utils_1.sub(getCrossingPoint(v1, v2, maxDistance), v1.start), 10), v1.start);
+}
+function getCrossingPoint(v1, v2, maxDistance) {
+    var direction1 = utils_1.sub(v1.end, v1.start);
+    var direction2 = utils_1.sub(v2.end, v2.start);
+    var getPointOnDirection = function (direction, dist, offset) { return utils_1.sum(offset, utils_1.multiply(direction, dist)); };
+    var MAX_ITERATIONS = 16;
+    var step = 2;
+    var curPos = maxDistance / step;
+    var returnResult = function () {
+        var p1 = getPointOnDirection(direction1, curPos, v1.start);
+        var p2 = getPointOnDirection(direction2, curPos, v2.start);
+        return {
+            x: (p1.x + p2.x) / 2,
+            y: (p1.y + p2.y) / 2,
+            z: (p1.z + p2.z) / 2,
+        };
+    };
+    for (var i = 0; i < MAX_ITERATIONS; i++) {
+        step *= 2;
+        var nextPos1 = curPos + maxDistance / step;
+        var p1_1 = getPointOnDirection(direction1, nextPos1, v1.start);
+        var p1_2 = getPointOnDirection(direction2, nextPos1, v2.start);
+        var dist1 = utils_1.distance(p1_1, p1_2);
+        var nextPos2 = curPos - maxDistance / step;
+        var p2_1 = getPointOnDirection(direction1, nextPos2, v1.start);
+        var p2_2 = getPointOnDirection(direction2, nextPos2, v2.start);
+        var dist2 = utils_1.distance(p2_1, p2_2);
+        if (dist1 < dist2) {
+            curPos = curPos + maxDistance / step;
+        }
+        else if (dist1 > dist2) {
+            curPos = curPos - maxDistance / step;
+        }
+        else {
+            return returnResult();
         }
     }
+    return returnResult();
+}
+function stopDragging(dragState, diagramView) {
+    if (dragState.dragCompanionFor) {
+        dragState.dragCompanionFor.dragCompanion = undefined;
+    }
+    if (dragState.dragCompanion) {
+        dragState.dragCompanion.dragCompanionFor = undefined;
+    }
+    attach(dragState.mockObject, dragState.targetParent, diagramView.core.scene);
+    dragState.position = utils_1.threeVector3ToVector3d(dragState.mockObject.position);
+    detach(dragState.mockObject, dragState.mockObject.parent, diagramView.core.scene);
+    dragState.target = undefined;
+    dragState.mockObject = undefined;
+    dragState.targetParent = undefined;
+    dragState.isDragging = false;
+    dragState.dragCompanionFor = undefined;
+    dragState.dragCompanion = undefined;
 }
 function attach(child, to, scene) {
     if (!(child && scene && to)) {
@@ -79599,11 +79470,11 @@ exports._attach = _attach;
 
 
 /***/ }),
-/* 231 */
+/* 228 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var node_1 = __webpack_require__(61);
+var node_1 = __webpack_require__(50);
 var GamepadEditor = (function () {
     function GamepadEditor(gamepadHandler) {
         this.gamepadHandler = gamepadHandler;
@@ -79620,27 +79491,27 @@ exports.GamepadEditor = GamepadEditor;
 
 
 /***/ }),
-/* 232 */
+/* 229 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var sphericalViewController_1 = __webpack_require__(233);
-var cylindricViewController_1 = __webpack_require__(235);
-var openSpaceViewController_1 = __webpack_require__(236);
-var vrViewController_1 = __webpack_require__(237);
+var sphericalViewController_1 = __webpack_require__(230);
+var cylindricalViewController_1 = __webpack_require__(232);
+var openSpaceViewController_1 = __webpack_require__(233);
+var vrViewController_1 = __webpack_require__(234);
 function DEFAULT_VIEW_CONTROLLERS_SET() {
     return [
-        function (view, mouseHandler, keyHandler) {
-            return new sphericalViewController_1.SphericalViewController(view, mouseHandler, keyHandler);
+        function (core, mouseHandler, keyHandler) {
+            return new sphericalViewController_1.SphericalViewController(core, mouseHandler, keyHandler);
         },
-        function (view, mouseHandler, keyHandler) {
-            return new cylindricViewController_1.CylindricalViewController(view, mouseHandler, keyHandler);
+        function (core, mouseHandler, keyHandler) {
+            return new cylindricalViewController_1.CylindricalViewController(core, mouseHandler, keyHandler);
         },
-        function (view, mouseHandler, keyHandler) {
-            return new openSpaceViewController_1.OpenSpaceViewController(view, mouseHandler, keyHandler);
+        function (core, mouseHandler, keyHandler) {
+            return new openSpaceViewController_1.OpenSpaceViewController(core, mouseHandler, keyHandler);
         },
-        function (view, mouseHandler, keyHandler, gamepadHandler) {
-            return new vrViewController_1.VrViewController(view, mouseHandler, keyHandler, gamepadHandler);
+        function (core, mouseHandler, keyHandler, gamepadHandler) {
+            return new vrViewController_1.VrViewController(core, mouseHandler, keyHandler, gamepadHandler);
         },
     ];
 }
@@ -79648,20 +79519,20 @@ exports.DEFAULT_VIEW_CONTROLLERS_SET = DEFAULT_VIEW_CONTROLLERS_SET;
 
 
 /***/ }),
-/* 233 */
+/* 230 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var viewController_1 = __webpack_require__(234);
-var utils_1 = __webpack_require__(48);
+var viewController_1 = __webpack_require__(231);
+var utils_1 = __webpack_require__(52);
 var keyHandler_1 = __webpack_require__(46);
 var WHEEL_SPEED = 100;
 var SphericalViewController = (function (_super) {
     tslib_1.__extends(SphericalViewController, _super);
-    function SphericalViewController(view, mouseHandler, keyHandler) {
+    function SphericalViewController(core, mouseHandler, keyHandler) {
         var _this = _super.call(this) || this;
-        _this.view = view;
+        _this.core = core;
         _this.mouseHandler = mouseHandler;
         _this.keyHandler = keyHandler;
         _this.cameraAngle = { x: 0, y: Math.PI / 4 };
@@ -79731,7 +79602,7 @@ var SphericalViewController = (function (_super) {
         this.trigger('switched:off');
     };
     SphericalViewController.prototype.refreshCamera = function () {
-        var position = this.view.cameraState.position;
+        var position = this.core.cameraState.position;
         var curTreePos = utils_1.vector3dToTreeVector3(position);
         var distance = curTreePos.distanceTo(viewController_1.ZERO_POSITION);
         this.cameraDistance = this.limitDistance(distance);
@@ -79763,13 +79634,13 @@ var SphericalViewController = (function (_super) {
             y: Math.sin(this.cameraAngle.y) * this.cameraDistance,
             z: Math.sin(this.cameraAngle.x) * this.cameraDistance * Math.cos(this.cameraAngle.y),
         };
-        this.view.cameraState = {
+        this.core.setCameraState({
             position: cameraPosition,
-            focusDirection: this.view.scene.position,
-        };
+            focusDirection: this.core.scene.position,
+        });
     };
     SphericalViewController.prototype.limitDistance = function (distance) {
-        return Math.min(Math.max(0.001, distance), this.view.screenParameters.FAR / 2 - viewController_1.BORDER_OPACITY);
+        return Math.min(Math.max(0.001, distance), this.core.screenParameters.FAR / 2 - viewController_1.BORDER_OPACITY);
     };
     SphericalViewController.prototype.zoom = function (diff) {
         var curDistance = this.cameraDistance;
@@ -79781,11 +79652,11 @@ exports.SphericalViewController = SphericalViewController;
 
 
 /***/ }),
-/* 234 */
+/* 231 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var three_1 = __webpack_require__(51);
+var three_1 = __webpack_require__(55);
 exports.ROTATION_DECREASE_SPEED = 300;
 exports.CAMERA_STEP_SPEED = 20;
 exports.ZERO_POSITION = new three_1.Vector3(0, 0, 0);
@@ -79795,17 +79666,17 @@ exports.BORDER_OPACITY = 100;
 
 
 /***/ }),
-/* 235 */
+/* 232 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var sphericalViewController_1 = __webpack_require__(233);
-var viewController_1 = __webpack_require__(234);
+var sphericalViewController_1 = __webpack_require__(230);
+var viewController_1 = __webpack_require__(231);
 var CylindricalViewController = (function (_super) {
     tslib_1.__extends(CylindricalViewController, _super);
-    function CylindricalViewController(view, mouseHandler, keyHandler) {
-        var _this = _super.call(this, view, mouseHandler, keyHandler) || this;
+    function CylindricalViewController(core, mouseHandler, keyHandler) {
+        var _this = _super.call(this, core, mouseHandler, keyHandler) || this;
         _this.id = 'cylindrical-view-controller';
         _this.label = 'Cylindrical View Controller';
         return _this;
@@ -79821,13 +79692,13 @@ var CylindricalViewController = (function (_super) {
             y: cameraPosition.y,
             z: 0,
         };
-        this.view.cameraState = {
+        this.core.setCameraState({
             position: cameraPosition,
             focusDirection: focusDirection,
-        };
+        });
     };
     CylindricalViewController.prototype.limitDistance = function (distance) {
-        return Math.min(Math.max(0.001, distance), (this.view.screenParameters.FAR / 2 - viewController_1.BORDER_OPACITY) / 2);
+        return Math.min(Math.max(0.001, distance), (this.core.screenParameters.FAR / 2 - viewController_1.BORDER_OPACITY) / 2);
     };
     return CylindricalViewController;
 }(sphericalViewController_1.SphericalViewController));
@@ -79835,19 +79706,19 @@ exports.CylindricalViewController = CylindricalViewController;
 
 
 /***/ }),
-/* 236 */
+/* 233 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var viewController_1 = __webpack_require__(234);
-var utils_1 = __webpack_require__(48);
+var viewController_1 = __webpack_require__(231);
+var utils_1 = __webpack_require__(52);
 var keyHandler_1 = __webpack_require__(46);
 var OpenSpaceViewController = (function (_super) {
     tslib_1.__extends(OpenSpaceViewController, _super);
-    function OpenSpaceViewController(view, mouseHandler, keyHandler) {
+    function OpenSpaceViewController(core, mouseHandler, keyHandler) {
         var _this = _super.call(this) || this;
-        _this.view = view;
+        _this.core = core;
         _this.mouseHandler = mouseHandler;
         _this.keyHandler = keyHandler;
         _this.cameraAngle = { x: 0, y: 0 };
@@ -79916,7 +79787,7 @@ var OpenSpaceViewController = (function (_super) {
     OpenSpaceViewController.prototype.focusOn = function (element) {
     };
     OpenSpaceViewController.prototype.refreshCamera = function () {
-        var position = this.view.cameraState.position;
+        var position = this.core.cameraState.position;
         this.position = position;
         var curTreePos = utils_1.vector3dToTreeVector3(position);
         var distance = curTreePos.distanceTo(viewController_1.ZERO_POSITION);
@@ -79940,13 +79811,13 @@ var OpenSpaceViewController = (function (_super) {
             y: this.position.y + cameraDirection.y,
             z: this.position.z + cameraDirection.z,
         };
-        this.view.cameraState = {
+        this.core.setCameraState({
             position: this.position,
             focusDirection: focusDirection,
-        };
+        });
     };
     OpenSpaceViewController.prototype.limitPosition = function (targetPosition) {
-        var maxRadius = this.view.screenParameters.FAR / 2 - viewController_1.BORDER_OPACITY;
+        var maxRadius = this.core.screenParameters.FAR / 2 - viewController_1.BORDER_OPACITY;
         var curTreePos = utils_1.vector3dToTreeVector3(targetPosition);
         var distanceToTheCenter = curTreePos.distanceTo(viewController_1.ZERO_POSITION);
         if (distanceToTheCenter > maxRadius) {
@@ -80018,18 +79889,18 @@ exports.OpenSpaceViewController = OpenSpaceViewController;
 
 
 /***/ }),
-/* 237 */
+/* 234 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var utils_1 = __webpack_require__(48);
+var utils_1 = __webpack_require__(52);
 var keyHandler_1 = __webpack_require__(46);
 var VrViewController = (function (_super) {
     tslib_1.__extends(VrViewController, _super);
-    function VrViewController(view, mouseHandler, keyHandler, gamepadHandler) {
+    function VrViewController(core, mouseHandler, keyHandler, gamepadHandler) {
         var _this = _super.call(this) || this;
-        _this.view = view;
+        _this.core = core;
         _this.mouseHandler = mouseHandler;
         _this.keyHandler = keyHandler;
         _this.gamepadHandler = gamepadHandler;
@@ -80045,16 +79916,13 @@ var VrViewController = (function (_super) {
                 _this.switchOff();
             }
         };
-        _this.vrManager = _this.view.vrManager;
+        _this.vrManager = _this.core.vrManager;
         return _this;
     }
     VrViewController.prototype.focusOn = function () { };
     VrViewController.prototype.switchOn = function () {
         var _this = this;
-        this.vrManager.connect().then(function () {
-            _this.switchOff();
-            _this.view.renderGraph();
-        }).catch(function (e) {
+        this.vrManager.connect().catch(function (e) {
             console.error(e.message + e.stack);
             _this.switchOff();
         });
@@ -80067,7 +79935,7 @@ var VrViewController = (function (_super) {
         this.vrManager.unsubscribe('connection:state:changed', this.onPresentingChanged);
         this.trigger('switched:off');
         this.vrManager.disconnect();
-        this.view.renderGraph();
+        this.core.forceRender();
     };
     return VrViewController;
 }(utils_1.Subscribable));
@@ -80075,17 +79943,17 @@ exports.VrViewController = VrViewController;
 
 
 /***/ }),
-/* 238 */
+/* 235 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var selectionWidget_1 = __webpack_require__(239);
-var selectionView_1 = __webpack_require__(222);
-var arrowHelperView_1 = __webpack_require__(241);
-var arrowHelper_1 = __webpack_require__(242);
-var gamepadsWidget_1 = __webpack_require__(244);
-var gamepadsWidgetView_1 = __webpack_require__(245);
-var defaultTools_1 = __webpack_require__(246);
+var selectionWidget_1 = __webpack_require__(236);
+var selectionView_1 = __webpack_require__(221);
+var arrowHelperView_1 = __webpack_require__(238);
+var arrowHelper_1 = __webpack_require__(239);
+var gamepadsWidget_1 = __webpack_require__(241);
+var gamepadsWidgetView_1 = __webpack_require__(242);
+var defaultTools_1 = __webpack_require__(243);
 exports.selectionWidgetFactory = {
     getModel: function (context) { return new selectionWidget_1.SelectionWidget({
         diagramModel: context.diagramModel,
@@ -80127,13 +79995,13 @@ exports.DEFAULT_MESH_WIDGET_SET = DEFAULT_MESH_WIDGET_SET;
 
 
 /***/ }),
-/* 239 */
+/* 236 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var widget_1 = __webpack_require__(240);
-var node_1 = __webpack_require__(61);
+var widget_1 = __webpack_require__(237);
+var node_1 = __webpack_require__(50);
 var SelectionWidget = (function (_super) {
     tslib_1.__extends(SelectionWidget, _super);
     function SelectionWidget(parameters) {
@@ -80179,7 +80047,7 @@ exports.SelectionWidget = SelectionWidget;
 
 
 /***/ }),
-/* 240 */
+/* 237 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -80201,11 +80069,11 @@ exports.Widget = Widget;
 
 
 /***/ }),
-/* 241 */
+/* 238 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var THREE = __webpack_require__(51);
+var THREE = __webpack_require__(55);
 var LINES_LENGTH = 100;
 var ArrowHelperView = (function () {
     function ArrowHelperView(parameters) {
@@ -80256,13 +80124,13 @@ exports.ArrowHelperView = ArrowHelperView;
 
 
 /***/ }),
-/* 242 */
+/* 239 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var nodeWidget_1 = __webpack_require__(243);
-var node_1 = __webpack_require__(61);
+var nodeWidget_1 = __webpack_require__(240);
+var node_1 = __webpack_require__(50);
 var ArrowHelper = (function (_super) {
     tslib_1.__extends(ArrowHelper, _super);
     function ArrowHelper(parameters) {
@@ -80292,12 +80160,12 @@ exports.ArrowHelper = ArrowHelper;
 
 
 /***/ }),
-/* 243 */
+/* 240 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var widget_1 = __webpack_require__(240);
+var widget_1 = __webpack_require__(237);
 var NodeWidget = (function (_super) {
     tslib_1.__extends(NodeWidget, _super);
     function NodeWidget(parameters) {
@@ -80350,12 +80218,12 @@ exports.NodeWidget = NodeWidget;
 
 
 /***/ }),
-/* 244 */
+/* 241 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var widget_1 = __webpack_require__(240);
+var widget_1 = __webpack_require__(237);
 var GamepadsWidget = (function (_super) {
     tslib_1.__extends(GamepadsWidget, _super);
     function GamepadsWidget(props) {
@@ -80378,12 +80246,12 @@ exports.GamepadsWidget = GamepadsWidget;
 
 
 /***/ }),
-/* 245 */
+/* 242 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var THREE = __webpack_require__(51);
-var gamepadHandler_1 = __webpack_require__(230);
+var THREE = __webpack_require__(55);
+var gamepadHandler_1 = __webpack_require__(227);
 var GamepadsWidgetView = (function () {
     function GamepadsWidgetView(parameters) {
         this.boundingBox = new THREE.Box3();
@@ -80437,14 +80305,14 @@ exports.GamepadsWidgetView = GamepadsWidgetView;
 
 
 /***/ }),
-/* 246 */
+/* 243 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var THREE = __webpack_require__(51);
-var gamepadHandler_1 = __webpack_require__(230);
-var utils_1 = __webpack_require__(48);
+var THREE = __webpack_require__(55);
+var gamepadHandler_1 = __webpack_require__(227);
+var utils_1 = __webpack_require__(52);
 var SELECTION_COLOR = 'red';
 var LEFT_GAMEPAD_COLOR = 'green';
 var RIGHT_GAMEPAD_COLOR = 'blue';
@@ -80542,13 +80410,311 @@ exports.RightGamepadTool = RightGamepadTool;
 
 
 /***/ }),
+/* 244 */
+/***/ (function(module, exports, __webpack_require__) {
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var tslib_1 = __webpack_require__(1);
+var THREE = __webpack_require__(55);
+var CSS3DRenderer_1 = __webpack_require__(218);
+var vrManager_1 = __webpack_require__(245);
+var utils_1 = __webpack_require__(52);
+exports.DEFAULT_CAMERA_DIST = 100;
+exports.DEFAULT_SCREEN_PARAMETERS = {
+    VIEW_ANGLE: 45,
+    NEAR: 0.1,
+    FAR: 10000,
+};
+var Cancellation = (function (_super) {
+    tslib_1.__extends(Cancellation, _super);
+    function Cancellation() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.isCancelled = false;
+        return _this;
+    }
+    Cancellation.prototype.stop = function () {
+        this.isCancelled = true;
+        this.trigger('cancel');
+    };
+    return Cancellation;
+}(utils_1.Subscribable));
+exports.Cancellation = Cancellation;
+var Core = (function () {
+    function Core() {
+        var _this = this;
+        this.animationLoopActions = new Set();
+        this.forceRender = function (callback) {
+            _this.forceRenderCallback = function () {
+                _this.forceRenderCallback = undefined;
+                if (callback) {
+                    callback();
+                }
+            };
+        };
+        this.forceRenderAction = function () {
+            return Boolean(_this.forceRenderCallback);
+        };
+        this.vrAction = function () { return true; };
+        this.vrManager = new vrManager_1.VrManager(this);
+        this.vrManager.on('connection:state:changed', function () {
+            if (_this.vrManager.isConnected) {
+                _this.animationLoopActions.add(_this.vrAction);
+            }
+            else {
+                _this.animationLoopActions.delete(_this.vrAction);
+            }
+        });
+        this.animationLoopActions.add(this.forceRenderAction);
+        this.initScene();
+    }
+    Core.prototype.addAnimationLoopAction = function (action) {
+        this.animationLoopActions.add(action);
+    };
+    Core.prototype.removeAnimationLoopAction = function (action) {
+        this.animationLoopActions.delete(action);
+    };
+    Core.prototype.animationFrameInterval = function (intervalCallback) {
+        var _this = this;
+        var cancellation = new Cancellation();
+        var animate = function () {
+            return cancellation.isCancelled ? false : intervalCallback() || false;
+        };
+        this.addAnimationLoopAction(animate);
+        cancellation.on('cancel', function () {
+            _this.removeAnimationLoopAction(animate);
+        });
+        return cancellation;
+    };
+    Core.prototype.attachTo = function (rootHTML, rootOverlayHtml) {
+        this.rootHTML = rootHTML;
+        this.rootHTML.appendChild(this.renderer.domElement);
+        this.rootOverlayHtml = rootOverlayHtml;
+        this.rootOverlayHtml.appendChild(this.overlayRenderer.domElement);
+        this.resize();
+    };
+    Core.prototype.mouseTo3dPos = function (event, distanceFromScreen) {
+        if (distanceFromScreen === void 0) { distanceFromScreen = 600; }
+        var bBox = this.rootHTML ?
+            this.rootHTML.getBoundingClientRect() : { x: 0, y: 0, width: 100, height: 100 };
+        return this.clientPosTo3dPos(utils_1.eventToPosition(event, bBox) || { x: 0, y: 0 }, distanceFromScreen);
+    };
+    Core.prototype.clientPosTo3dPos = function (position, distanceFromScreen) {
+        if (distanceFromScreen === void 0) { distanceFromScreen = 600; }
+        var cameraPos = this.camera.position;
+        var screenParameters = this.screenParameters;
+        var vector = new THREE.Vector3((position.x / screenParameters.WIDTH) * 2 - 1, 1 - (position.y / screenParameters.HEIGHT) * 2, 1);
+        var point = vector.unproject(this.camera);
+        var distance = point.distanceTo(cameraPos);
+        var k = distanceFromScreen / distance;
+        var relativePoint = {
+            x: point.x - cameraPos.x,
+            y: point.y - cameraPos.y,
+            z: point.z - cameraPos.z,
+        };
+        return {
+            x: relativePoint.x * k + cameraPos.x,
+            y: relativePoint.y * k + cameraPos.y,
+            z: relativePoint.z * k + cameraPos.z,
+        };
+    };
+    Core.prototype.pos3dToClientPos = function (position) {
+        var treePos = utils_1.vector3dToTreeVector3(position);
+        var screenParameters = this.screenParameters;
+        var vector = treePos.project(this.camera);
+        return {
+            x: (vector.x + 1) * screenParameters.WIDTH / 2,
+            y: (1 - vector.y) * screenParameters.HEIGHT / 2,
+        };
+    };
+    Object.defineProperty(Core.prototype, "cameraState", {
+        get: function () {
+            var focusDirection = new THREE.Vector3(0, 0, -1);
+            focusDirection.applyQuaternion(this.camera.quaternion);
+            return {
+                position: this.camera.position,
+                focusDirection: focusDirection,
+            };
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Core.prototype.setCameraState = function (cameraState) {
+        var position = cameraState.position, focusDirection = cameraState.focusDirection;
+        this.camera.position.x = position.x;
+        this.camera.position.y = position.y;
+        this.camera.position.z = position.z;
+        if (focusDirection) {
+            this.camera.lookAt(new THREE.Vector3(focusDirection.x, focusDirection.y, focusDirection.z));
+        }
+        this.forceRender();
+    };
+    Core.prototype.resize = function () {
+        if (!this.rootHTML) {
+            return;
+        }
+        this.screenParameters = tslib_1.__assign(tslib_1.__assign({}, this.screenParameters), { WIDTH: this.rootHTML.clientWidth, HEIGHT: this.rootHTML.clientHeight, ASPECT: this.rootHTML.clientWidth / this.rootHTML.clientHeight });
+        this.renderer.setSize(this.screenParameters.WIDTH, this.screenParameters.HEIGHT);
+        this.overlayRenderer.setSize(this.screenParameters.WIDTH, this.screenParameters.HEIGHT);
+        this.camera.aspect = this.screenParameters.ASPECT;
+        this.camera.updateProjectionMatrix();
+        this.forceRender();
+    };
+    Core.prototype.initScene = function () {
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(255, 255, 255);
+        this.screenParameters = tslib_1.__assign(tslib_1.__assign({}, exports.DEFAULT_SCREEN_PARAMETERS), { WIDTH: 100, HEIGHT: 100, ASPECT: 1 });
+        this.camera = new THREE.PerspectiveCamera(this.screenParameters.VIEW_ANGLE, this.screenParameters.ASPECT, this.screenParameters.NEAR, this.screenParameters.FAR);
+        this.camera.position.set(0, 0, exports.DEFAULT_CAMERA_DIST);
+        this.camera.lookAt(this.scene.position);
+        this.scene.add(this.camera);
+        var dirLight = new THREE.DirectionalLight(0xffffff);
+        dirLight.position.set(200, 200, 1000).normalize();
+        this.scene.add(new THREE.AmbientLight(0x444444));
+        this.camera.add(dirLight);
+        this.camera.add(dirLight.target);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(this.screenParameters.WIDTH, this.screenParameters.HEIGHT);
+        this.renderer.setClearColor('white');
+        this.renderer.xr.enabled = true;
+        this.overlayRenderer = new CSS3DRenderer_1.CSS3DRenderer();
+        this.overlayRenderer.setSize(this.screenParameters.WIDTH, this.screenParameters.HEIGHT);
+        var sphereGeometry = new THREE.SphereGeometry(this.screenParameters.FAR / 2, 35, 35);
+        var sphereMaterial = new THREE.MeshBasicMaterial({
+            wireframe: true, color: 0xf0f0f0,
+        });
+        var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.position.set(0, 0, 0);
+        this.scene.add(sphere);
+        this.renderer.render(this.scene, this.camera);
+        this.overlayRenderer.render(this.scene, this.camera);
+        this.setAnimationLoop();
+    };
+    Core.prototype.setAnimationLoop = function () {
+        var _this = this;
+        this.renderer.setAnimationLoop(function () {
+            var renderNeeded = false;
+            _this.animationLoopActions.forEach(function (action) {
+                var askForRender = action();
+                renderNeeded = renderNeeded || askForRender;
+            });
+            if (renderNeeded) {
+                _this.renderer.render(_this.scene, _this.camera);
+                _this.overlayRenderer.render(_this.scene, _this.camera);
+                if (_this.forceRenderCallback) {
+                    _this.forceRenderCallback();
+                }
+            }
+        });
+    };
+    return Core;
+}());
+exports.Core = Core;
+
+
+/***/ }),
+/* 245 */
+/***/ (function(module, exports, __webpack_require__) {
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var tslib_1 = __webpack_require__(1);
+var subscribable_1 = __webpack_require__(47);
+var webVr_1 = __webpack_require__(246);
+var VrManager = (function (_super) {
+    tslib_1.__extends(VrManager, _super);
+    function VrManager(core) {
+        var _this = _super.call(this) || this;
+        _this.core = core;
+        return _this;
+    }
+    Object.defineProperty(VrManager.prototype, "camera", {
+        get: function () {
+            return this.core.renderer.xr.getCamera(this.core.camera);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(VrManager.prototype, "isConnected", {
+        get: function () {
+            return this._isConnected;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    VrManager.prototype.disconnect = function () {
+        if (this._session) {
+            this._session.end();
+        }
+    };
+    VrManager.prototype.connect = function () {
+        var _this = this;
+        return this.checkIfSupported().then(function (supported) {
+            return new Promise(function (resolve, reject) {
+                if (supported) {
+                    var sessionInit = { optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking'] };
+                    return navigator.xr.requestSession('immersive-vr', sessionInit).then(function (session) {
+                        var xr = _this.core.renderer.xr;
+                        var onSessionEnded = function (event) {
+                            session.removeEventListener('end', onSessionEnded);
+                            _this._isConnected = false;
+                            resolve();
+                            _this.trigger('connection:state:changed');
+                        };
+                        session.addEventListener('end', onSessionEnded);
+                        xr.setSession(session);
+                        _this._session = session;
+                        _this._isConnected = true;
+                        _this.trigger('connection:state:changed');
+                    });
+                }
+                else {
+                    reject(new Error('Vr mode is not supported! Neither xr no VR modes are supported by navigator.'));
+                }
+            });
+        });
+    };
+    VrManager.prototype.getController = function (id) {
+        return this.core.renderer.xr.getController(id);
+    };
+    VrManager.prototype.checkIfSupported = function () {
+        if (webVr_1.isXrNavigator(navigator)) {
+            return navigator.xr.isSessionSupported('immersive-vr');
+        }
+        else {
+            return Promise.resolve(false);
+        }
+    };
+    return VrManager;
+}(subscribable_1.default));
+exports.VrManager = VrManager;
+
+
+/***/ }),
+/* 246 */
+/***/ (function(module, exports) {
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function isXrNavigator(navigator) {
+    return 'xr' in navigator;
+}
+exports.isXrNavigator = isXrNavigator;
+function hasVrDisplays(navigator) {
+    return 'getVRDisplays' in navigator;
+}
+exports.hasVrDisplays = hasVrDisplays;
+function isWebkitNavigator(n) {
+    return Boolean('webkitGetGamepads' in n);
+}
+exports.isWebkitNavigator = isWebkitNavigator;
+
+
+/***/ }),
 /* 247 */
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
 var cola = __webpack_require__(248);
-var utils_1 = __webpack_require__(48);
+var utils_1 = __webpack_require__(52);
 exports.PREFERRED_LINK_LENGTH = 75;
 var LayoutNode3D = (function (_super) {
     tslib_1.__extends(LayoutNode3D, _super);
@@ -85256,8 +85422,8 @@ exports.powerGraphGridLayout = powerGraphGridLayout;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var nodeWidget_1 = __webpack_require__(243);
-var node_1 = __webpack_require__(61);
+var nodeWidget_1 = __webpack_require__(240);
+var node_1 = __webpack_require__(50);
 var FocusNodeWidget = (function (_super) {
     tslib_1.__extends(FocusNodeWidget, _super);
     function FocusNodeWidget(parameters) {
@@ -85288,7 +85454,7 @@ exports.FocusNodeWidget = FocusNodeWidget;
 /***/ (function(module, exports, __webpack_require__) {
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var THREE = __webpack_require__(51);
+var THREE = __webpack_require__(55);
 var ReactNodeWidgetView = (function () {
     function ReactNodeWidgetView(parameters) {
         this.model = parameters.model;
