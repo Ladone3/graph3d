@@ -238,6 +238,18 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                 </DiagramView>
             </div>
             <div className='o3d-toolbar'>
+                <button
+                    title='Help'
+                    onClick={() => { alert(`
+Next three buttons provide three ways of navigation in 3D space!
+Hold mouse over the button to see full name of view controller. Use mouse and keyboard arrows for navigation
+S (Spherical view controller) - Camera is moving around the center of the diagram.
+C (Cylindrical view controller) - Camera is moving around the pivot which is placed in the center of the diagram.
+O (Open space view controller) - You can move in any direction. Change the view direction my mouse dragging,
+and change the position by using keyboard arrows.
+                    `); }}>
+                    <h2 style={{margin: 0}}>?</h2>
+                </button>
                 {this.viewControllers.map((viewController, index) => {
                     return <button
                         title={viewController.label}
