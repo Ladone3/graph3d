@@ -160,16 +160,12 @@ export function normalLeft(vector: Vector3D) {
 }
 
 export function normalUp(vector: Vector3D) {
-    const dir = normalize({
-        x: vector.x,
-        y: 0,
-        z: vector.z,
-    });
-    return {
-        x: -vector.y * dir.x,
-        y: (1 - Math.abs(vector.y)),
-        z: -vector.y * dir.z,
-    };
+    const normalL = vector3DToTreeVector3(normalLeft(vector));
+    const quaternion = new THREE.Quaternion();
+    quaternion.setFromAxisAngle(normalL, -Math.PI / 2);
+
+    const treeVector = vector3DToTreeVector3(vector).applyQuaternion(quaternion);
+    return treeVector3ToVector3D(treeVector);
 }
 
 export function normalDown(vector: Vector3D) {
