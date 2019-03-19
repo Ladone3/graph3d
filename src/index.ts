@@ -4,8 +4,9 @@ require('./js/LoaderSupport.js');
 require('./js/OBJLoader.js');
 require('./js/OBJLoader2.js');
 
-export { L3Graph, L3GraphProps, GraphElements } from './l3Graph/l3Graph';
+export { L3Graph, L3GraphProps } from './l3Graph/l3Graph';
 export { ViewOptions } from './l3Graph/views/diagramView';
+export { GraphElements } from './l3Graph/models/diagramModel';
 export { Node } from './l3Graph/models/node';
 export { Link } from './l3Graph/models/link';
 

@@ -1,135 +1,75 @@
 import * as THREE from 'three';
 
-import { handleDragging, vector3DToTreeVector3, treeVector3ToVector3D } from '../utils';
-import { Node } from '../models/node';
+import { vector3DToTreeVector3 } from '../utils';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
-import { Vector2D } from '../models/primitives';
 import { ArrowHelper } from '../models/arrowHelper';
 import { Element, isLink } from '../models/graphModel';
+import { MouseHandler } from '../utils/mouseHandler';
 
-const WHEEL_SPEED = 0.25;
+const WHEEL_STEP = 100;
 
 export class MouseEditor {
-    private raycaster: THREE.Raycaster;
     private arrowHelper: ArrowHelper;
 
     constructor(
-        private diagramhModel: DiagramModel,
+        private diagramModel: DiagramModel,
         private diagramView: DiagramView,
+        private mouseHandler: MouseHandler,
     ) {
-        this.raycaster = new THREE.Raycaster();
         this.arrowHelper = new ArrowHelper();
-        this.diagramhModel.widgets.registerWidget(this.arrowHelper);
+        this.diagramModel.widgets.registerWidget(this.arrowHelper);
+
+        this.mouseHandler.on('elementClick', e => {
+            this.diagramModel.selection = new Set([e.data.element]);
+            e.data.nativeEvent.preventDefault();
+            e.data.nativeEvent.stopPropagation();
+        });
+        this.mouseHandler.on('paperClick', e => {
+            this.diagramModel.selection = new Set();
+            e.data.preventDefault();
+            e.data.stopPropagation();
+        });
+        this.mouseHandler.on('elementStartDrag', e => {
+            this.onElementDrag(e.data.nativeEvent, e.data.element);
+            e.data.nativeEvent.preventDefault();
+            e.data.nativeEvent.stopPropagation();
+        });
+        this.mouseHandler.on('elementDrag', e => {
+            this.onElementDrag(e.data.nativeEvent, e.data.element);
+            e.data.nativeEvent.preventDefault();
+            e.data.nativeEvent.stopPropagation();
+        });
+        this.mouseHandler.on('elementEndDrag', e => {
+            this.onElementDragEnd(e.data.nativeEvent, e.data.element);
+            e.data.nativeEvent.preventDefault();
+            e.data.nativeEvent.stopPropagation();
+        });
+        this.mouseHandler.on('elementScroll', () => {
+            // ...
+        });
     }
 
-    onMouseDown(event: MouseEvent) {
-        const clickPoint = this.calcRay(event);
-        const draggedNode = this.getIntersectedObject(clickPoint);
-        if (draggedNode) {
-            const nodeTreePos = vector3DToTreeVector3(draggedNode.position);
-            const cameraPos = this.diagramView.camera.position;
-            let distanceToNode = nodeTreePos.distanceTo(cameraPos);
-
-            this.diagramhModel.selection = new Set<Element>([draggedNode]);
-            this.arrowHelper.focusNode = draggedNode;
-
-            const onWheel = (wheelEvent: Event) => {
-                const e = wheelEvent as MouseWheelEvent;
-                distanceToNode -= (e.deltaX || e.deltaY || e.deltaZ) * WHEEL_SPEED;
-                wheelEvent.stopPropagation();
-                draggedNode.position = this.diagramView.mouseTo3dPos(e, distanceToNode);
-            };
-            document.body.addEventListener('mousewheel', onWheel);
-
-            handleDragging(event, (dragEvent) => {
-                draggedNode.position = this.diagramView.mouseTo3dPos(dragEvent, distanceToNode);
-            }, () => {
-                this.arrowHelper.focusNode = undefined;
-                document.body.removeEventListener('mousewheel', onWheel);
-            });
-
-            return false;
-        }
-        return true;
-    }
-
-    // todo: improve mouse proccessing pipline
-    onOverlayDown(event: MouseEvent, target: Element) {
+    onElementDrag(event: MouseEvent | MouseWheelEvent, target: Element) {
         if (isLink(target)) { return; }
+
+        this.arrowHelper.focusNode = target;
         const nodeTreePos = vector3DToTreeVector3(target.position);
         const cameraPos = this.diagramView.camera.position;
         let distanceToNode = nodeTreePos.distanceTo(cameraPos);
-
-        this.diagramhModel.selection = new Set<Element>([target]);
-        this.arrowHelper.focusNode = target;
-
-        const onWheel = (wheelEvent: Event) => {
-            const e = wheelEvent as MouseWheelEvent;
-            distanceToNode -= (e.deltaX || e.deltaY || e.deltaZ) * WHEEL_SPEED;
-            wheelEvent.stopPropagation();
-            target.position = this.diagramView.mouseTo3dPos(e, distanceToNode);
-        };
-        document.body.addEventListener('mousewheel', onWheel);
-
-        handleDragging(event, (dragEvent) => {
-            target.position = this.diagramView.mouseTo3dPos(dragEvent, distanceToNode);
-        }, () => {
-            this.arrowHelper.focusNode = undefined;
-            document.body.removeEventListener('mousewheel', onWheel);
-        });
-    }
-
-    private getIntersectedObject(viewDirection: THREE.Vector3): Node | undefined {
-        const meshes: THREE.Object3D[] = [];
-        const nodeMeshMap: Node[] = [];
-
-        this.diagramhModel.nodes.forEach(node => {
-            const nodeView = this.diagramView.graphView.views.get(node.id);
-
-            if (nodeView.mesh) {
-                if (nodeView.mesh instanceof THREE.Group) {
-                    for (const obj of nodeView.mesh.children) {
-                        meshes.push(obj);
-                        nodeMeshMap.push(node);
-                    }
-                } else {
-                    meshes.push(nodeView.mesh);
-                    nodeMeshMap.push(node);
-                }
-            }
-            if (nodeView.overlay) {
-                meshes.push(nodeView.overlay);
-                nodeMeshMap.push(node);
-            }
-        });
-
-        this.raycaster.set(
-            this.diagramView.camera.position,
-            viewDirection.sub(this.diagramView.camera.position).normalize()
-        );
-        const intersects = this.raycaster.intersectObjects(meshes);
-
-        if (intersects.length > 0) {
-            const selectedMesh = intersects[0].object;
-            const index = meshes.indexOf(selectedMesh);
-            return nodeMeshMap[index];
+        if (isMouseWheelEvent(event)) {
+            const delata = -(event.deltaX || event.deltaY || event.deltaZ);
+            distanceToNode += (delata > 0 ? 1 : -1) * WHEEL_STEP;
         }
+        target.position = this.diagramView.mouseTo3dPos(event, distanceToNode);
     }
 
-    calcRay(event: MouseEvent): THREE.Vector3 {
-        const view = this.diagramView;
-        const bbox = view.meshHtmlContainer.getBoundingClientRect();
-        const position: Vector2D = {
-            x: event.clientX - bbox.left,
-            y: event.clientY - bbox.top,
-        };
-        const screenParameters = view.screenParameters;
-        const vector = new THREE.Vector3(
-            (position.x / screenParameters.WIDTH) * 2 - 1,
-            1 - (position.y / screenParameters.HEIGHT) * 2,
-            1
-        );
-        return vector.unproject(view.camera);
+    onElementDragEnd(event: MouseEvent | MouseWheelEvent, target: Element) {
+        this.onElementDrag(event, target);
+        this.arrowHelper.focusNode = undefined;
     }
+}
+
+function isMouseWheelEvent(e: any): e is MouseWheelEvent {
+    return Boolean(e.deltaX || e.deltaY || e.deltaZ);
 }

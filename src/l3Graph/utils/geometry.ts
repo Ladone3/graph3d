@@ -106,11 +106,17 @@ export function normalize(vector: Vector3D): Vector3D {
     };
 }
 
-export function distance(from: Vector3D, to: Vector3D): number {
+export function length(from: Vector3D | Vector2D): number {
+    return distance(from, {x: 0, y: 0});
+}
+
+export function distance(from: Vector3D | Vector2D, to: Vector3D | Vector2D): number {
+    const from3d: Vector3D = {z: 0, ...from};
+    const to3d: Vector3D = {z: 0, ...to};
     return Math.sqrt(
-        Math.pow(from.x - to.x, 2) +
-        Math.pow(from.y - to.y, 2) +
-        Math.pow(from.z - to.z, 2)
+        Math.pow(from3d.x - to3d.x, 2) +
+        Math.pow(from3d.y - to3d.y, 2) +
+        Math.pow((from3d.z || 0) - to3d.z, 2)
     );
 }
 

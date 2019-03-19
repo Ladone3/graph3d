@@ -1,30 +1,15 @@
 import * as React from 'react';
-import { ViewController, ViewControllersSet, MIN_DRAG_OFFSET } from './controllers/viewController';
+import { ViewController, ViewControllersSet } from './controllers/viewController';
 import { DEFAULT_VIEW_CONTROLLERS_SET } from './controllers/defaultViewControllers';
 import { KeyHandler } from './utils/keyHandler';
 import { MouseEditor } from './editors/mouseEditor';
-import { DiagramModel } from './models/diagramModel';
+import { DiagramModel, GraphElements } from './models/diagramModel';
 import { DiagramView, ViewOptions } from './views/diagramView';
-import { Link } from './models/link';
-import { Node } from './models/node';
-import { isTypesEqual, handleDragging, EventObject } from './utils';
 import { Vector2D, Vector3D } from './models/primitives';
 import { applyForceLayout3d, applyRandomLayout } from './layout/layouts';
+import { MouseHandler } from './utils/mouseHandler';
+import { EventObject } from './utils';
 import { Element } from './models/graphModel';
-
-export interface GraphElements {
-    nodes: Node[];
-    links: Link[];
-}
-
-interface GraphUpdate {
-    newNodes?: Node[];
-    newLinks?: Link[];
-    nodesToRemove?: Node[];
-    linksToRemove?: Link[];
-    nodesToUpdate?: Node[];
-    linksToUpdate?: Link[];
-}
 
 export interface L3GraphProps {
     elements: GraphElements;
@@ -42,6 +27,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
     public model: DiagramModel;
     private view: DiagramView;
     private keyHandler: KeyHandler;
+    private mouseHandler: MouseHandler;
     private viewControllers: ViewController[] = [];
     private mouseEditor: MouseEditor;
 
@@ -49,18 +35,15 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         super(props);
         this.model = new DiagramModel();
         this.state = {};
-        this.keyHandler = new KeyHandler();
-        this.updateGraph({
-            newNodes: this.props.elements.nodes,
-            newLinks: this.props.elements.links,
+        this.model.updateGraph({
+            nodes: this.props.elements.nodes,
+            links: this.props.elements.links,
         });
     }
 
-    componentWillUpdate(props: L3GraphProps) {
+    componentDidUpdate(props: L3GraphProps) {
         const {elements} = props;
-        this.updateGraph(
-            this.merge(elements),
-        );
+        this.model.updateGraph(elements);
     }
 
     get viewController() {
@@ -68,7 +51,10 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
     }
 
     set viewController(viewController: ViewController) {
-        viewController.refreshCamera();
+        if (this.state.viewController) {
+            this.state.viewController.switchOff();
+        }
+        viewController.switchOn();
         this.setState({viewController});
     }
 
@@ -76,7 +62,6 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         if (this.props.onComponentMount) {
             this.props.onComponentMount(this);
         }
-        this.keyHandler.on('keyPressed', (event) => this.onKeyPressed(event.data));
     }
 
     componentWillUnmount() {
@@ -94,115 +79,37 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         return this.view.pos3dToClientPos(position);
     }
 
-    private updateGraph(update: GraphUpdate) {
-        const {newNodes, newLinks, nodesToRemove, linksToRemove, linksToUpdate, nodesToUpdate} = update;
-        if (newNodes) { this.model.addElements(newNodes); }
-        if (newLinks) { this.model.addElements(newLinks); }
-        if (linksToRemove && linksToRemove.length > 0) { this.model.removeLinksByIds(linksToRemove.map(l => l.id)); }
-        if (nodesToRemove && nodesToRemove.length > 0) { this.model.removeNodesByIds(nodesToRemove.map(n => n.id)); }
-        if (nodesToUpdate && nodesToUpdate.length > 0) { this.model.updateElements(nodesToUpdate); }
-        if (linksToUpdate && linksToUpdate.length > 0) { this.model.updateElements(linksToUpdate); }
-    }
-
-    private merge(newGraphModel: GraphElements): GraphUpdate {
-        const graph = this.model.graph;
-        const {nodes, links} = newGraphModel;
-
-        const newNodes: Node[] = [];
-        const newLinks: Link[] = [];
-        const nodesToRemove: Node[] = [];
-        const linksToRemove: Link[] = [];
-        const nodesToUpdate: Node[] = [];
-        const linksToUpdate: Link[] = [];
-
-        const nodeMap = new Map<string, Node>();
-        for (const node of nodes) {
-            const id = node.id;
-            if (!graph.nodes.has(id)) {
-                newNodes.push(node);
-            } else {
-                const curNode = graph.nodes.get(id);
-                const needUpdateView =
-                    curNode.data !== node.data ||
-                    !isTypesEqual(curNode.types, node.types);
-
-                if (needUpdateView) {
-                    nodesToUpdate.push(node);
-                }
-            }
-            nodeMap.set(id, node);
-        }
-        if (graph.nodes) {
-            graph.nodes.forEach(node => {
-                if (!nodeMap.has(node.id)) {
-                    nodesToRemove.push(node);
-                }
-            });
-        }
-
-        const linksMap = new Map<string, Link>();
-        for (const link of links) {
-            const id = link.id;
-            if (!graph.links.has(id)) {
-                newLinks.push(link);
-            } else {
-                const curLink = graph.links.get(id);
-                const needUpdateView =
-                    curLink.label !== link.label ||
-                    curLink.types.sort().join('') !== link.types.sort().join('');
-
-                if (needUpdateView) {
-                    linksToUpdate.push(link);
-                }
-            }
-            linksMap.set(id, link);
-        }
-        if (graph.links) {
-            graph.links.forEach(link => {
-                if (!linksMap.has(link.id)) {
-                    linksToRemove.push(link);
-                }
-            });
-        }
-
-        return {newNodes, newLinks, nodesToRemove, linksToRemove, nodesToUpdate, linksToUpdate};
-    }
-
     private onWheel(e: React.WheelEvent<HTMLDivElement>) {
-        this.viewController.onMouseWheel(e.nativeEvent);
-        e.preventDefault();
-    }
-
-    // todo: improve mouse proccessing pipline
-    private onMouseDown(event: React.MouseEvent<HTMLDivElement>) {
-        const elementNotCaptured = this.mouseEditor.onMouseDown(event.nativeEvent);
-        if (elementNotCaptured) {
-            this.viewController.onMouseDown(event.nativeEvent);
-            handleDragging(event.nativeEvent, () => {
-                // do nothing
-            }, (dragEvent, offset) => {
-                const dist = Math.sqrt(offset.x * offset.x + offset.y * offset.y);
-                if (dist < MIN_DRAG_OFFSET) {
-                    this.model.selection = new Set();
-                }
-            });
+        if (this.mouseHandler) {
+            this.mouseHandler.onScroll(e.nativeEvent);
         }
     }
 
-    // todo: improve mouse proccessing pipline
+    private onMouseDown(event: React.MouseEvent<HTMLDivElement>) {
+        if (this.mouseHandler) {
+            this.mouseHandler.onMouseDown(event.nativeEvent);
+        }
+    }
+
     private onOverlayDown(event: EventObject<'click:overlay', {event: MouseEvent; target: Element}>) {
-        event.data.event.stopPropagation();
-        event.data.event.preventDefault();
-        this.mouseEditor.onOverlayDown(event.data.event, event.data.target);
+        if (this.mouseHandler) {
+            this.mouseHandler.onMouseDown(event.data.event, event.data.target);
+            event.data.event.stopPropagation();
+        }
     }
 
     private onViewMount = (view: DiagramView) => {
         this.view = view;
-        const controllersSet = this.props.viewControllers || DEFAULT_VIEW_CONTROLLERS_SET;
-        this.viewControllers = controllersSet.map(controller => controller(view));
-        this.viewController = this.viewControllers[0];
-        this.mouseEditor = new MouseEditor(this.model, view);
         this.view.graphView.on('click:overlay', (event) => this.onOverlayDown(event));
+        this.keyHandler = new KeyHandler();
+        this.mouseHandler = new MouseHandler(this.model, this.view);
+
+        this.viewControllers =
+            (this.props.viewControllers || DEFAULT_VIEW_CONTROLLERS_SET)
+                .map(controller => controller(this.view, this.mouseHandler, this.keyHandler));
+        this.viewController = this.viewControllers[0];
+        this.mouseEditor = new MouseEditor(this.model, this.view, this.mouseHandler);
+
         this.forceUpdate();
     }
 
@@ -212,12 +119,6 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
 
     private onBlur = () => {
         this.keyHandler.switchOff();
-    }
-
-    private onKeyPressed = (keyMap: Set<number>) => {
-        if (this.viewController) {
-            this.viewController.onKeyPressed(keyMap);
-        }
     }
 
     render() {
@@ -240,14 +141,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
             <div className='o3d-toolbar'>
                 <button
                     title='Help'
-                    onClick={() => { alert(`
-Next three buttons provide three ways of navigation in 3D space!
-Hold mouse over the button to see full name of view controller. Use mouse and keyboard arrows for navigation
-S (Spherical view controller) - Camera is moving around the center of the diagram.
-C (Cylindrical view controller) - Camera is moving around the pivot which is placed in the center of the diagram.
-O (Open space view controller) - You can move in any direction. Change the view direction my mouse dragging,
-and change the position by using keyboard arrows.
-                    `); }}>
+                    onClick={() => { alert(HELP_TEXT); }}>
                     <h2 style={{margin: 0}}>?</h2>
                 </button>
                 {this.viewControllers.map((viewController, index) => {
@@ -275,3 +169,10 @@ and change the position by using keyboard arrows.
         </div>;
     }
 }
+
+const HELP_TEXT = `Next three buttons provide three ways of navigation in 3D space!
+Hold mouse over the button to see full name of view controller. Use mouse and keyboard arrows for navigation
+S (Spherical view controller) - Camera is moving around the center of the diagram.
+C (Cylindrical view controller) - Camera is moving around the pivot which is placed in the center of the diagram.
+O (Open space view controller) - You can move in any direction. Change the view direction my mouse dragging,
+and change the position by using keyboard arrows.`;

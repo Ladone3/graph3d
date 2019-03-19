@@ -1,4 +1,3 @@
-import { Vector3D } from './primitives';
 import { Subscribable } from '../utils/subscribeable';
 import { Widget, WidgetEvents } from './widget';
 import { Node } from './node';
@@ -13,7 +12,7 @@ export interface SelectionEvents extends WidgetEvents {
 }
 
 export class Selection extends Subscribable<SelectionEvents> implements Widget {
-    private _selection?: Set<Element>;
+    private _selection?: ReadonlySet<Element>;
     public readonly widgetId: string;
 
     constructor(parameters: SelectionParameters = {}) {
@@ -22,7 +21,7 @@ export class Selection extends Subscribable<SelectionEvents> implements Widget {
         this._selection = parameters.selection || new Set<Element>();
     }
 
-    set selection(selection: Set<Element>) {
+    set selection(selection: ReadonlySet<Element>) {
         selection = selection || new Set<Element>();
         if (this._selection !== selection) {
             if (this._selection) {
@@ -43,7 +42,7 @@ export class Selection extends Subscribable<SelectionEvents> implements Widget {
         this.updateView();
     }
 
-    get selection(): Set<Element> {
+    get selection(): ReadonlySet<Element> {
         return this._selection;
     }
 
