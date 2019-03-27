@@ -150,11 +150,11 @@ export function applyForceLayout(graph: GraphModel) {
         const node = layoutNode.originalNode;
         const nodePos = node.position;
 
-        node.position = {
+        node.setPosition({
             x: layoutNode.x,
             y: layoutNode.y,
             z: Math.round(nodePos.z / 2),
-        };
+        });
     }
 }
 
@@ -173,11 +173,11 @@ export function applyRandomLayout(graph: GraphModel, maxDist: number = 500) {
     let index = 0;
     nodes.forEach(node => {
         const pos = positions[index++];
-        node.position = {
+        node.setPosition({
             x: pos.x - average.x,
             y: pos.y - average.y,
             z: pos.z - average.z,
-        };
+        });
     });
 }
 
@@ -217,10 +217,10 @@ export function applyForceLayout3d(
     for (const layoutNode of layoutNodes) {
         const node = layoutNode.node;
 
-        node.position = {
+        node.setPosition({
             x: layoutNode.x - average.x,
             y: layoutNode.y - average.y,
             z: layoutNode.z - average.z,
-        };
+        });
     }
 }

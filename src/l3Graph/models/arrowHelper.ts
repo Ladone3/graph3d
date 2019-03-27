@@ -18,10 +18,10 @@ export class ArrowHelper extends Subscribable<ArrowHelperEvents> implements Widg
     constructor(parameters: ArrowHelperParameters = {}) {
         super();
         this.widgetId = 'o3d-arrow-helper-widget';
-        this.focusNode = parameters.focusNode;
+        this.setFocusNode(parameters.focusNode);
     }
 
-    set focusNode(target: Node | undefined) {
+    setFocusNode(target: Node | undefined) {
         if (target !== this._focusNode) {
             if (this._focusNode) {
                 this._focusNode.unsubscribe(this.updateView);

@@ -40,7 +40,7 @@ export class Node<NodeContent = any> extends Subscribable<NodeEvents> {
     get types() {
         return this._types;
     }
-    set types(types: string[]) {
+    setTypes(types: string[]) {
         if (!isTypesEqual(this._types, types)) {
             this._types = types;
             this.trigger('force-update');
@@ -50,7 +50,7 @@ export class Node<NodeContent = any> extends Subscribable<NodeEvents> {
     get data() {
         return this._data;
     }
-    set data(data: NodeContent) {
+    setData(data: NodeContent) {
         if (this._data !== data) {
             this._data = data;
             this.trigger('force-update');
@@ -60,7 +60,7 @@ export class Node<NodeContent = any> extends Subscribable<NodeEvents> {
     get position() {
         return this._position;
     }
-    set position(position: Vector3D) {
+    setPosition(position: Vector3D) {
         const previous = this._position;
         this._position = position;
         this.trigger('change:position', previous);

@@ -58,9 +58,9 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         return this._selection.selection;
     }
 
-    public set selection(newSelection: ReadonlySet<Element>) {
+    public setSelection(newSelection: ReadonlySet<Element>) {
         const oldSelection = this._selection.selection;
-        this._selection.selection = newSelection as ReadonlySet<Element>;
+        this._selection.setSelection(newSelection as ReadonlySet<Element>);
         this.trigger('change:selection', oldSelection);
     }
 

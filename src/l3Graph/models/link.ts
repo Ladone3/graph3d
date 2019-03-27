@@ -44,7 +44,7 @@ export class Link extends Subscribable<LinkEvents> {
     get types() {
         return this._types;
     }
-    set types(types: string[]) {
+    setTypes(types: string[]) {
         if (!isTypesEqual(this._types, types)) {
             this._types = types;
             this.trigger('force-update');
@@ -54,7 +54,7 @@ export class Link extends Subscribable<LinkEvents> {
     get label() {
         return this._label;
     }
-    set label(label: string) {
+    setLabel(label: string) {
         if (this._label !== label) {
             this._label = label;
             this.trigger('force-update');

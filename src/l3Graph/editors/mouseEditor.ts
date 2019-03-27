@@ -21,12 +21,12 @@ export class MouseEditor {
         this.diagramModel.widgets.registerWidget(this.arrowHelper);
 
         this.mouseHandler.on('elementClick', e => {
-            this.diagramModel.selection = new Set([e.data.element]);
+            this.diagramModel.setSelection(new Set([e.data.element]));
             e.data.nativeEvent.preventDefault();
             e.data.nativeEvent.stopPropagation();
         });
         this.mouseHandler.on('paperClick', e => {
-            this.diagramModel.selection = new Set();
+            this.diagramModel.setSelection(new Set());
             e.data.preventDefault();
             e.data.stopPropagation();
         });
@@ -53,7 +53,7 @@ export class MouseEditor {
     onElementDrag(event: MouseEvent | MouseWheelEvent, target: Element) {
         if (isLink(target)) { return; }
 
-        this.arrowHelper.focusNode = target;
+        this.arrowHelper.setFocusNode(target);
         const nodeTreePos = vector3DToTreeVector3(target.position);
         const cameraPos = this.diagramView.camera.position;
         let distanceToNode = nodeTreePos.distanceTo(cameraPos);
@@ -61,12 +61,12 @@ export class MouseEditor {
             const delata = -(event.deltaX || event.deltaY || event.deltaZ);
             distanceToNode += (delata > 0 ? 1 : -1) * WHEEL_STEP;
         }
-        target.position = this.diagramView.mouseTo3dPos(event, distanceToNode);
+        target.setPosition(this.diagramView.mouseTo3dPos(event, distanceToNode));
     }
 
     onElementDragEnd(event: MouseEvent | MouseWheelEvent, target: Element) {
         this.onElementDrag(event, target);
-        this.arrowHelper.focusNode = undefined;
+        this.arrowHelper.setFocusNode(undefined);
     }
 }
 

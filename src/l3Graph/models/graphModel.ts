@@ -93,12 +93,12 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
             this.fullUpdateList.add(element.id);
             if (isNode(element)) {
                 const node = this.nodes.get(element.id);
-                node.data = element.data;
-                node.types = element.types;
+                node.setData(element.data);
+                node.setTypes(element.types);
             } else {
                 const link = this.links.get(element.id);
-                link.types = element.types;
-                link.label = element.label;
+                link.setTypes(element.types);
+                link.setLabel(element.label);
             }
         }
     }

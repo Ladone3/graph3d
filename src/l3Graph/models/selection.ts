@@ -21,7 +21,7 @@ export class Selection extends Subscribable<SelectionEvents> implements Widget {
         this._selection = parameters.selection || new Set<Element>();
     }
 
-    set selection(selection: ReadonlySet<Element>) {
+    setSelection(selection: ReadonlySet<Element>) {
         selection = selection || new Set<Element>();
         if (this._selection !== selection) {
             if (this._selection) {
