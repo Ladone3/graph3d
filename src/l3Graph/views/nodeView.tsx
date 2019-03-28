@@ -6,15 +6,14 @@ import { DiagramElementView } from './diagramElementView';
 import {
     NodeViewTemplate,
     DEFAULT_NODE_TEMPLATE,
-    isMeshObj,
-    isObject3d,
-    isMeshPrimitive,
     createContextProvider,
+    MeshKind,
+    L3Mesh,
+    DEFAULT_NODE_SIZE,
 } from '../templates';
 import { getColorByTypes } from '../utils/colorUtils';
 import { getPrimitive } from '../utils/shapeUtils';
-
-export const DEFAULT_SCALE = 20;
+import { Vector3D } from '../models/primitives';
 
 export class NodeView implements DiagramElementView<Node> {
     public readonly model: Node;
@@ -33,21 +32,18 @@ export class NodeView implements DiagramElementView<Node> {
             ...DEFAULT_NODE_TEMPLATE,
             ...customTemplate,
         };
-        const mesh = template.mesh(model.data);
+        const meshDescription = template.mesh(model.data);
         const Overlay = template.overlay.get(model.data);
 
-        if (mesh) {
-            if (isObject3d(mesh)) {
-                this.mesh = mesh;
-            } else if (isMeshPrimitive(mesh)) {
-                this.mesh = getPrimitive(mesh);
-            } else if (isMeshObj(mesh)) {
-                const obj = mesh.obj;
-                const colors = mesh.colors || [];
+        if (meshDescription) {
+            if (meshDescription.type === MeshKind.ThreeNative) {
+                this.mesh = meshDescription.mesh;
+            } else if (meshDescription.type === MeshKind.Primitive) {
+                this.mesh = getPrimitive(meshDescription);
+            } else if (meshDescription.type === MeshKind.Obj) {
+                const colors = meshDescription.colors || [];
                 const loader = new THREE.OBJLoader();
-                this.mesh = loader.parse(obj);
-                const scale = mesh.scale || DEFAULT_SCALE;
-                this.mesh.scale.set(scale, scale, scale);
+                this.mesh = loader.parse(meshDescription.markup);
 
                 let counter = 0;
                 const fallbackColor = colors[0] || getColorByTypes(this.model.types);
@@ -57,10 +53,14 @@ export class NodeView implements DiagramElementView<Node> {
                     }
                 });
             }
-            // Calc mesh offset
+            // Calc scale
+            const scale = this.calcScale(meshDescription);
+            this.mesh.scale.set(scale.x, scale.y, scale.z);
+            // Calc bounding box
             this.boundingBox.setFromObject(this.mesh)
                 .getCenter(this.mesh.position)
                 .multiplyScalar(-1);
+            // Calc mesh offset
             this.meshOffset = this.mesh.position.clone();
         } else {
             this.mesh = null;
@@ -112,6 +112,35 @@ export class NodeView implements DiagramElementView<Node> {
                 position.y,
                 position.z,
             );
+        }
+    }
+
+    private calcScale(meshTemplate: L3Mesh): Vector3D {
+        // Calc bounding box
+        this.boundingBox.setFromObject(this.mesh)
+            .getCenter(this.mesh.position)
+            .multiplyScalar(-1);
+        // Calc mesh offset
+        this.meshOffset = this.mesh.position.clone();
+
+        const size = this.boundingBox.getSize();
+        const maxSize = meshTemplate.size || DEFAULT_NODE_SIZE;
+        if (typeof maxSize === 'number') {
+            const scaleX = maxSize / size.x;
+            const scaleY = maxSize / size.x;
+            const scaleZ = maxSize / size.x;
+            const minScale = Math.min(scaleX, scaleY, scaleZ);
+            return {
+                x: minScale,
+                y: minScale,
+                z: minScale,
+            };
+        } else {
+            return {
+                x: maxSize.x / size.x,
+                y: maxSize.y / size.y,
+                z: maxSize.z / size.z,
+            };
         }
     }
 }

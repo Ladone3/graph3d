@@ -7,6 +7,7 @@ import {
     NodeViewTemplate,
 } from '../index';
 import { generateData } from './generateData';
+import { MeshKind } from '../l3Graph/templates';
 
 require('./example.scss');
 const cubePortal = require<string>('./portalCube.obj');
@@ -31,19 +32,20 @@ const rootHtml = document.getElementById('rootHtml');
 
 const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
     mesh: (node: {label: string}) => {
-        const shapeNumber = Math.round(Math.random() * 9);
+        const shapeNumber = Math.round(Math.random() * 8);
         if (shapeNumber === 0) {
             return {
-                obj: person3d,
-                scale: 0.2,
+                type: MeshKind.Obj,
+                markup: person3d,
             };
         } else if (shapeNumber === 1) {
             return {
-                obj: cat3d,
-                scale: 1,
+                type: MeshKind.Obj,
+                markup: cat3d,
             };
         } else {
             return {
+                type: MeshKind.Primitive,
                 shape: [
                     'cube',
                     'sphere',
@@ -52,8 +54,7 @@ const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
                     'dodecahedron',
                     'torus',
                     'tetrahedron',
-                    'plane',
-                ][Math.round(Math.random() * 7)],
+                ][Math.round(Math.random() * 6)] as any,
             };
         }
     },
@@ -61,7 +62,9 @@ const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
 
 const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
     mesh: (node: {label: string}): MeshObj => ({
-        obj: cubePortal,
+        type: MeshKind.Obj,
+        markup: cubePortal,
+        size: 40,
     }),
     overlay: {
         get: (node: {label: string}) => {

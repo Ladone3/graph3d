@@ -1,13 +1,11 @@
 import * as THREE from 'three';
-import { MeshPrimitive, isMeshPrimitive } from '../templates';
-import { Vector3D } from '../models/primitives';
-import { sum, multiply } from './geometry';
+import { MeshKind, MeshPrimitive } from '../templates';
 
 export function getPrimitive(primitive: MeshPrimitive): THREE.Mesh {
-    if (!isMeshPrimitive(primitive)) {
+    if (primitive.type !== MeshKind.Primitive) {
         throw new Error('Not a prmitive mesh was passed into function!');
     }
-    const color = primitive.color || Math.random() * 0xffffff;
+    const color = (primitive.colors || [])[0] || Math.random() * 0xffffff;
     const material = new THREE.MeshPhongMaterial({color});
     let geometry: THREE.Geometry;
 
