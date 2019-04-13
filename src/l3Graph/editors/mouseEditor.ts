@@ -22,27 +22,22 @@ export class MouseEditor {
 
         this.mouseHandler.on('elementClick', e => {
             this.diagramModel.setSelection(new Set([e.data.element]));
-            e.data.nativeEvent.preventDefault();
             e.data.nativeEvent.stopPropagation();
         });
         this.mouseHandler.on('paperClick', e => {
             this.diagramModel.setSelection(new Set());
-            e.data.preventDefault();
             e.data.stopPropagation();
         });
         this.mouseHandler.on('elementStartDrag', e => {
             this.onElementDrag(e.data.nativeEvent, e.data.element);
-            e.data.nativeEvent.preventDefault();
             e.data.nativeEvent.stopPropagation();
         });
         this.mouseHandler.on('elementDrag', e => {
             this.onElementDrag(e.data.nativeEvent, e.data.element);
-            e.data.nativeEvent.preventDefault();
             e.data.nativeEvent.stopPropagation();
         });
         this.mouseHandler.on('elementEndDrag', e => {
             this.onElementDragEnd(e.data.nativeEvent, e.data.element);
-            e.data.nativeEvent.preventDefault();
             e.data.nativeEvent.stopPropagation();
         });
         this.mouseHandler.on('elementScroll', () => {

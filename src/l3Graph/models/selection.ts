@@ -33,6 +33,7 @@ export class Selection extends Subscribable<SelectionEvents> implements Widget {
                 selection.forEach(el => {
                     if (isNode(el)) {
                         el.on('change:position', this.updateView);
+                        el.on('change:size', this.updateView);
                     }
                 });
             }

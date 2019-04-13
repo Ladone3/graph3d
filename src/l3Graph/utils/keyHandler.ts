@@ -13,8 +13,8 @@ export const KEY_CODES = {
     RIGHT: 39,
     SPACE: 32,
     CTRL: 17,
-    PLUS: 109,
-    MINUS: 107,
+    PLUS: 107,
+    MINUS: 109,
 };
 
 export class KeyHandler extends Subscribable<KeyHandlerEvents> {

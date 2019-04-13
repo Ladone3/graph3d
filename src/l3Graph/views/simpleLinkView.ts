@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Link } from '../models/link';
 import { Vector3D } from '../models/primitives';
 import { DiagramElementView } from './diagramElementView';
-import { LinkViewTemplate, DEFAULT_LINK_TEMPLATE } from '../templates';
+import { LinkViewTemplate, DEFAULT_LINK_TEMPLATE } from '../customisation';
 import { vector3DToTreeVector3 } from '../utils';
 
 export class SimpleLinkView implements DiagramElementView<Link> {

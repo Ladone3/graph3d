@@ -40,21 +40,18 @@ export class SphericalViewController implements ViewController {
         this.mouseHandler.on('paperStartDrag', e => {
             if (this.isActive) {
                 this.onMouseDragStart();
-                e.data.nativeEvent.preventDefault();
                 e.data.nativeEvent.stopPropagation();
             }
         });
         this.mouseHandler.on('paperDrag', e => {
             if (this.isActive) {
                 this.onMouseDrag(e.data.offset);
-                e.data.nativeEvent.preventDefault();
                 e.data.nativeEvent.stopPropagation();
             }
         });
         this.mouseHandler.on('paperScroll', e => {
             if (this.isActive) {
                 this.onMouseWheel(e.data);
-                e.data.preventDefault();
                 e.data.stopPropagation();
             }
         });
@@ -143,7 +140,7 @@ export class SphericalViewController implements ViewController {
 
     private onMouseWheel(event: MouseWheelEvent) {
         const delta = event.deltaY || event.deltaX || event.deltaZ;
-        const deltaNorma = delta > 0 ? 1 : -1;
+        const deltaNorma = delta < 0 ? 1 : -1;
         this.zoom(deltaNorma * WHEEL_SPEED);
     }
 
@@ -177,7 +174,7 @@ export class SphericalViewController implements ViewController {
     private zoom(diff: number) {
         const curDistance = this.cameraDistance;
         this.setCameraDistance(
-            curDistance + diff * ZOOM_STEP_MULTIPLAYER,
+            curDistance - diff * ZOOM_STEP_MULTIPLAYER,
         );
     }
 }

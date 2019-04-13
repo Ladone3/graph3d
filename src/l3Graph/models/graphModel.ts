@@ -106,6 +106,7 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
     private subscribeOnNode(element: Node) {
         element.on('force-update', () => this.performNodeUpdate(element));
         element.on('change:position', () => this.performNodeUpdate(element));
+        element.on('change:size', () => this.performNodeUpdate(element));
         element.on('remove', () => this.removeElements([element]));
     }
 

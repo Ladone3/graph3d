@@ -4,6 +4,7 @@ import { Selection } from '../models/selection';
 import { isNode } from '../models/graphModel';
 import { Vector3D } from '../models/primitives';
 import { calcBounds } from '../utils';
+import { Node } from '../models/node';
 
 const SELECTION_PADDING = 15;
 
@@ -31,24 +32,45 @@ export class SelectionView implements DiagramElementView<Selection> {
     }
 
     public update() {
-        const points: Vector3D[] = [];
+        // Right now it work only for one node
+        // const points: Vector3D[] = [];
+        // this.model.selection.forEach(element => {
+        //     if (isNode(element)) {
+        //         points.push(element.position);
+        //     }
+        // });
+        // if (points.length > 0) {
+        //     this.mesh.visible = true;
+        //     const {min, max, average} = calcBounds(points);
+
+        //     this.mesh.position.set(average.x, average.y, average.z);
+        //     this.mesh.scale.set(
+        //         max.x - min.x + SELECTION_PADDING * 2,
+        //         max.y - min.y + SELECTION_PADDING * 2,
+        //         max.z - min.z + SELECTION_PADDING * 2
+        //     );
+        // } else {
+        //     this.mesh.visible = false;
+        // }
+        const nodes: Node[] = [];
         this.model.selection.forEach(element => {
             if (isNode(element)) {
-                points.push(element.position);
+                nodes.push(element);
             }
         });
-        if (points.length > 0) {
-            this.mesh.visible = true;
-            const {min, max, average} = calcBounds(points);
-
-            this.mesh.position.set(average.x, average.y, average.z);
+        if (nodes.length > 0) {
+            const node = nodes[0];
+            this.mesh.position.set(node.position.x, node.position.y, node.position.z);
+            const nodeSize = typeof node.size === 'number' ? {
+                x: node.size,
+                y: node.size,
+                z: node.size,
+            } : node.size;
             this.mesh.scale.set(
-                max.x - min.x + SELECTION_PADDING * 2,
-                max.y - min.y + SELECTION_PADDING * 2,
-                max.z - min.z + SELECTION_PADDING * 2
+                nodeSize.x + SELECTION_PADDING * 2,
+                nodeSize.y + SELECTION_PADDING * 2,
+                nodeSize.z + SELECTION_PADDING * 2,
             );
-        } else {
-            this.mesh.visible = false;
         }
     }
 }

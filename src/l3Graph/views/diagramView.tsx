@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as THREE from 'three';
 import { Vector3D, Vector2D } from '../models/primitives';
-import { NodeTemplateProvider, LinkTemplateProvider } from '../templates';
+import { NodeTemplateProvider, LinkTemplateProvider } from '../customisation';
 import { GraphView } from './graphView';
 import { DiagramModel } from '../models/diagramModel';
 import { Element, GraphModelEvents } from '../models/graphModel';

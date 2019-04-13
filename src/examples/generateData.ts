@@ -16,6 +16,7 @@ export function generateData(
     const linkMap = new Set<string>();
 
     for (let i = 0; i < nodeNumber; i++) {
+        const randSizeK = 0.5 + Math.random() * 2;
         data.nodes.push(new Node<NodeData>({
             types: i % 10 === 0 ? ['o3d-node-custome'] : ['o3d-node'],
             data: { label: 'Node ' + i },
@@ -24,6 +25,7 @@ export function generateData(
                 y: Math.random() * positionRange,
                 z: Math.random() * positionRange - positionRange / 2,
             },
+            size: { x: 15 * randSizeK, y: 15 * randSizeK, z: 15 * randSizeK },
         }));
     }
 

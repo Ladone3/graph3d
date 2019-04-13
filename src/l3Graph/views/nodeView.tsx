@@ -8,12 +8,11 @@ import {
     DEFAULT_NODE_TEMPLATE,
     createContextProvider,
     MeshKind,
-    L3Mesh,
-    DEFAULT_NODE_SIZE,
-} from '../templates';
+} from '../customisation';
 import { getColorByTypes } from '../utils/colorUtils';
 import { getPrimitive } from '../utils/shapeUtils';
 import { Vector3D } from '../models/primitives';
+import { treeVector3ToVector3D } from '../utils';
 
 export class NodeView implements DiagramElementView<Node> {
     public readonly model: Node;
@@ -21,9 +20,12 @@ export class NodeView implements DiagramElementView<Node> {
     public readonly overlay: THREE.CSS3DSprite;
 
     private boundingBox: THREE.Box3;
-    private meshOffset: THREE.Vector3;
+    private meshOriginalSize: THREE.Vector3;
+    private meshOffset: Vector3D;
     private htmlOverlay: HTMLElement;
     private htmlBody: HTMLElement;
+
+    private preserveRatio: boolean;
 
     constructor(model: Node, customTemplate?: NodeViewTemplate) {
         this.model = model;
@@ -32,36 +34,32 @@ export class NodeView implements DiagramElementView<Node> {
             ...DEFAULT_NODE_TEMPLATE,
             ...customTemplate,
         };
-        const meshDescription = template.mesh(model.data);
+        const meshDescriptor = template.mesh(model.data);
         const Overlay = template.overlay.get(model.data);
 
-        if (meshDescription) {
-            if (meshDescription.type === MeshKind.ThreeNative) {
-                this.mesh = meshDescription.mesh;
-            } else if (meshDescription.type === MeshKind.Primitive) {
-                this.mesh = getPrimitive(meshDescription);
-            } else if (meshDescription.type === MeshKind.Obj) {
-                const colors = meshDescription.colors || [];
-                const loader = new THREE.OBJLoader();
-                this.mesh = loader.parse(meshDescription.markup);
+        this.preserveRatio = meshDescriptor.preserveRatio || meshDescriptor.preserveRatio === undefined;
 
-                let counter = 0;
-                const fallbackColor = colors[0] || getColorByTypes(this.model.types);
+        if (meshDescriptor) {
+            if (meshDescriptor.type === MeshKind.ThreeNative) {
+                this.mesh = meshDescriptor.mesh;
+            } else if (meshDescriptor.type === MeshKind.Primitive) {
+                this.mesh = getPrimitive(meshDescriptor);
+            } else if (meshDescriptor.type === MeshKind.Obj) {
+                const color = meshDescriptor.color || getColorByTypes(this.model.types);
+                const loader = new THREE.OBJLoader();
+                this.mesh = loader.parse(meshDescriptor.markup);
+
+                const material = new THREE.MeshPhongMaterial({color});
                 this.mesh.traverse(child => {
-                    if (child instanceof THREE.Mesh) {
-                        child.material = new THREE.MeshPhongMaterial({color: colors[counter++] || fallbackColor});
-                    }
+                    if (child instanceof THREE.Mesh) { child.material = material; }
                 });
             }
-            // Calc scale
-            const scale = this.calcScale(meshDescription);
-            this.mesh.scale.set(scale.x, scale.y, scale.z);
             // Calc bounding box
             this.boundingBox.setFromObject(this.mesh)
                 .getCenter(this.mesh.position)
                 .multiplyScalar(-1);
-            // Calc mesh offset
-            this.meshOffset = this.mesh.position.clone();
+            this.meshOffset = treeVector3ToVector3D(this.mesh.position);
+            this.meshOriginalSize = this.boundingBox.getSize(this.mesh.position).clone();
         } else {
             this.mesh = null;
         }
@@ -96,12 +94,19 @@ export class NodeView implements DiagramElementView<Node> {
     public update() {
         const position = this.model.position;
 
-        // Update mesh
         if (this.mesh) {
+            // Calc scale
+            const scale = this.calcScale();
+            this.mesh.scale.set(scale.x, scale.y, scale.z);
+            // Calc bounding box
+            this.boundingBox.setFromObject(this.mesh)
+                .getCenter(this.mesh.position)
+                .multiplyScalar(-1);
+
             this.mesh.position.set(
-                position.x + this.meshOffset.x,
-                position.y + this.meshOffset.y,
-                position.z + this.meshOffset.z,
+                position.x + this.meshOffset.x * scale.x,
+                position.y + this.meshOffset.y * scale.y,
+                position.z + this.meshOffset.z * scale.z,
             );
         }
 
@@ -115,32 +120,23 @@ export class NodeView implements DiagramElementView<Node> {
         }
     }
 
-    private calcScale(meshTemplate: L3Mesh): Vector3D {
-        // Calc bounding box
-        this.boundingBox.setFromObject(this.mesh)
-            .getCenter(this.mesh.position)
-            .multiplyScalar(-1);
-        // Calc mesh offset
-        this.meshOffset = this.mesh.position.clone();
-
-        const size = this.boundingBox.getSize();
-        const maxSize = meshTemplate.size || DEFAULT_NODE_SIZE;
-        if (typeof maxSize === 'number') {
-            const scaleX = maxSize / size.x;
-            const scaleY = maxSize / size.x;
-            const scaleZ = maxSize / size.x;
-            const minScale = Math.min(scaleX, scaleY, scaleZ);
+    private calcScale(): Vector3D {
+        const size = this.meshOriginalSize;
+        const prefferedSize = this.model.size;
+        const scale = {
+            x: prefferedSize.x / size.x,
+            y: prefferedSize.y / size.y,
+            z: prefferedSize.z / size.z,
+        };
+        if (this.preserveRatio) {
+            const singleScale = Math.min(scale.x, scale.y, scale.z);
             return {
-                x: minScale,
-                y: minScale,
-                z: minScale,
+                x: singleScale,
+                y: singleScale,
+                z: singleScale,
             };
         } else {
-            return {
-                x: maxSize.x / size.x,
-                y: maxSize.y / size.y,
-                z: maxSize.z / size.z,
-            };
+            return scale;
         }
     }
 }

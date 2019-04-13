@@ -50,21 +50,18 @@ export class OpenSpaceViewController implements ViewController {
         this.mouseHandler.on('paperStartDrag', e => {
             if (this.isActive) {
                 this.onMouseDragStart();
-                e.data.nativeEvent.preventDefault();
                 e.data.nativeEvent.stopPropagation();
             }
         });
         this.mouseHandler.on('paperDrag', e => {
             if (this.isActive) {
                 this.onMouseDrag(e.data.offset);
-                e.data.nativeEvent.preventDefault();
                 e.data.nativeEvent.stopPropagation();
             }
         });
         this.mouseHandler.on('paperScroll', e => {
             if (this.isActive) {
                 this.onMouseWheel(e.data);
-                e.data.preventDefault();
                 e.data.stopPropagation();
             }
         });

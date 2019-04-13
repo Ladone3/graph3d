@@ -7,7 +7,7 @@ import {
     NodeViewTemplate,
 } from '../index';
 import { generateData } from './generateData';
-import { MeshKind } from '../l3Graph/templates';
+import { MeshKind } from '../l3Graph/customisation';
 
 require('./example.scss');
 const cubePortal = require<string>('./portalCube.obj');
@@ -64,7 +64,6 @@ const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
     mesh: (node: {label: string}): MeshObj => ({
         type: MeshKind.Obj,
         markup: cubePortal,
-        size: 40,
     }),
     overlay: {
         get: (node: {label: string}) => {

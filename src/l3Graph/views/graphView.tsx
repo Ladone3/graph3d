@@ -8,7 +8,7 @@ import {
     DEFAULT_NODE_TEMPLATE_PROVIDER,
     LinkTemplateProvider,
     DEFAULT_LINK_TEMPLATE_PROVIDER,
-} from '../templates';
+} from '../customisation';
 import { SimpleLinkView } from './simpleLinkView';
 import { Subscribable } from '../utils';
 import { Node } from '../models/node';

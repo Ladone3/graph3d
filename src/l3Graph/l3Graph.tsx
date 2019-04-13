@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ViewController, ViewControllersSet } from './controllers/viewController';
 import { DEFAULT_VIEW_CONTROLLERS_SET } from './controllers/defaultViewControllers';
-import { KeyHandler } from './utils/keyHandler';
+import { KeyHandler, KEY_CODES } from './utils/keyHandler';
 import { MouseEditor } from './editors/mouseEditor';
 import { DiagramModel, GraphElements } from './models/diagramModel';
 import { DiagramView, ViewOptions } from './views/diagramView';
@@ -10,6 +10,7 @@ import { applyForceLayout3d, applyRandomLayout } from './layout/layouts';
 import { MouseHandler } from './utils/mouseHandler';
 import { EventObject } from './utils';
 import { Element } from './models/graphModel';
+import { Node } from './models/node';
 
 export interface L3GraphProps {
     elements: GraphElements;
@@ -101,8 +102,8 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
     private onViewMount = (view: DiagramView) => {
         this.view = view;
         this.view.graphView.on('click:overlay', (event) => this.onOverlayDown(event));
-        this.keyHandler = new KeyHandler();
         this.mouseHandler = new MouseHandler(this.model, this.view);
+        this.keyHandler = new KeyHandler();
 
         this.viewControllers =
             (this.props.viewControllers || DEFAULT_VIEW_CONTROLLERS_SET)

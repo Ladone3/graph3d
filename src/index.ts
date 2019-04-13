@@ -21,7 +21,7 @@ export {
     DEFAULT_NODE_TEMPLATE_PROVIDER,
     DEFAULT_LINK_TEMPLATE,
     DEFAULT_LINK_TEMPLATE_PROVIDER,
-} from './l3Graph/templates';
+} from './l3Graph/customisation';
 
 export { ViewController } from './l3Graph/controllers/viewController';
 
