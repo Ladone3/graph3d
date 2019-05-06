@@ -33,6 +33,8 @@ export class DiagramView extends React.Component<DiagramViewProps> {
     private renderer: THREE.WebGLRenderer;
     private overlayRenderer: THREE.CSS3DRenderer;
 
+    private vrButton: HTMLDivElement;
+
     graphView: GraphView;
     widgetsView: WidgetsView;
 
@@ -52,6 +54,22 @@ export class DiagramView extends React.Component<DiagramViewProps> {
 
     constructor(props: DiagramViewProps) {
         super(props);
+    }
+
+    switchOnVr() {
+        const vrButton: HTMLElement = (THREE as any).WEBVR.createButton(this.renderer);
+        this.vrButton.appendChild(vrButton);
+        this.renderer.vr.enabled = true;
+        (this.renderer as any).setAnimationLoop(() => {
+            this.renderer.render(this.scene, this.camera);
+        });
+    }
+
+    switchOffVr() {
+        const vrButton: HTMLElement = (THREE as any).WEBVR.createButton(this.renderer);
+        this.vrButton.innerHTML = '';
+        this.renderer.vr.enabled = false;
+        (this.renderer as any).setAnimationLoop(null);
     }
 
     componentDidMount() {
@@ -268,14 +286,15 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         return <div className='o3d-main_screen'>
             <div
                 className='o3d-main_screen__mesh-layer'
-                ref={(div) => this.meshHtmlContainer = div}
+                ref={div => this.meshHtmlContainer = div}
             >
             </div>
             <div
                 className='o3d-main_screen__overlay-layer'
-                ref={(div) => this.overlayHtmlContainer = div}
+                ref={div => this.overlayHtmlContainer = div}
             >
             </div>
+            <div ref={div => this.vrButton = div}></div>
         </div>;
     }
 }

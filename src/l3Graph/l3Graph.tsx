@@ -22,6 +22,7 @@ export interface L3GraphProps {
 
 export interface State {
     viewController?: ViewController;
+    vrMode?: boolean;
 }
 
 export class L3Graph extends React.Component<L3GraphProps, State> {
@@ -165,6 +166,21 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                     title='Random layaout'
                     onClick={() => { applyRandomLayout(this.model.graph); }}>
                     RL
+                </button>
+                <button
+                    id='o3d-vr-button'
+                    title={`${this.state.vrMode ? 'Switch off VR mode' : 'Switch on VR mode'}`}
+                    onClick={() => {
+                        if (this.state.vrMode) {
+                            this.view.switchOffVr();
+                            this.setState({vrMode: false});
+                        } else {
+                            this.view.switchOnVr();
+                            this.setState({vrMode: true});
+                        }
+                        this.view.renderGraph();
+                    }}>
+                    VR {`${this.state.vrMode ? '-' : '+'}`}
                 </button>
             </div>
         </div>;
