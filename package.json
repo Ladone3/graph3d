@@ -17,9 +17,7 @@
     "check-cycles": "./node_modules/webpack-cyclic-dependency-checker/src/cli.js stats.json"
   },
   "dependencies": {
-    "@types/lodash": "4.14.110",
     "@types/three": "0.89.10",
-    "lodash": "4.17.10",
     "three": "0.99.0",
     "webcola": "~3.3.8"
   },

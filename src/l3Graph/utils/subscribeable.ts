@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-
 export interface EventObject<Key = any, Events = any> {
     eventId: Key;
     data: Events;

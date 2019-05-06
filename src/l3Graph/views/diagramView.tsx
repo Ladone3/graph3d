@@ -29,9 +29,10 @@ export interface CameraState {
 export const DEFAULT_CAMERA_DIST = 100;
 
 export class DiagramView extends React.Component<DiagramViewProps> {
-    private renderer: THREE.WebGLRenderer;
-    private overlayRenderer: THREE.CSS3DRenderer;
+    renderer: THREE.WebGLRenderer;
+    overlayRenderer: THREE.CSS3DRenderer;
 
+    vrButton: HTMLDivElement;
     graphView: GraphView;
     widgetsView: WidgetsView;
 
@@ -274,6 +275,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
                 ref={(div) => this.overlayHtmlContainer = div}
             >
             </div>
+            <div ref={div => this.vrButton = div}></div>
         </div>;
     }
 }

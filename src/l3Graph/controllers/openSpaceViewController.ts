@@ -21,7 +21,6 @@ import {
     KeyHandler,
 } from '../utils';
 
-import * as _ from 'lodash';
 import { DiagramView } from '../views/diagramView';
 import { MouseHandler } from '../utils/mouseHandler';
 
@@ -38,7 +37,7 @@ export class OpenSpaceViewController implements ViewController {
         protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
     ) {
-        this.id = _.uniqueId('view-controller-');
+        this.id = 'open-space-view-controller';
         this.label = 'Open Space View Controller';
         this.updateCameraPosition();
 

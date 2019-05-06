@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import { MouseHandler } from '../../utils/mouseHandler';
 import { KeyHandler } from '../../utils';
 import { DiagramWidgetView, GraphView } from '../../views';

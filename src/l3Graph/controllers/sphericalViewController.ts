@@ -9,7 +9,6 @@ import {
 } from './viewController';
 import { vector3DToTreeVector3, KEY_CODES, KeyHandler } from '../utils';
 
-import * as _ from 'lodash';
 import { DiagramView } from '../views/diagramView';
 import { MouseHandler } from '../utils/mouseHandler';
 
@@ -28,7 +27,7 @@ export class SphericalViewController implements ViewController {
         protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
     ) {
-        this.id = _.uniqueId('view-controller-');
+        this.id = 'spherical-view-controller';
         this.label = 'Spherical View Controller';
         this.updateCameraPosition();
 
