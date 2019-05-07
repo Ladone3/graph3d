@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = require("tslib");
+require('./js/WebVR.js');
 require('../styles/main.scss');
 require('./js/CSS3DRenderer.js');
 require('./js/LoaderSupport.js');

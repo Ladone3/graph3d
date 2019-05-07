@@ -12,6 +12,21 @@ var DiagramView = /** @class */ (function (_super) {
     function DiagramView(props) {
         return _super.call(this, props) || this;
     }
+    DiagramView.prototype.switchOnVr = function () {
+        var _this = this;
+        var vrButton = THREE.WEBVR.createButton(this.renderer);
+        this.vrButton.appendChild(vrButton);
+        this.renderer.vr.enabled = true;
+        this.renderer.setAnimationLoop(function () {
+            _this.renderer.render(_this.scene, _this.camera);
+        });
+    };
+    DiagramView.prototype.switchOffVr = function () {
+        var vrButton = THREE.WEBVR.createButton(this.renderer);
+        this.vrButton.innerHTML = '';
+        this.renderer.vr.enabled = false;
+        this.renderer.setAnimationLoop(null);
+    };
     DiagramView.prototype.componentDidMount = function () {
         this.initScene();
         this.initSubViews();
@@ -191,7 +206,8 @@ var DiagramView = /** @class */ (function (_super) {
         var _this = this;
         return React.createElement("div", { className: 'o3d-main_screen' },
             React.createElement("div", { className: 'o3d-main_screen__mesh-layer', ref: function (div) { return _this.meshHtmlContainer = div; } }),
-            React.createElement("div", { className: 'o3d-main_screen__overlay-layer', ref: function (div) { return _this.overlayHtmlContainer = div; } }));
+            React.createElement("div", { className: 'o3d-main_screen__overlay-layer', ref: function (div) { return _this.overlayHtmlContainer = div; } }),
+            React.createElement("div", { ref: function (div) { return _this.vrButton = div; } }));
     };
     return DiagramView;
 }(React.Component));

@@ -24,6 +24,7 @@ export declare const DEFAULT_CAMERA_DIST = 100;
 export declare class DiagramView extends React.Component<DiagramViewProps> {
     private renderer;
     private overlayRenderer;
+    private vrButton;
     graphView: GraphView;
     widgetsView: WidgetsView;
     camera: THREE.PerspectiveCamera;
@@ -39,6 +40,8 @@ export declare class DiagramView extends React.Component<DiagramViewProps> {
         FAR: number;
     };
     constructor(props: DiagramViewProps);
+    switchOnVr(): void;
+    switchOffVr(): void;
     componentDidMount(): void;
     mouseTo3dPos(event: MouseEvent, distanceFromScreen?: number): Vector3D;
     clientPosTo3dPos(position: Vector2D, distanceFromScreen?: number): Vector3D;

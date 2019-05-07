@@ -19,6 +19,7 @@ export interface L3GraphProps {
 }
 export interface State {
     viewController?: ViewController;
+    vrMode?: boolean;
 }
 export declare class L3Graph extends React.Component<L3GraphProps, State> {
     model: DiagramModel;

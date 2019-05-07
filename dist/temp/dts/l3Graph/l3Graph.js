@@ -200,7 +200,19 @@ var L3Graph = /** @class */ (function (_super) {
                     return React.createElement("button", { title: viewController.label, key: "controller-button-" + index, className: _this.viewController === viewController ? 'o3d-selected' : '', onClick: function () { _this.viewController = viewController; } }, viewController.label[0]);
                 }),
                 React.createElement("button", { id: 'o3d-force-layout-button', title: 'Force layaout', onClick: function () { layouts_1.applyForceLayout3d(_this.model.graph, 30, 150); } }, "FL"),
-                React.createElement("button", { id: 'o3d-random-layout-button', title: 'Random layaout', onClick: function () { layouts_1.applyRandomLayout(_this.model.graph); } }, "RL")));
+                React.createElement("button", { id: 'o3d-random-layout-button', title: 'Random layaout', onClick: function () { layouts_1.applyRandomLayout(_this.model.graph); } }, "RL"),
+                React.createElement("button", { id: 'o3d-vr-button', title: "" + (this.state.vrMode ? 'Switch off VR mode' : 'Switch on VR mode'), onClick: function () {
+                        if (_this.state.vrMode) {
+                            _this.view.switchOffVr();
+                            _this.setState({ vrMode: false });
+                        }
+                        else {
+                            _this.view.switchOnVr();
+                            _this.setState({ vrMode: true });
+                        }
+                        _this.view.renderGraph();
+                    } },
+                    "VR ", "" + (this.state.vrMode ? '-' : '+'))));
     };
     return L3Graph;
 }(React.Component));

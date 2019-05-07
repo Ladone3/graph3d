@@ -37,6 +37,7 @@ declare module 'l3-graph/l3Graph/l3Graph' {
     }
     export interface State {
         viewController?: ViewController;
+        vrMode?: boolean;
     }
     export class L3Graph extends React.Component<L3GraphProps, State> {
         model: DiagramModel;
@@ -90,6 +91,8 @@ declare module 'l3-graph/l3Graph/views/diagramView' {
             FAR: number;
         };
         constructor(props: DiagramViewProps);
+        switchOnVr(): void;
+        switchOffVr(): void;
         componentDidMount(): void;
         mouseTo3dPos(event: MouseEvent, distanceFromScreen?: number): Vector3D;
         clientPosTo3dPos(position: Vector2D, distanceFromScreen?: number): Vector3D;
