@@ -30,11 +30,10 @@ export interface CameraState {
 export const DEFAULT_CAMERA_DIST = 100;
 
 export class DiagramView extends React.Component<DiagramViewProps> {
-    private renderer: THREE.WebGLRenderer;
-    private overlayRenderer: THREE.CSS3DRenderer;
+    renderer: THREE.WebGLRenderer;
+    overlayRenderer: THREE.CSS3DRenderer;
 
-    private vrButton: HTMLDivElement;
-
+    vrButton: HTMLDivElement;
     graphView: GraphView;
     widgetsView: WidgetsView;
 
@@ -54,22 +53,6 @@ export class DiagramView extends React.Component<DiagramViewProps> {
 
     constructor(props: DiagramViewProps) {
         super(props);
-    }
-
-    switchOnVr() {
-        const vrButton: HTMLElement = (THREE as any).WEBVR.createButton(this.renderer);
-        this.vrButton.appendChild(vrButton);
-        this.renderer.vr.enabled = true;
-        (this.renderer as any).setAnimationLoop(() => {
-            this.renderer.render(this.scene, this.camera);
-        });
-    }
-
-    switchOffVr() {
-        const vrButton: HTMLElement = (THREE as any).WEBVR.createButton(this.renderer);
-        this.vrButton.innerHTML = '';
-        this.renderer.vr.enabled = false;
-        (this.renderer as any).setAnimationLoop(null);
     }
 
     componentDidMount() {
