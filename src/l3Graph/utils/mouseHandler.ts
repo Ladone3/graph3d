@@ -8,17 +8,17 @@ import { Vector2D } from '../models/primitives';
 import { Element } from '../models/graphModel';
 export const MIN_DRAG_OFFSET = 5;
 
-interface HandlerElementClickEvent {
+export interface HandlerElementClickEvent {
     nativeEvent: MouseEvent | MouseWheelEvent;
     element: Element;
 }
 
-interface HandlerDragElementEvent  {
+export interface HandlerDragElementEvent  {
     nativeEvent: MouseEvent | MouseWheelEvent;
     element: Element;
 }
 
-interface HandlerDragEvent  {
+export interface HandlerDragEvent  {
     nativeEvent: MouseEvent | MouseWheelEvent;
     offset: Vector2D;
 }
