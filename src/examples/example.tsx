@@ -22,7 +22,22 @@ export class NodeOverlay extends React.Component<NodeData> {
     render() {
         const {label} = this.props;
 
-        return <div className='o3d-node-template'>
+        return <div style={{
+            width: 100,
+            height: 40,
+            backgroundColor: '#cc1c1c',
+            color: 'white',
+            borderRadius: 5,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            textAlign: 'center',
+            textOverflow: 'ellipsis',
+            fontSize: 12,
+            userSelect: 'none',
+            border: '1px solid black',
+            padding: 20,
+        }}>
             Label: {label} - redefined template.
         </div>;
     }
@@ -58,6 +73,12 @@ const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
             };
         }
     },
+    overlay: {
+        get: (node: {label: string}) => {
+            return NodeOverlay;
+        },
+        context: undefined,
+    },
 };
 
 const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
@@ -74,7 +95,7 @@ const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    const graphElements = generateData(30);
+    const graphElements = generateData(5);
     ReactDOM.render(React.createElement(L3Graph, {
         viewOptions: {
             nodeTemplateProvider: (types: string[]) => {

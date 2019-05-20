@@ -24,6 +24,10 @@ export class NodeView implements DiagramElementView<Node> {
     private meshOffset: Vector3D;
     private htmlOverlay: HTMLElement;
     private htmlBody: HTMLElement;
+    private texture: THREE.Texture;
+
+    private overlayMesh: THREE.Mesh;
+    private meshMesh: THREE.Mesh;
 
     private preserveRatio: boolean;
 
@@ -39,31 +43,34 @@ export class NodeView implements DiagramElementView<Node> {
 
         this.preserveRatio = meshDescriptor.preserveRatio || meshDescriptor.preserveRatio === undefined;
 
+        let mesh: THREE.Mesh;
         if (meshDescriptor) {
             if (meshDescriptor.type === MeshKind.ThreeNative) {
-                this.mesh = meshDescriptor.mesh;
+                mesh = meshDescriptor.mesh;
             } else if (meshDescriptor.type === MeshKind.Primitive) {
-                this.mesh = getPrimitive(meshDescriptor);
+                mesh = getPrimitive(meshDescriptor);
             } else if (meshDescriptor.type === MeshKind.Obj) {
                 const color = meshDescriptor.color || getColorByTypes(this.model.types);
                 const loader = new THREE.OBJLoader();
-                this.mesh = loader.parse(meshDescriptor.markup);
+                mesh = loader.parse(meshDescriptor.markup) as any;
 
                 const material = new THREE.MeshPhongMaterial({color});
-                this.mesh.traverse(child => {
+                mesh.traverse(child => {
                     if (child instanceof THREE.Mesh) { child.material = material; }
                 });
             }
             // Calc bounding box
-            this.boundingBox.setFromObject(this.mesh)
-                .getCenter(this.mesh.position)
+            this.boundingBox.setFromObject(mesh)
+                .getCenter(mesh.position)
                 .multiplyScalar(-1);
-            this.meshOffset = treeVector3ToVector3D(this.mesh.position);
-            this.meshOriginalSize = this.boundingBox.getSize(this.mesh.position).clone();
+            this.meshOffset = treeVector3ToVector3D(mesh.position);
+            this.meshOriginalSize = this.boundingBox.getSize(mesh.position).clone();
         } else {
-            this.mesh = null;
+            mesh = null;
         }
+        this.meshMesh = mesh;
 
+        let overlay: THREE.Object3D;
         if (Overlay) {
             this.htmlOverlay = document.createElement('DIV');
             this.htmlOverlay.className = 'o3d-node-html-container';
@@ -80,9 +87,36 @@ export class NodeView implements DiagramElementView<Node> {
             } else {
                 ReactDOM.render(createElement(Overlay, model.data), this.htmlBody);
             }
-            this.overlay = new THREE.CSS3DSprite(this.htmlOverlay);
+            // overlay = new THREE.CSS3DSprite(this.htmlOverlay);
+
+            getImage(this.htmlOverlay.innerHTML).then((dataUrl: string) => {
+                this.texture = new THREE.TextureLoader().load(dataUrl);
+                this.model.forceUpdate();
+                const img: HTMLImageElement = document.createElement('img') as any;
+                img.src = dataUrl;
+                document.body.appendChild(img);
+            });
+            overlay = new THREE.Mesh(
+                new THREE.PlaneGeometry(30, 10, 2),
+                new THREE.MeshPhongMaterial({color: 'gray', side: THREE.DoubleSide}),
+            );
+            overlay.position.set(0, 0, 0);
         } else {
-            this.overlay = null;
+            overlay = null;
+        }
+
+        if (mesh || overlay) {
+            if (mesh && overlay) {
+                this.mesh = new THREE.Group();
+                this.mesh.add(mesh);
+                this.mesh.add(overlay);
+                this.overlayMesh = overlay as any;
+            } else if (mesh) {
+                this.mesh = mesh;
+            } else {
+                this.mesh = overlay;
+                this.overlayMesh = overlay as any;
+            }
         }
         this.update();
     }
@@ -94,16 +128,16 @@ export class NodeView implements DiagramElementView<Node> {
     public update() {
         const position = this.model.position;
 
-        if (this.mesh) {
+        if (this.meshMesh) {
             // Calc scale
             const scale = this.calcScale();
-            this.mesh.scale.set(scale.x, scale.y, scale.z);
+            this.meshMesh.scale.set(scale.x, scale.y, scale.z);
             // Calc bounding box
-            this.boundingBox.setFromObject(this.mesh)
-                .getCenter(this.mesh.position)
+            this.boundingBox.setFromObject(this.meshMesh)
+                .getCenter(this.meshMesh.position)
                 .multiplyScalar(-1);
 
-            this.mesh.position.set(
+            this.meshMesh.position.set(
                 position.x + this.meshOffset.x * scale.x,
                 position.y + this.meshOffset.y * scale.y,
                 position.z + this.meshOffset.z * scale.z,
@@ -111,12 +145,19 @@ export class NodeView implements DiagramElementView<Node> {
         }
 
         // Update overlay
-        if (this.overlay) {
-            this.overlay.position.set(
-                position.x,
-                position.y,
-                position.z,
+        if (this.overlayMesh && this.texture) {
+            this.overlayMesh.position.set(
+                position.x + 10,
+                position.y + 10,
+                position.z + 10,
             );
+            this.overlayMesh.material = new THREE.MeshBasicMaterial({
+                map: this.texture,
+                side: THREE.DoubleSide,
+                color: 'white',
+            });
+            this.overlayMesh.material.needsUpdate = true;
+            // .side = THREE.DoubleSide
         }
     }
 
@@ -139,4 +180,24 @@ export class NodeView implements DiagramElementView<Node> {
             return scale;
         }
     }
+}
+
+function getImage(html: string): Promise<string> {
+    return fetch('/convertToImage', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        mode: 'cors',
+        cache: 'default',
+        body: html,
+    }).then(function (response) {
+        if (response.ok) {
+            return response.text(); // Also possible to use: response.text(); //response.type;
+        } else {
+            const error = new Error(response.statusText);
+            throw error;
+        }
+    });
 }

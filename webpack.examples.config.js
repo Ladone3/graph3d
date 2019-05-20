@@ -36,4 +36,14 @@ module.exports = {
         publicPath: '',
     },
     devtool: 'source-map',
+    devServer: {
+        contentBase: './dist',
+        proxy: {
+            '/convertToImage': {
+                target: 'http://localhost:5001',
+                changeOrigin: true,
+                secure: false,
+            }
+        },
+    }
 };
