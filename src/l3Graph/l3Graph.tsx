@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { ViewController, ViewControllersSet } from './controllers/viewController';
 import { DEFAULT_VIEW_CONTROLLERS_SET } from './controllers/defaultViewControllers';
-import { KeyHandler, KEY_CODES } from './utils/keyHandler';
-import { MouseEditor } from './editors/mouseEditor';
-import { DiagramModel, GraphElements } from './models/diagramModel';
+import { KeyHandler } from './utils/keyHandler';
+import { DefaultEditor } from './editors/defaultEditor';
+import { DiagramModel, Graph } from './models/diagramModel';
 import { DiagramView, ViewOptions } from './views/diagramView';
 import { Vector2D, Vector3D } from './models/primitives';
 import { applyForceLayout3d, applyRandomLayout } from './layout/layouts';
@@ -13,7 +13,7 @@ import { Element } from './models/graphModel';
 import { Node } from './models/node';
 
 export interface L3GraphProps {
-    elements: GraphElements;
+    graph: Graph;
     viewOptions?: ViewOptions;
     viewControllers?: ViewControllersSet;
     onComponentMount?: (graph: L3Graph) => void;
@@ -30,21 +30,21 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
     private keyHandler: KeyHandler;
     private mouseHandler: MouseHandler;
     private viewControllers: ViewController[] = [];
-    private mouseEditor: MouseEditor;
+    private defaultEditor: DefaultEditor;
 
     constructor(props: L3GraphProps) {
         super(props);
         this.model = new DiagramModel();
         this.state = {};
         this.model.updateGraph({
-            nodes: this.props.elements.nodes,
-            links: this.props.elements.links,
+            nodes: this.props.graph.nodes,
+            links: this.props.graph.links,
         });
     }
 
     componentDidUpdate(props: L3GraphProps) {
-        const {elements} = props;
-        this.model.updateGraph(elements);
+        const {graph} = props;
+        this.model.updateGraph(graph);
     }
 
     get viewController() {
@@ -109,7 +109,12 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
             (this.props.viewControllers || DEFAULT_VIEW_CONTROLLERS_SET)
                 .map(controller => controller(this.view, this.mouseHandler, this.keyHandler));
         this.viewController = this.viewControllers[0];
-        this.mouseEditor = new MouseEditor(this.model, this.view, this.mouseHandler);
+        this.defaultEditor = new DefaultEditor(
+            this.model,
+            this.view,
+            this.mouseHandler,
+            this.keyHandler,
+        );
 
         this.forceUpdate();
     }

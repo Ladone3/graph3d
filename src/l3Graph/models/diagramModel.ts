@@ -1,4 +1,4 @@
-import { Element, GraphModel } from './graphModel';
+import { Element, GraphModel, ImmutableMap } from './graphModel';
 import { Subscribable, EventObject } from '../utils/subscribeable';
 import { Node } from '../models/node';
 import { Link } from '../models/link';
@@ -6,12 +6,12 @@ import { WidgetsModel } from './widgetsModel';
 import { Selection } from './selection';
 import { isTypesEqual } from '../utils';
 
-export interface GraphElements {
+export interface Graph {
     nodes: Node[];
     links: Link[];
 }
 
-interface GraphUpdate {
+interface GraphPatch {
     newNodes?: Node[];
     newLinks?: Link[];
     nodesToRemove?: Node[];
@@ -25,19 +25,17 @@ export interface DiagramModelEvents {
         graphEvents: Set<EventObject>;
         widgetEvents: Set<EventObject>;
     };
-    'change:selection': ReadonlySet<Element>;
 }
 
 export class DiagramModel extends Subscribable<DiagramModelEvents> {
     public graph: GraphModel;
     public widgets: WidgetsModel;
+    public selection: Selection;
+
     private deprecatedSelection: ReadonlySet<Element> = new Set();
     private animationFrame: number;
-
     private graphEvents: Set<EventObject> = new Set();
     private widgetEvents: Set<EventObject> = new Set();
-
-    private _selection: Selection;
 
     constructor() {
         super();
@@ -54,21 +52,11 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         this.widgets.on('update:widget', this.groupWidgetEvents);
     }
 
-    public get selection(): ReadonlySet<Element> {
-        return this._selection.selection;
-    }
-
-    public setSelection(newSelection: ReadonlySet<Element>) {
-        const oldSelection = this._selection.selection;
-        this._selection.setSelection(newSelection as ReadonlySet<Element>);
-        this.trigger('change:selection', oldSelection);
-    }
-
-    public get nodes(): Map<string, Node> {
+    public get nodes(): ImmutableMap<string, Node> {
         return this.graph.nodes;
     }
 
-    public get links(): Map<string, Link> {
+    public get links(): ImmutableMap<string, Link> {
         return this.graph.links;
     }
 
@@ -80,15 +68,15 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         this.graph.removeElements(elements);
     }
 
-    public removeNodesByIds(nodeIds: string[]) {
-        this.graph.removeNodesByIds(nodeIds);
+    public removeNodes(nodes: Node[]) {
+        this.graph.removeNodes(nodes);
     }
 
-    public removeLinksByIds(linkIds: string[]) {
-        this.graph.removeLinksByIds(linkIds);
+    public removeLinks(links: Link[]) {
+        this.graph.removeLinks(links);
     }
 
-    private updateElements(elements: Element[]) {
+    private updateElementsData(elements: Element[]) {
         this.graph.updateElementsData(elements);
     }
 
@@ -106,23 +94,23 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         });
     }
 
-    public updateGraph(elements: GraphElements) {
-        this.applyGraphUpdate(
-            this.merge(elements),
+    public updateGraph(elements: Graph) {
+        this.applyGraphPatch(
+            this.createPatch(elements),
         );
     }
 
-    private applyGraphUpdate(update: GraphUpdate) {
+    private applyGraphPatch(update: GraphPatch) {
         const {newNodes, newLinks, nodesToRemove, linksToRemove, linksToUpdate, nodesToUpdate} = update;
         if (newNodes) { this.addElements(newNodes); }
         if (newLinks) { this.addElements(newLinks); }
-        if (linksToRemove && linksToRemove.length > 0) { this.removeLinksByIds(linksToRemove.map(l => l.id)); }
-        if (nodesToRemove && nodesToRemove.length > 0) { this.removeNodesByIds(nodesToRemove.map(n => n.id)); }
-        if (nodesToUpdate && nodesToUpdate.length > 0) { this.updateElements(nodesToUpdate); }
-        if (linksToUpdate && linksToUpdate.length > 0) { this.updateElements(linksToUpdate); }
+        if (linksToRemove && linksToRemove.length > 0) {this.removeLinks(linksToRemove);  }
+        if (nodesToRemove && nodesToRemove.length > 0) { this.removeNodes(nodesToRemove); }
+        if (nodesToUpdate && nodesToUpdate.length > 0) { this.updateElementsData(nodesToUpdate); }
+        if (linksToUpdate && linksToUpdate.length > 0) { this.updateElementsData(linksToUpdate); }
     }
 
-    private merge(newGraphModel: GraphElements): GraphUpdate {
+    private createPatch(newGraphModel: Graph): GraphPatch {
         const graph = this.graph;
         const {nodes, links} = newGraphModel;
 
@@ -197,7 +185,7 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
     }
 
     private initSelectionWidget() {
-        this._selection = new Selection();
-        this.widgets.registerWidget(this._selection);
+        this.selection = new Selection({graph: this.graph});
+        this.widgets.registerWidget(this.selection);
     }
 }

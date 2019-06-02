@@ -108,9 +108,8 @@ export class GraphView extends Subscribable<GraphViewEvents> {
     }
 
     update(specificIds: string[]) {
-        // const selection = this
         const updateView = (elementId: string) => {
-            if (this.graphModel.fullUpdateList.has(elementId)) {
+            if (this.graphModel._fullUpdateList.has(elementId)) {
                 const element = this.graphModel.getElementById(elementId);
                 this.removeElementView(element);
                 this.addElementView(element);
@@ -129,6 +128,6 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         for (const id of specificIds) {
             updateView(id);
         }
-        this.graphModel.fullUpdateList.clear();
+        this.graphModel._fullUpdateList.clear();
     }
 }

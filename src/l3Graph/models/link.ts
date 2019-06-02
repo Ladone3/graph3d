@@ -17,7 +17,6 @@ export interface LinkParameters {
 
 export interface LinkEvents {
     'force-update': void;
-    'remove': void;
 }
 
 export class Link extends Subscribable<LinkEvents> {
@@ -63,10 +62,6 @@ export class Link extends Subscribable<LinkEvents> {
 
     forceUpdate() {
         this.trigger('force-update');
-    }
-
-    remove() {
-        this.trigger('remove');
     }
 }
 

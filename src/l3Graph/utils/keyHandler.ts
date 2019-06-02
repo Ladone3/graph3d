@@ -15,6 +15,7 @@ export const KEY_CODES = {
     CTRL: 17,
     PLUS: 107,
     MINUS: 109,
+    DELETE: 46,
 };
 
 export class KeyHandler extends Subscribable<KeyHandlerEvents> {

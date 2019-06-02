@@ -2,8 +2,6 @@ import * as THREE from 'three';
 import { DiagramElementView } from './diagramElementView';
 import { Selection } from '../models/selection';
 import { isNode } from '../models/graphModel';
-import { Vector3D } from '../models/primitives';
-import { calcBounds } from '../utils';
 import { Node } from '../models/node';
 
 const SELECTION_PADDING = 15;
@@ -53,12 +51,13 @@ export class SelectionView implements DiagramElementView<Selection> {
         //     this.mesh.visible = false;
         // }
         const nodes: Node[] = [];
-        this.model.selection.forEach(element => {
+        this.model.elements.forEach(element => {
             if (isNode(element)) {
                 nodes.push(element);
             }
         });
         if (nodes.length > 0) {
+            this.mesh.visible = true;
             const node = nodes[0];
             this.mesh.position.set(node.position.x, node.position.y, node.position.z);
             const nodeSize = typeof node.size === 'number' ? {
@@ -71,6 +70,8 @@ export class SelectionView implements DiagramElementView<Selection> {
                 nodeSize.y + SELECTION_PADDING * 2,
                 nodeSize.z + SELECTION_PADDING * 2,
             );
+        } else {
+            this.mesh.visible = false;
         }
     }
 }

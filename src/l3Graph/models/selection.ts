@@ -1,50 +1,63 @@
 import { Subscribable } from '../utils/subscribeable';
 import { Widget, WidgetEvents } from './widget';
-import { Node } from './node';
-import { Element, isNode } from './graphModel';
+import { Element, isNode, GraphModel } from './graphModel';
 
 export interface SelectionParameters {
     selection?: Set<Element>;
+    graph: GraphModel;
 }
 
 export interface SelectionEvents extends WidgetEvents {
-    'change:focus': Node;
+    'change': ReadonlySet<Element>;
 }
 
 export class Selection extends Subscribable<SelectionEvents> implements Widget {
-    private _selection?: ReadonlySet<Element>;
     public readonly widgetId: string;
+    private _elements?: ReadonlySet<Element>;
+    private readonly graph: GraphModel;
 
-    constructor(parameters: SelectionParameters = {}) {
+    constructor(parameters: SelectionParameters) {
         super();
         this.widgetId = 'o3d-selection-widget';
-        this._selection = parameters.selection || new Set<Element>();
+        this._elements = parameters.selection || new Set<Element>();
+        this.graph = parameters.graph;
+
+        this.graph.on('remove:elements', e => {
+            const newSelection: Set<Element> = new Set(this._elements);
+            const deletedElements = e.data;
+            for (const el of deletedElements) {
+                newSelection.delete(el);
+            }
+            this.setSelection(newSelection);
+        });
     }
 
-    setSelection(selection: ReadonlySet<Element>) {
-        selection = selection || new Set<Element>();
-        if (this._selection !== selection) {
-            if (this._selection) {
-                this._selection.forEach(el => {
+    setSelection(elements: ReadonlySet<Element>) {
+        elements = elements || new Set<Element>();
+        if (this._elements !== elements) {
+            if (this._elements) {
+                this._elements.forEach(el => {
                     el.unsubscribe(this.updateView);
                 });
             }
-            if (selection) {
-                selection.forEach(el => {
+            if (elements) {
+                elements.forEach(el => {
                     if (isNode(el)) {
                         el.on('change:position', this.updateView);
                         el.on('change:size', this.updateView);
                     }
                 });
             }
+            this.updateView();
+            this.trigger('change');
         }
 
-        this._selection = selection;
+        this._elements = elements;
         this.updateView();
     }
 
-    get selection(): ReadonlySet<Element> {
-        return this._selection;
+    get elements(): ReadonlySet<Element> {
+        return this._elements;
     }
 
     private updateView = () => {

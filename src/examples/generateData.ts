@@ -1,4 +1,4 @@
-import { Node, Link, GraphElements } from '../index';
+import { Node, Link, Graph } from '../index';
 
 export interface NodeData {
     label: string;
@@ -8,8 +8,8 @@ export function generateData(
     nodeNumber: number = 50,
     linkDublicationNumber: number = 1,
     positionRange: number = 100,
-): GraphElements {
-    const data: GraphElements = {
+): Graph {
+    const data: Graph = {
         nodes: [],
         links: [],
     };
