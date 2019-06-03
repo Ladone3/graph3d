@@ -1,18 +1,19 @@
 import { Node } from './node';
-import { uniqueId } from 'lodash';
 import { Subscribable } from '../utils/subscribeable';
-import { createUUID, isTypesEqual } from '../utils';
-
-const LINK_HASH_POSTFIX = createUUID();
+import { isTypesEqual as equalTypes } from '../utils';
 
 export const DEFAULT_LINK_ID = 'o3d-link';
 
-export interface LinkParameters {
-    id?: string;
+export interface LinkModel {
     sourceId: string;
     targetId: string;
     label: string;
     types?: string[];
+}
+
+export interface LinkParameters {
+    source: Node;
+    target: Node;
 }
 
 export interface LinkEvents {
@@ -21,43 +22,47 @@ export interface LinkEvents {
 
 export class Link extends Subscribable<LinkEvents> {
     get id() {
-        return `Link~From(${this._sourceId})With(${this._types.join('/')})To(${this._targetId})#${LINK_HASH_POSTFIX}`;
+        return getLinkId(this._model);
     }
-    public source: Node;
-    public target: Node;
-    public _sourceId: string;
-    public _targetId: string;
+    public readonly source: Node;
+    public readonly target: Node;
+    public modelIsChanged: boolean = false;
 
-    private _label: string;
-    private _types: string[];
-
-    constructor(parameters: LinkParameters) {
+    constructor(
+        private _model: LinkModel,
+        parameters: LinkParameters,
+    ) {
         super();
-
-        this._types = parameters.types || [DEFAULT_LINK_ID];
-        this._label = parameters.label;
-        this._sourceId = parameters.sourceId;
-        this._targetId = parameters.targetId;
+        this.source = parameters.source;
+        this.target = parameters.target;
     }
 
     get types() {
-        return this._types;
+        return this._model.types;
     }
     setTypes(types: string[]) {
-        if (!isTypesEqual(this._types, types)) {
-            this._types = types;
-            this.trigger('force-update');
+        if (!equalTypes(this._model.types, types)) {
+            this._model = {
+                ...this._model,
+                types,
+            };
+            this.modelIsChanged = true;
+            this.forceUpdate();
         }
     }
 
     get label() {
-        return this._label;
+        return this._model.label;
     }
     setLabel(label: string) {
-        if (this._label !== label) {
-            this._label = label;
+        if (this._model.label !== label) {
+            this._model.label = label;
             this.trigger('force-update');
         }
+    }
+
+    get model(): LinkModel {
+        return this._model;
     }
 
     forceUpdate() {
@@ -65,6 +70,14 @@ export class Link extends Subscribable<LinkEvents> {
     }
 }
 
-export function getGroupId(link: Link): string {
-    return [link._sourceId, link._targetId].sort().join('<==>') + `:${LINK_HASH_POSTFIX}`;
+export function getGroupId(link: LinkModel): string {
+    return `${[link.sourceId, link.targetId].sort().join('<==>')}`;
+}
+
+export function getLinkId(model: LinkModel): string {
+    return `Link~From(${
+        model.sourceId
+    })With(${model.types.join('/')})To(${
+        model.targetId
+    })`;
 }

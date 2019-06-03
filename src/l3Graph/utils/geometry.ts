@@ -51,18 +51,6 @@ export function handleDragging(
     document.body.addEventListener('mouseup', _onend);
 }
 
-export function createUUID(): string {
-    let dt = new Date().getTime();
-    const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        // tslint:disable-next-line
-        const r = (dt + Math.random() * 16) % 16 | 0;
-        dt = Math.floor(dt / 16);
-        // tslint:disable-next-line
-        return (c === 'x' ? r :(r&0x3|0x8)).toString(16);
-    });
-    return uuid;
-}
-
 export function isTypesEqual(types1: string[], types2: string[]): boolean {
     return types1.sort().join('') === types2.sort().join('');
 }

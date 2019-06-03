@@ -1,23 +1,23 @@
-import { Element, GraphModel, ImmutableMap } from './graphModel';
+import { ElementModel, GraphModel, ImmutableMap } from './graphModel';
 import { Subscribable, EventObject } from '../utils/subscribeable';
-import { Node } from '../models/node';
-import { Link } from '../models/link';
+import { NodeModel, Node } from '../models/node';
+import { LinkModel, Link, getLinkId } from '../models/link';
 import { WidgetsModel } from './widgetsModel';
 import { Selection } from './selection';
 import { isTypesEqual } from '../utils';
 
 export interface Graph {
-    nodes: Node[];
-    links: Link[];
+    nodes: NodeModel[];
+    links: LinkModel[];
 }
 
 interface GraphPatch {
-    newNodes?: Node[];
-    newLinks?: Link[];
-    nodesToRemove?: Node[];
-    linksToRemove?: Link[];
-    nodesToUpdate?: Node[];
-    linksToUpdate?: Link[];
+    newNodes?: NodeModel[];
+    newLinks?: LinkModel[];
+    nodesToRemove?: NodeModel[];
+    linksToRemove?: LinkModel[];
+    nodesToUpdate?: NodeModel[];
+    linksToUpdate?: LinkModel[];
 }
 
 export interface DiagramModelEvents {
@@ -32,7 +32,7 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
     public widgets: WidgetsModel;
     public selection: Selection;
 
-    private deprecatedSelection: ReadonlySet<Element> = new Set();
+    private deprecatedSelection: ReadonlySet<ElementModel> = new Set();
     private animationFrame: number;
     private graphEvents: Set<EventObject> = new Set();
     private widgetEvents: Set<EventObject> = new Set();
@@ -60,23 +60,23 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         return this.graph.links;
     }
 
-    public addElements(elements: Element[]) {
+    public addElements(elements: ElementModel[]) {
         this.graph.addElements(elements);
     }
 
-    public removeElements(elements: Element[]) {
+    public removeElements(elements: ElementModel[]) {
         this.graph.removeElements(elements);
     }
 
-    public removeNodes(nodes: Node[]) {
+    public removeNodes(nodes: NodeModel[]) {
         this.graph.removeNodes(nodes);
     }
 
-    public removeLinks(links: Link[]) {
+    public removeLinks(links: LinkModel[]) {
         this.graph.removeLinks(links);
     }
 
-    private updateElementsData(elements: Element[]) {
+    private updateElementsData(elements: ElementModel[]) {
         this.graph.updateElementsData(elements);
     }
 
@@ -114,14 +114,14 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         const graph = this.graph;
         const {nodes, links} = newGraphModel;
 
-        const newNodes: Node[] = [];
-        const newLinks: Link[] = [];
-        const nodesToRemove: Node[] = [];
-        const linksToRemove: Link[] = [];
-        const nodesToUpdate: Node[] = [];
-        const linksToUpdate: Link[] = [];
+        const newNodes: NodeModel[] = [];
+        const newLinks: LinkModel[] = [];
+        const nodesToRemove: NodeModel[] = [];
+        const linksToRemove: LinkModel[] = [];
+        const nodesToUpdate: NodeModel[] = [];
+        const linksToUpdate: LinkModel[] = [];
 
-        const nodeMap = new Map<string, Node>();
+        const nodeMap = new Map<string, NodeModel>();
         for (const node of nodes) {
             const id = node.id;
             if (!graph.nodes.has(id)) {
@@ -146,9 +146,9 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
             });
         }
 
-        const linksMap = new Map<string, Link>();
+        const linksMap = new Map<string, LinkModel>();
         for (const link of links) {
-            const id = link.id;
+            const id = getLinkId(link);
             if (!graph.links.has(id)) {
                 newLinks.push(link);
             } else {
@@ -166,7 +166,7 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         if (graph.links) {
             graph.links.forEach(link => {
                 if (!linksMap.has(link.id)) {
-                    linksToRemove.push(link);
+                    linksToRemove.push(link.model);
                 }
             });
         }

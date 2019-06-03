@@ -109,10 +109,11 @@ export class GraphView extends Subscribable<GraphViewEvents> {
 
     update(specificIds: string[]) {
         const updateView = (elementId: string) => {
-            if (this.graphModel._fullUpdateList.has(elementId)) {
-                const element = this.graphModel.getElementById(elementId);
+            const element = this.graphModel.getElementById(elementId);
+            if (element.modelIsChanged) {
                 this.removeElementView(element);
                 this.addElementView(element);
+                element.modelIsChanged = false;
             }
             const view = this.views.get(elementId);
             if (view) { // View is added asynchronously
@@ -128,6 +129,5 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         for (const id of specificIds) {
             updateView(id);
         }
-        this.graphModel._fullUpdateList.clear();
     }
 }

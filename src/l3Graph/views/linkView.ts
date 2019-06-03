@@ -105,7 +105,7 @@ export class LinkView implements DiagramElementView<Link> {
         } else {
             const linkIndex = this.group.links.indexOf(this.model);
             const groupSize = this.group.links.length;
-            const inverseDirection = this.model._sourceId === this.group.targetId;
+            const inverseDirection = this.model.source.id === this.group.targetId;
             const angle = (2 * Math.PI / groupSize) * (linkIndex + 1);
             // Calculate the kink point
             const originalDirection = normalize(sub(sourcePos, targetPos));

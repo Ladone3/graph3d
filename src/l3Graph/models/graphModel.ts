@@ -1,8 +1,9 @@
-import { Node } from './node';
-import { Link, getGroupId } from './link';
+import { Node, NodeModel } from './node';
+import { Link, getGroupId, LinkModel, getLinkId } from './link';
 import { Subscribable } from '../utils/subscribeable';
 
 export type Element = Node | Link;
+export type ElementModel = NodeModel | LinkModel;
 
 export function isNode(element: Element): element is Node {
     return element instanceof Node;
@@ -12,12 +13,22 @@ export function isLink(element: Element): element is Link {
     return element instanceof Link;
 }
 
+export function isNodeModel(elementModel: ElementModel): elementModel is NodeModel {
+    return !isLinkModel(elementModel);
+}
+
+export function isLinkModel(elementModel: ElementModel): elementModel is LinkModel {
+    return (elementModel as any).sourceId !== undefined &&
+        (elementModel as any).targetId !== undefined;
+}
+
 export interface LinkGroup { targetId: string; sourceId: string; links: Link[]; }
 
 export interface GraphModelEvents {
     'add:elements': Element[];
     'remove:elements': Element[];
     'update:element': Element;
+    'update:element:model': Element;
 }
 
 export interface ImmutableMap<K, V> {
@@ -34,7 +45,6 @@ export interface ImmutableSet<T> {
 }
 
 export class GraphModel extends Subscribable<GraphModelEvents> {
-    public _fullUpdateList: Set<string> = new Set();
     private _nodes: Map<string, Node> = new Map();
     private _links: Map<string, Link> = new Map();
     private _alignedLinksMap: Map<string, LinkGroup> = new Map();
@@ -48,7 +58,7 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
     }
 
     public getGroup(link: Link): LinkGroup {
-        const groupId = getGroupId(link);
+        const groupId = getGroupId(link.model);
         return this._alignedLinksMap.get(groupId);
     }
 
@@ -56,66 +66,67 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         return this.nodes.get(id) || this.links.get(id);
     }
 
-    public addElements(elements: Element[]) {
+    public addElements(models: ElementModel[]) {
         const newElements: Element[] = [];
-        for (const element of elements) {
-            if (isNode(element) && !this._nodes.has(element.id)) {
-                this._nodes.set(element.id, element);
-                this.subscribeOnNode(element);
-                newElements.push(element);
-            } else if (isLink(element) && !this._links.has(element.id)) {
-                this.addToGroup(element);
-                element.source = this._nodes.get(element._sourceId);
-                element.target = this._nodes.get(element._targetId);
-                if (element.source && element.target) {
-                    this._links.set(element.id, element);
-                    element.source.outgoingLinks.set(element.id, element);
-                    element.target.incomingLinks.set(element.id, element);
-                    this.subscribeOnLink(element);
-                    newElements.push(element);
+        for (const model of models) {
+            if (isNodeModel(model) && !this._nodes.has(model.id)) {
+                const node = new Node(model);
+                this._nodes.set(model.id, node);
+                this.subscribeOnNode(node);
+                newElements.push(node);
+            } else if (isLinkModel(model) && !this._links.has(getLinkId(model))) {
+                const linkParams = {
+                    source: this._nodes.get(model.sourceId),
+                    target: this._nodes.get(model.targetId),
+                };
+                if (linkParams.source && linkParams.target) {
+                    const link = new Link(model, linkParams);
+                    this.addToGroup(link);
+
+                    this._links.set(link.id, link);
+                    link.source.outgoingLinks.set(link.id, link);
+                    link.target.incomingLinks.set(link.id, link);
+                    this.subscribeOnLink(link);
+                    newElements.push(link);
                 }
             }
         }
         this.trigger('add:elements', newElements);
     }
 
-    public updateElementsData(elements: Element[]) {
-        for (const element of elements) {
-            this._fullUpdateList.add(element.id);
-            if (isNode(element)) {
-                const node = this._nodes.get(element.id);
-                node.setData(element.data);
-                node.setTypes(element.types);
+    public updateElementsData(models: ElementModel[]) {
+        for (const model of models) {
+            if (isNodeModel(model)) {
+                const node = this._nodes.get(model.id);
+                node.setData(model.data);
+                node.setTypes(model.types);
             } else {
-                const link = this._links.get(element.id);
-                link.setTypes(element.types);
-                link.setLabel(element.label);
+                const link = this._links.get(getLinkId(model));
+                link.setTypes(model.types);
+                link.setLabel(model.label);
             }
         }
     }
 
     private addToGroup(link: Link) {
-        const groupId = getGroupId(link);
+        const groupId = getGroupId(link.model);
         if (!this._alignedLinksMap.has(groupId)) {
             this._alignedLinksMap.set(groupId, {
-                sourceId: link._sourceId,
-                targetId: link._targetId,
+                sourceId: link.source.id,
+                targetId: link.target.id,
                 links: [link],
             });
         } else {
             const group = this._alignedLinksMap.get(groupId);
             group.links.push(link);
             for (const l of group.links) {
-                if (l !== link) {
-                    this._fullUpdateList.add(l.id);
-                    l.forceUpdate();
-                }
+                if (l !== link) { l.forceUpdate(); }
             }
         }
     }
 
     private removeFromGroup(link: Link) {
-        const groupId = getGroupId(link);
+        const groupId = getGroupId(link.model);
         if (this._alignedLinksMap.has(groupId)) {
             const alignedLinks = this._alignedLinksMap.get(groupId);
             const index = alignedLinks.links.indexOf(link);
@@ -158,18 +169,20 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         this.trigger('update:element', link);
     }
 
-    public removeNodes(nodes: Node[]) {
+    public removeNodes(nodes: NodeModel[]) {
         const nodesToDelete: Node[] = [];
-        const linksToDelete: Link[] = [];
+        const linksToDelete: LinkModel[] = [];
         for (const {id} of nodes) {
             if (this._nodes.has(id)) {
                 const n = this._nodes.get(id);
+                this.unsubscribeFromElement(n);
+
                 nodesToDelete.push(n);
                 n.incomingLinks.forEach(l => {
-                    linksToDelete.push(l);
+                    linksToDelete.push(l.model);
                 });
                 n.outgoingLinks.forEach(l => {
-                    linksToDelete.push(l);
+                    linksToDelete.push(l.model);
                 });
             }
         }
@@ -180,28 +193,34 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         this.trigger('remove:elements', nodesToDelete);
     }
 
-    public removeLinks(links: Link[]) {
+    public removeLinks(links: LinkModel[]) {
         const deletedLinks: Link[] = [];
-        for (const {id} of links) {
+        for (const link of links) {
+            const id = getLinkId(link);
             if (this._links.has(id)) {
                 const l = this._links.get(id);
+                this.unsubscribeFromElement(l);
+
                 deletedLinks.push(l);
                 this._links.delete(id);
                 this.removeFromGroup(l);
+                l.source.incomingLinks.delete(id);
+                l.source.outgoingLinks.delete(id);
+                l.target.incomingLinks.delete(id);
+                l.target.outgoingLinks.delete(id);
             }
         }
-        this.trigger('remove:elements', links);
+        this.trigger('remove:elements', deletedLinks);
     }
 
-    public removeElements(elements: Element[]) {
-        const nodesToDelete: Node[] = [];
-        const linksToDelete: Link[] = [];
-        for (const element of elements) {
-            this.unsubscribeFromElement(element);
-            if (isNode(element)) {
-                nodesToDelete.push(element);
-            } else if (isLink(element)) {
-                linksToDelete.push(element);
+    public removeElements(models: ElementModel[]) {
+        const nodesToDelete: NodeModel[] = [];
+        const linksToDelete: LinkModel[] = [];
+        for (const model of models) {
+            if (isNodeModel(model)) {
+                nodesToDelete.push(model);
+            } else if (isLinkModel(model)) {
+                linksToDelete.push(model);
             }
         }
         if (linksToDelete.length > 0) {

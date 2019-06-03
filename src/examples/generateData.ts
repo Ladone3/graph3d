@@ -1,4 +1,4 @@
-import { Node, Link, Graph } from '../index';
+import { Graph } from '../index';
 
 export interface NodeData {
     label: string;
@@ -16,17 +16,11 @@ export function generateData(
     const linkMap = new Set<string>();
 
     for (let i = 0; i < nodeNumber; i++) {
-        const randSizeK = 0.5 + Math.random() * 2;
-        data.nodes.push(new Node<NodeData>({
+        data.nodes.push({
+            id: `Node-${i}`,
             types: i % 10 === 0 ? ['o3d-node-custome'] : ['o3d-node'],
             data: { label: 'Node ' + i },
-            position: {
-                x: Math.random() * positionRange - positionRange / 2,
-                y: Math.random() * positionRange,
-                z: Math.random() * positionRange - positionRange / 2,
-            },
-            size: { x: 15 * randSizeK, y: 15 * randSizeK, z: 15 * randSizeK },
-        }));
+        });
     }
 
     for (let i = 0; i < nodeNumber; i++) {
@@ -36,12 +30,12 @@ export function generateData(
         if (!linkMap.has(key) && sourceIndex !== targetIndex) {
             linkMap.add(key);
             for (let j = 0; j < linkDublicationNumber; j++) {
-                data.links.push(new Link({
+                data.links.push({
                     label: `Link_${i}_${j}`,
                     sourceId: data.nodes[sourceIndex].id,
                     targetId: data.nodes[targetIndex].id,
                     types: [`Link_${j}`],
-                }));
+                });
             }
         }
     }
