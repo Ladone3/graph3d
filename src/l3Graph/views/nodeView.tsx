@@ -70,10 +70,10 @@ export class NodeView implements DiagramElementView<Node> {
 
         if (Overlay) {
             this.htmlOverlay = document.createElement('DIV');
-            this.htmlOverlay.className = 'o3d-node-html-container';
+            this.htmlOverlay.className = 'l3graph-node-html-container';
 
             this.htmlBody = document.createElement('DIV');
-            this.htmlBody.className = 'o3d-node-html-view';
+            this.htmlBody.className = 'l3graph-node-html-view';
             this.htmlOverlay.appendChild(this.htmlBody);
 
             if (template.overlay.context) {

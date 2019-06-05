@@ -131,11 +131,11 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         const viewOptions: ViewOptions = this.props.viewOptions || {};
         return <div
             tabIndex={0}
-            className='o3d-main'
+            className='l3graph-main'
             onFocus={this.onFocus}
             onBlur={this.onBlur}>
             <div
-                className='o3d-main__touch-panel'
+                className='l3graph-main__touch-panel'
                 onMouseDown={event => this.onMouseDown(event)}
                 onWheel={event => this.onWheel(event)}>
                 <DiagramView
@@ -144,7 +144,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                     viewOptions={viewOptions}>
                 </DiagramView>
             </div>
-            <div className='o3d-toolbar'>
+            <div className='l3graph-toolbar'>
                 <button
                     title='Help'
                     onClick={() => { alert(HELP_TEXT); }}>
@@ -154,19 +154,19 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                     return <button
                         title={viewController.label}
                         key={`controller-button-${index}`}
-                        className={this.viewController === viewController ? 'o3d-selected' : ''}
+                        className={this.viewController === viewController ? 'l3graph-selected' : ''}
                         onClick={() => { this.viewController = viewController; }}>
                         {viewController.label[0]}
                     </button>;
                 })}
                 <button
-                    id='o3d-force-layout-button'
+                    id='l3graph-force-layout-button'
                     title='Force layaout'
                     onClick={() => { applyForceLayout3d(this.model.graph, 30, 150); }}>
                     FL
                 </button>
                 <button
-                    id='o3d-random-layout-button'
+                    id='l3graph-random-layout-button'
                     title='Random layaout'
                     onClick={() => { applyRandomLayout(this.model.graph); }}>
                     RL

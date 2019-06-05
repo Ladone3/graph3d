@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { DiagramElementView } from './diagramElementView';
-import { Selection } from '../models/selection';
+import { Selection } from '../models/widgets/selection';
 import { isNode } from '../models/graphModel';
 import { Node } from '../models/node';
 

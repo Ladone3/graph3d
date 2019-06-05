@@ -2,7 +2,7 @@ import { Node } from './node';
 import { Subscribable } from '../utils/subscribeable';
 import { isTypesEqual as equalTypes } from '../utils';
 
-export const DEFAULT_LINK_ID = 'o3d-link';
+export const DEFAULT_LINK_ID = 'l3graph-link';
 
 export interface LinkModel {
     sourceId: string;

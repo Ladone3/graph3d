@@ -47,10 +47,10 @@ export class SimpleLinkView implements DiagramElementView<Link> {
 
         if (this.model.label) {
             this.htmlOverlay = document.createElement('DIV');
-            this.htmlOverlay.className = 'o3d-link-html-container';
+            this.htmlOverlay.className = 'l3graph-link-html-container';
 
             this.htmlBody = document.createElement('DIV');
-            this.htmlBody.className = 'o3d-link-html-view';
+            this.htmlBody.className = 'l3graph-link-html-view';
             this.htmlOverlay.appendChild(this.htmlBody);
             this.htmlBody.innerText = this.model.label;
 

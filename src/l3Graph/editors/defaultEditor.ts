@@ -1,7 +1,7 @@
 import { vector3DToTreeVector3, KeyHandler, KEY_CODES } from '../utils';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
-import { ArrowHelper } from '../models/arrowHelper';
+import { ArrowHelper } from '../models/widgets/arrowHelper';
 import { Element, isLink, ElementModel } from '../models/graphModel';
 import { MouseHandler } from '../utils/mouseHandler';
 

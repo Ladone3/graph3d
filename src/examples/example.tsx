@@ -22,7 +22,7 @@ export class NodeOverlay extends React.Component<NodeData> {
     render() {
         const {label} = this.props;
 
-        return <div className='o3d-node-template'>
+        return <div className='l3graph-node-template'>
             Label: {label} - redefined template.
         </div>;
     }
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ReactDOM.render(React.createElement(L3Graph, {
         viewOptions: {
             nodeTemplateProvider: (types: string[]) => {
-                if (types.indexOf('o3d-node-custome') !== -1) {
+                if (types.indexOf('l3graph-node-custome') !== -1) {
                     return CUSTOM_NODE_TEMPLATE_2;
                 } else {
                     return CUSTOM_NODE_TEMPLATE_1;

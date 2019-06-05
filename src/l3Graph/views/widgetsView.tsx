@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { DiagramElementView } from './diagramElementView';
-import { Selection } from '../models/selection';
-import { WidgetsModel } from '../models/widgetsModel';
-import { Widget } from '../models/widget';
+import { Selection } from '../models/widgets/selection';
+import { WidgetsModel } from '../models/widgets/widgetsModel';
+import { Widget } from '../models/widgets/widget';
 import { SelectionView } from './selectionView';
-import { ArrowHelper } from '../models/arrowHelper';
+import { ArrowHelper } from '../models/widgets/arrowHelper';
 import { ArrowHelperView } from './arrowHelperView';
 
 export interface WidgetsViewProps {
@@ -63,9 +63,9 @@ export class WidgetsView {
     }
 
     private findViewForWidget(model: Widget): DiagramElementView<any> | undefined {
-        if (model.widgetId === 'o3d-arrow-helper-widget') {
+        if (model.widgetId === 'l3graph-arrow-helper-widget') {
             return new ArrowHelperView(model as ArrowHelper);
-        } else if (model.widgetId === 'o3d-selection-widget') {
+        } else if (model.widgetId === 'l3graph-selection-widget') {
             return new SelectionView(model as Selection);
         } else {
             return undefined;

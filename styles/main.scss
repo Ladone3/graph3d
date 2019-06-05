@@ -4,7 +4,7 @@
     color: #999999;
 }
 
-.o3d-main {
+.l3graph-main {
     position: relative;
     width: 100%;
     height: 100%;
@@ -12,7 +12,7 @@
     background-color: white;
 }
 
-.o3d-toolbar {
+.l3graph-toolbar {
     position: absolute;
     display: flex;
     flex-direction: row;
@@ -40,18 +40,18 @@
             opacity: 1;
         }
     }
-    button.o3d-selected {
+    button.l3graph-selected {
         pointer-events: none;
         box-shadow: inset 0px 0px 13px 0px black;
         opacity: 0.7;
     }
 }
 
-.o3d-selected {
+.l3graph-selected {
     /*...*/
 }
 
-.o3d-main_screen {
+.l3graph-main_screen {
     position: absolute;
     width: 100%;
     height: 100%;
@@ -64,7 +64,7 @@
     }
 }
 
-.o3d-main__touch-panel {
+.l3graph-main__touch-panel {
     top: 0;
     left: 0;
     position: absolute;

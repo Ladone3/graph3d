@@ -2,8 +2,8 @@ import { ElementDefinition, GraphModel, ImmutableMap, NodeDefinition, ElementMod
 import { Subscribable, EventObject } from '../utils/subscribeable';
 import { NodeModel, Node } from '../models/node';
 import { LinkModel, Link, getLinkId } from '../models/link';
-import { WidgetsModel } from './widgetsModel';
-import { Selection } from './selection';
+import { WidgetsModel } from './widgets/widgetsModel';
+import { Selection } from './widgets/selection';
 import { isTypesEqual } from '../utils';
 
 export interface Graph {

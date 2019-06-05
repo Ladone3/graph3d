@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { DiagramElementView } from './diagramElementView';
-import { ArrowHelper } from '../models/arrowHelper';
+import { ArrowHelper } from '../models/widgets/arrowHelper';
 
 const LINES_LENGTH = 100;
 

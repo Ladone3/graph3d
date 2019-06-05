@@ -18,7 +18,7 @@ export function generateData(
     for (let i = 0; i < nodeNumber; i++) {
         data.nodes.push({
             id: `Node-${i}`,
-            types: i % 10 === 0 ? ['o3d-node-custome'] : ['o3d-node'],
+            types: i % 10 === 0 ? ['l3graph-node-custome'] : ['l3graph-node'],
             data: { label: 'Node ' + i },
             position: { x: 0, y: 0, z: 0 },
         });

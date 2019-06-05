@@ -2,14 +2,14 @@
     color: #999999;
 }
 
-.o3d-main {
+.l3graph-main {
     position: relative;
     width: 100vw;
     height: 100vh;
     background-color: aliceblue;
 }
 
-.o3d-link-html-view {
+.l3graph-link-html-view {
     opacity: 0.7;
     margin-top: 10px;
     font-size: 5px;
@@ -25,14 +25,14 @@
     }
 }
 
-.o3d-node-html-container {
+.l3graph-node-html-container {
     box-sizing: border-box;
     padding-left: 20px;
     padding-top: 10px;
     width: 40px;
     height: 20px;
     
-    .o3d-sphere {
+    .l3graph-sphere {
         margin-left: -8px;
         margin-top: -8px;
         position: absolute;
@@ -45,7 +45,7 @@
         // display: none;
     }
 
-    .o3d-node-html-view {
+    .l3graph-node-html-view {
         position: relative;
         overflow: hidden;
         cursor: pointer;
@@ -57,7 +57,7 @@
         width: max-content;
         // box-shadow: 0px 0px 26px -5px;
 
-        .o3d-default-node-view {
+        .l3graph-default-node-view {
             // width: 100px;
             // height: 40px;
             background-color: #268eb8;
@@ -76,7 +76,7 @@
     }
 
     &:hover {
-        .o3d-node-html-view {
+        .l3graph-node-html-view {
             opacity: 1;
             transform: scale(1);
         }

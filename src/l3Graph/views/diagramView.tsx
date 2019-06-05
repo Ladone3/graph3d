@@ -6,9 +6,9 @@ import { GraphView } from './graphView';
 import { DiagramModel } from '../models/diagramModel';
 import { Element, GraphModelEvents } from '../models/graphModel';
 import { WidgetsView } from './widgetsView';
-import { Widget } from '../models/widget';
+import { Widget } from '../models/widgets/widget';
 import { vector3DToTreeVector3, Subscribable, EventObject } from '../utils';
-import { WidgetsModelEvents } from '../models/widgetsModel';
+import { WidgetsModelEvents } from '../models/widgets/widgetsModel';
 
 export interface ViewOptions {
     nodeTemplateProvider?: NodeTemplateProvider;
@@ -265,14 +265,14 @@ export class DiagramView extends React.Component<DiagramViewProps> {
     }
 
     render() {
-        return <div className='o3d-main_screen'>
+        return <div className='l3graph-main_screen'>
             <div
-                className='o3d-main_screen__mesh-layer'
+                className='l3graph-main_screen__mesh-layer'
                 ref={(div) => this.meshHtmlContainer = div}
             >
             </div>
             <div
-                className='o3d-main_screen__overlay-layer'
+                className='l3graph-main_screen__overlay-layer'
                 ref={(div) => this.overlayHtmlContainer = div}
             >
             </div>
