@@ -33,15 +33,19 @@ const rootHtml = document.getElementById('rootHtml');
 const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
     mesh: (node: {label: string}) => {
         const shapeNumber = Math.round(Math.random() * 8);
+        const randomSize = 10 + Math.round(Math.random() * 20);
+        const size = {x: randomSize, y: randomSize, z: randomSize};
         if (shapeNumber === 0) {
             return {
                 type: MeshKind.Obj,
                 markup: person3d,
+                size,
             };
         } else if (shapeNumber === 1) {
             return {
                 type: MeshKind.Obj,
                 markup: cat3d,
+                size,
             };
         } else {
             return {
@@ -55,6 +59,7 @@ const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
                     'torus',
                     'tetrahedron',
                 ][Math.round(Math.random() * 6)] as any,
+                size,
             };
         }
     },
@@ -74,7 +79,7 @@ const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    const graphElements = generateData(30, 2);
+    const graphElements = generateData(5);
     ReactDOM.render(React.createElement(L3Graph, {
         viewOptions: {
             nodeTemplateProvider: (types: string[]) => {

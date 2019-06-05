@@ -3,10 +3,12 @@ import { Link } from './link';
 import { isTypesEqual } from '../utils';
 import { Point, PointEvents } from './point';
 
-const DEFAULT_NODE_PARAMETERS = {
-    position: {x: 0, y: 0, z: 0},
-    size: {x: 15, y: 15, z: 15},
+const DEFAULT_NODE_PARAMETERS: NodeParameters = {
+    position: { x: 0, y: 0, z: 0 },
+    size: { x: 15, y: 15, z: 15, placeholder: true },
 };
+
+export type Size = Vector3D & { placeholder?: boolean };
 
 export interface NodeModel<NodeContent = any> {
     id: string;
@@ -16,7 +18,7 @@ export interface NodeModel<NodeContent = any> {
 
 export interface NodeParameters {
     position: Vector3D;
-    size: Vector3D;
+    size?: Vector3D & { placeholder?: boolean };
 }
 
 export interface NodeEvents<NodeContent> extends PointEvents {
@@ -27,7 +29,7 @@ export class Node<NodeContent = any> extends Point<NodeEvents<NodeContent>> {
     public incomingLinks: Map<string, Link> = new Map();
     public outgoingLinks: Map<string, Link> = new Map();
     public modelIsChanged: boolean = false;
-    private _size: Vector3D;
+    private _size: Size;
 
     get id() {
         return this._model.id;
@@ -38,7 +40,7 @@ export class Node<NodeContent = any> extends Point<NodeEvents<NodeContent>> {
         parameters: NodeParameters = DEFAULT_NODE_PARAMETERS,
     ) {
         super(parameters);
-        this._size = parameters.size;
+        this._size = parameters.size || DEFAULT_NODE_PARAMETERS.size;
     }
 
     get types() {
@@ -75,10 +77,10 @@ export class Node<NodeContent = any> extends Point<NodeEvents<NodeContent>> {
         return this._model;
     }
 
-    get size() {
+    get size(): Size {
         return this._size;
     }
-    setSize(size: Vector3D) {
+    setSize(size: Size) {
         const previous = this._size;
         this._size = size;
         this.trigger('change:size', previous);

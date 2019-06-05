@@ -1,9 +1,12 @@
-import { Node, NodeModel } from './node';
-import { Link, getGroupId, LinkModel, getLinkId } from './link';
+import { Node, NodeModel, NodeParameters } from './node';
+import { Link, getGroupId, LinkModel, getLinkId, LinkParameters } from './link';
 import { Subscribable } from '../utils/subscribeable';
+
+export type NodeDefinition<Contetnt = any> = NodeModel<Contetnt> & NodeParameters;
 
 export type Element = Node | Link;
 export type ElementModel = NodeModel | LinkModel;
+export type ElementDefinition = NodeDefinition | LinkModel;
 
 export function isNode(element: Element): element is Node {
     return element instanceof Node;
@@ -20,6 +23,10 @@ export function isNodeModel(elementModel: ElementModel): elementModel is NodeMod
 export function isLinkModel(elementModel: ElementModel): elementModel is LinkModel {
     return (elementModel as any).sourceId !== undefined &&
         (elementModel as any).targetId !== undefined;
+}
+
+export function isNodeDefinition(elementModel: ElementDefinition): elementModel is NodeDefinition {
+    return !isLinkModel(elementModel) && Boolean(elementModel.position);
 }
 
 export interface LinkGroup { targetId: string; sourceId: string; links: Link[]; }
@@ -66,11 +73,12 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         return this.nodes.get(id) || this.links.get(id);
     }
 
-    public addElements(models: ElementModel[]) {
+    public addElements(models: ElementDefinition[]) {
         const newElements: Element[] = [];
         for (const model of models) {
             if (isNodeModel(model) && !this._nodes.has(model.id)) {
-                const node = new Node(model);
+                const parameters: NodeParameters = model;
+                const node = new Node(model, parameters);
                 this._nodes.set(model.id, node);
                 this.subscribeOnNode(node);
                 newElements.push(node);
@@ -91,20 +99,28 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
                 }
             }
         }
-        this.trigger('add:elements', newElements);
+        if (newElements.length > 0) {
+            this.trigger('add:elements', newElements);
+        }
     }
 
-    public updateElementsData(models: ElementModel[]) {
-        for (const model of models) {
-            if (isNodeModel(model)) {
-                const node = this._nodes.get(model.id);
-                node.setData(model.data);
-                node.setTypes(model.types);
-            } else {
-                const link = this._links.get(getLinkId(model));
-                link.setTypes(model.types);
-                link.setLabel(model.label);
+    public updateNodes(definitions: NodeDefinition[]) {
+        for (const definition of definitions) {
+            const node = this._nodes.get(definition.id);
+            node.setData(definition.data);
+            node.setTypes(definition.types);
+            node.setPosition(definition.position);
+            if (definition.size) {
+                node.setSize(definition.size);
             }
+        }
+    }
+
+    public updateLinks(models: LinkModel[]) {
+        for (const model of models) {
+            const link = this._links.get(getLinkId(model));
+            link.setTypes(model.types);
+            link.setLabel(model.label);
         }
     }
 

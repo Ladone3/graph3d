@@ -20,6 +20,7 @@ export interface Mesh {
     color?: string | number;
     texture?: string;
     preserveRatio?: boolean;
+    size?: Vector3D;
 }
 
 export interface MeshNative extends Mesh {

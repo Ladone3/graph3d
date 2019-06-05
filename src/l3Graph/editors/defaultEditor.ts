@@ -2,7 +2,7 @@ import { vector3DToTreeVector3, KeyHandler, KEY_CODES } from '../utils';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
 import { ArrowHelper } from '../models/arrowHelper';
-import { Element, isLink } from '../models/graphModel';
+import { Element, isLink, ElementModel } from '../models/graphModel';
 import { MouseHandler } from '../utils/mouseHandler';
 
 const WHEEL_STEP = 100;
@@ -48,9 +48,9 @@ export class DefaultEditor {
 
     private onKeyPressed(keyMap: Set<number>) {
         if (keyMap.has(KEY_CODES.DELETE) && this.diagramModel.selection.elements.size > 0) {
-            const elementsToDelete: Element[] = [];
+            const elementsToDelete: ElementModel[] = [];
             this.diagramModel.selection.elements.forEach(el => {
-                elementsToDelete.push(el);
+                elementsToDelete.push(el.model);
             });
             this.diagramModel.removeElements(elementsToDelete);
         }

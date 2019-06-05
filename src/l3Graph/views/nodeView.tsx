@@ -60,6 +60,10 @@ export class NodeView implements DiagramElementView<Node> {
                 .multiplyScalar(-1);
             this.meshOffset = treeVector3ToVector3D(this.mesh.position);
             this.meshOriginalSize = this.boundingBox.getSize(this.mesh.position).clone();
+
+            if (meshDescriptor.size && this.model.size.placeholder) {
+                this.model.setSize(meshDescriptor.size);
+            }
         } else {
             this.mesh = null;
         }

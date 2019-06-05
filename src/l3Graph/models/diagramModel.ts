@@ -1,4 +1,4 @@
-import { ElementModel, GraphModel, ImmutableMap } from './graphModel';
+import { ElementDefinition, GraphModel, ImmutableMap, NodeDefinition, ElementModel } from './graphModel';
 import { Subscribable, EventObject } from '../utils/subscribeable';
 import { NodeModel, Node } from '../models/node';
 import { LinkModel, Link, getLinkId } from '../models/link';
@@ -7,16 +7,16 @@ import { Selection } from './selection';
 import { isTypesEqual } from '../utils';
 
 export interface Graph {
-    nodes: NodeModel[];
+    nodes: NodeDefinition[];
     links: LinkModel[];
 }
 
 interface GraphPatch {
-    newNodes?: NodeModel[];
+    newNodes?: NodeDefinition[];
     newLinks?: LinkModel[];
     nodesToRemove?: NodeModel[];
     linksToRemove?: LinkModel[];
-    nodesToUpdate?: NodeModel[];
+    nodesToUpdate?: NodeDefinition[];
     linksToUpdate?: LinkModel[];
 }
 
@@ -32,7 +32,7 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
     public widgets: WidgetsModel;
     public selection: Selection;
 
-    private deprecatedSelection: ReadonlySet<ElementModel> = new Set();
+    private deprecatedSelection: ReadonlySet<ElementDefinition> = new Set();
     private animationFrame: number;
     private graphEvents: Set<EventObject> = new Set();
     private widgetEvents: Set<EventObject> = new Set();
@@ -60,7 +60,7 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         return this.graph.links;
     }
 
-    public addElements(elements: ElementModel[]) {
+    public addElements(elements: ElementDefinition[]) {
         this.graph.addElements(elements);
     }
 
@@ -74,10 +74,6 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
 
     public removeLinks(links: LinkModel[]) {
         this.graph.removeLinks(links);
-    }
-
-    private updateElementsData(elements: ElementModel[]) {
-        this.graph.updateElementsData(elements);
     }
 
     public performSyncUpdate = () => {
@@ -106,19 +102,19 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         if (newLinks) { this.addElements(newLinks); }
         if (linksToRemove && linksToRemove.length > 0) {this.removeLinks(linksToRemove);  }
         if (nodesToRemove && nodesToRemove.length > 0) { this.removeNodes(nodesToRemove); }
-        if (nodesToUpdate && nodesToUpdate.length > 0) { this.updateElementsData(nodesToUpdate); }
-        if (linksToUpdate && linksToUpdate.length > 0) { this.updateElementsData(linksToUpdate); }
+        if (nodesToUpdate && nodesToUpdate.length > 0) { this.graph.updateNodes(nodesToUpdate); }
+        if (linksToUpdate && linksToUpdate.length > 0) { this.graph.updateLinks(linksToUpdate); }
     }
 
     private createPatch(newGraphModel: Graph): GraphPatch {
         const graph = this.graph;
         const {nodes, links} = newGraphModel;
 
-        const newNodes: NodeModel[] = [];
+        const newNodes: NodeDefinition[] = [];
         const newLinks: LinkModel[] = [];
         const nodesToRemove: NodeModel[] = [];
         const linksToRemove: LinkModel[] = [];
-        const nodesToUpdate: NodeModel[] = [];
+        const nodesToUpdate: NodeDefinition[] = [];
         const linksToUpdate: LinkModel[] = [];
 
         const nodeMap = new Map<string, NodeModel>();

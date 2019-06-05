@@ -20,6 +20,7 @@ export function generateData(
             id: `Node-${i}`,
             types: i % 10 === 0 ? ['o3d-node-custome'] : ['o3d-node'],
             data: { label: 'Node ' + i },
+            position: { x: 0, y: 0, z: 0 },
         });
     }
 
