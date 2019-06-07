@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { DiagramElementView } from './diagramElementView';
-import { ArrowHelper } from '../models/widgets/arrowHelper';
+import { DiagramWidgetView } from '.';
+import { ArrowHelper } from '../models/widgets/ArrowHelper';
 
 const LINES_LENGTH = 100;
 
-export class ArrowHelperView implements DiagramElementView<ArrowHelper> {
+export class ArrowHelperView implements DiagramWidgetView<ArrowHelper> {
     public readonly model: ArrowHelper;
     public readonly mesh: THREE.Group;
     public readonly overlay: THREE.CSS3DObject | null;
@@ -78,7 +78,7 @@ export class ArrowHelperView implements DiagramElementView<ArrowHelper> {
     }
 
     public update() {
-        const isWidgetVisible = Boolean(this.model.focusNode);
+        const isWidgetVisible = this.model.isVisible;
         this.mesh.visible = isWidgetVisible;
 
         const position = isWidgetVisible ? this.model.focusNode.position : { x: 0, y: 0, z: 0 };

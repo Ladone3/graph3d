@@ -11,11 +11,14 @@ import { MouseHandler } from './utils/mouseHandler';
 import { EventObject } from './utils';
 import { Element } from './models/graphModel';
 import { Node } from './models/node';
+import { DEFAULT_WIDGET_SET } from './defaultWidgetsSet';
+import { WidgetResolver } from './models/widgets';
 
 export interface L3GraphProps {
     graph: Graph;
     viewOptions?: ViewOptions;
     viewControllers?: ViewControllersSet;
+    widgetResolvers?: WidgetResolver[];
     onComponentMount?: (graph: L3Graph) => void;
     onComponentUnmount?: (graph: L3Graph) => void;
 }
@@ -25,26 +28,32 @@ export interface State {
 }
 
 export class L3Graph extends React.Component<L3GraphProps, State> {
-    public model: DiagramModel;
+    private diagramModel: DiagramModel;
     private view: DiagramView;
     private keyHandler: KeyHandler;
     private mouseHandler: MouseHandler;
     private viewControllers: ViewController[] = [];
     private defaultEditor: DefaultEditor;
+    private widgetResolvers: WidgetResolver[];
 
     constructor(props: L3GraphProps) {
         super(props);
-        this.model = new DiagramModel();
+        this.diagramModel = new DiagramModel();
         this.state = {};
-        this.model.updateGraph({
+        this.diagramModel.updateGraph({
             nodes: this.props.graph.nodes,
             links: this.props.graph.links,
         });
+        this.widgetResolvers = props.widgetResolvers || DEFAULT_WIDGET_SET;
     }
 
     componentDidUpdate(props: L3GraphProps) {
         const {graph} = props;
-        this.model.updateGraph(graph);
+        this.diagramModel.updateGraph(graph);
+    }
+
+    get model() {
+        return this.diagramModel;
     }
 
     get viewController() {
@@ -102,7 +111,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
     private onViewMount = (view: DiagramView) => {
         this.view = view;
         this.view.graphView.on('click:overlay', (event) => this.onOverlayDown(event));
-        this.mouseHandler = new MouseHandler(this.model, this.view);
+        this.mouseHandler = new MouseHandler(this.diagramModel, this.view);
         this.keyHandler = new KeyHandler();
 
         this.viewControllers =
@@ -110,12 +119,14 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                 .map(controller => controller(this.view, this.mouseHandler, this.keyHandler));
         this.viewController = this.viewControllers[0];
         this.defaultEditor = new DefaultEditor(
-            this.model,
+            this.diagramModel,
             this.view,
             this.mouseHandler,
             this.keyHandler,
         );
-
+        for (const widgetResolver of this.widgetResolvers) {
+            this.registerWidget(widgetResolver);
+        }
         this.forceUpdate();
     }
 
@@ -125,6 +136,16 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
 
     private onBlur = () => {
         this.keyHandler.switchOff();
+    }
+
+    public registerWidget(widgetResolver: WidgetResolver) {
+        const widgetModel = widgetResolver.model({
+            diagramModel: this.diagramModel,
+            keyHandler: this.keyHandler,
+            mouseHandler: this.mouseHandler,
+        });
+        this.view.widgetsView.registerView(widgetModel.widgetId, widgetResolver.view);
+        this.diagramModel.widgets.registerWidget(widgetModel);
     }
 
     render() {
@@ -139,7 +160,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                 onMouseDown={event => this.onMouseDown(event)}
                 onWheel={event => this.onWheel(event)}>
                 <DiagramView
-                    model={this.model}
+                    model={this.diagramModel}
                     onViewMount={this.onViewMount}
                     viewOptions={viewOptions}>
                 </DiagramView>
@@ -162,13 +183,13 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                 <button
                     id='l3graph-force-layout-button'
                     title='Force layaout'
-                    onClick={() => { applyForceLayout3d(this.model.graph, 30, 150); }}>
+                    onClick={() => { applyForceLayout3d(this.diagramModel.graph, 30, 150); }}>
                     FL
                 </button>
                 <button
                     id='l3graph-random-layout-button'
                     title='Random layaout'
-                    onClick={() => { applyRandomLayout(this.model.graph); }}>
+                    onClick={() => { applyRandomLayout(this.diagramModel.graph); }}>
                     RL
                 </button>
             </div>

@@ -25,7 +25,7 @@
     }
 }
 
-.l3graph-node-html-container {
+.l3graph-overlayed-html-container {
     box-sizing: border-box;
     padding-left: 20px;
     padding-top: 10px;
@@ -45,7 +45,7 @@
         // display: none;
     }
 
-    .l3graph-node-html-view {
+    .l3graph-overlayed-html-view {
         position: relative;
         overflow: hidden;
         cursor: pointer;
@@ -76,7 +76,7 @@
     }
 
     &:hover {
-        .l3graph-node-html-view {
+        .l3graph-overlayed-html-view {
             opacity: 1;
             transform: scale(1);
         }

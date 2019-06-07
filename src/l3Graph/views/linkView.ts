@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Link } from '../models/link';
-import { DiagramElementView } from './diagramElementView';
+import { DiagramElementView } from '.';
 import { LinkViewTemplate, DEFAULT_LINK_TEMPLATE } from '../customisation';
 import {
     vector3DToTreeVector3,
@@ -19,7 +19,7 @@ import { Vector3D } from '../models/primitives';
 const LINK_OFFSET = 30;
 const ARROW_LENGTH = 10;
 
-export class LinkView implements DiagramElementView<Link> {
+export class LinkView implements DiagramElementView {
     public readonly model: Link;
     public readonly group: LinkGroup;
     public readonly mesh: THREE.Group;

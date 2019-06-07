@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { createElement } from 'react';
 import * as ReactDOM from 'react-dom';
 import { Node } from '../models/node';
-import { DiagramElementView } from './diagramElementView';
+import { DiagramElementView } from '.';
 import {
     NodeViewTemplate,
     DEFAULT_NODE_TEMPLATE,
@@ -14,7 +14,7 @@ import { getPrimitive } from '../utils/shapeUtils';
 import { Vector3D } from '../models/primitives';
 import { treeVector3ToVector3D } from '../utils';
 
-export class NodeView implements DiagramElementView<Node> {
+export class NodeView implements DiagramElementView {
     public readonly model: Node;
     public readonly mesh: THREE.Object3D;
     public readonly overlay: THREE.CSS3DSprite;
@@ -70,10 +70,10 @@ export class NodeView implements DiagramElementView<Node> {
 
         if (Overlay) {
             this.htmlOverlay = document.createElement('DIV');
-            this.htmlOverlay.className = 'l3graph-node-html-container';
+            this.htmlOverlay.className = 'l3graph-overlayed-html-container';
 
             this.htmlBody = document.createElement('DIV');
-            this.htmlBody.className = 'l3graph-node-html-view';
+            this.htmlBody.className = 'l3graph-overlayed-html-view';
             this.htmlOverlay.appendChild(this.htmlBody);
 
             if (template.overlay.context) {

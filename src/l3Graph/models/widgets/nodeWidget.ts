@@ -1,24 +1,14 @@
-import { Subscribable } from '../../utils/subscribeable';
-import { Widget, WidgetEvents } from './widget';
+import { Widget, WidgetEvents, WidgetParameters } from '.';
 import { Node } from '../node';
-
-export interface NodeWidgetParameters {
-    focusNode?: Node;
-}
+import { isNode } from '../graphModel';
 
 export interface NodeWidgetEvents extends WidgetEvents {
     'change:focus': Node;
 }
 
-export class NodeWidget extends Subscribable<NodeWidgetEvents> implements Widget {
+export abstract class NodeWidget extends Widget {
     private _focusNode?: Node;
     public readonly widgetId: string;
-
-    constructor(parameters: NodeWidgetParameters = {}) {
-        super();
-        this.widgetId = 'l3graph-node-widget';
-        this.setFocusNode(parameters.focusNode);
-    }
 
     setFocusNode(target: Node | undefined) {
         if (target !== this._focusNode) {

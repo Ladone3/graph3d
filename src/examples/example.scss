@@ -14,3 +14,20 @@
     border: 1px solid black;
     padding: 20px;
 }
+
+.l3graph-widget-overlay {
+    width: 150px;
+    height: 150px;
+    background-color: green;
+    color: white;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    user-select: none;
+    border: 1px solid black;
+    padding: 20px;
+}

@@ -41,8 +41,8 @@ export interface MouseHandlerEvents {
 
 export class MouseHandler extends Subscribable<MouseHandlerEvents> {
     private raycaster: THREE.Raycaster;
-    private isDrugging = false;
-    private mouseDownElement: Element;
+    private dragging = false;
+    private mouseDownOnElement: Element;
 
     constructor(
         private diagramhModel: DiagramModel,
@@ -52,51 +52,67 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         this.raycaster = new THREE.Raycaster();
     }
 
+    get isPanning() {
+        return this.dragging && !this.mouseDownOnElement;
+    }
+
+    get isDragging() {
+        return this.dragging && Boolean(this.mouseDownOnElement);
+    }
+
+    get draggedElement(): Element | undefined {
+        if (this.isDragging) {
+            return this.mouseDownOnElement;
+        } else {
+            return undefined;
+        }
+    }
+
     onMouseDown(event: MouseEvent, element?: Element) {
-        this.mouseDownElement = element || this.getIntersectedObject(event);
-        this.isDrugging = false;
+        this.mouseDownOnElement = element || this.getIntersectedObject(event);
+        this.dragging = false;
 
         handleDragging(event, (e, offset) => {
-            if (this.isDrugging) {
-                if (this.mouseDownElement) {
-                    this.trigger('elementDrag', {nativeEvent: e, element: this.mouseDownElement});
+            if (this.dragging) {
+                if (this.mouseDownOnElement) {
+                    this.trigger('elementDrag', {nativeEvent: e, element: this.mouseDownOnElement});
                 } else {
                     this.trigger('paperDrag', {nativeEvent: e, offset});
                 }
             } else {
                 const dist = length(offset);
                 if (dist >= MIN_DRAG_OFFSET) {
-                    this.isDrugging = true;
-                    if (this.mouseDownElement) {
-                        this.trigger('elementStartDrag', {nativeEvent: e, element: this.mouseDownElement});
+                    this.dragging = true;
+                    if (this.mouseDownOnElement) {
+                        this.trigger('elementStartDrag', {nativeEvent: e, element: this.mouseDownOnElement});
                     } else {
                         this.trigger('paperStartDrag', {nativeEvent: e, offset});
                     }
                 }
             }
         }, (e, offset) => {
-            if (this.isDrugging) {
-                if (this.mouseDownElement) {
-                    this.trigger('elementEndDrag', {nativeEvent: e, element: this.mouseDownElement});
+            if (this.dragging) {
+                if (this.mouseDownOnElement) {
+                    this.trigger('elementEndDrag', {nativeEvent: e, element: this.mouseDownOnElement});
                 } else {
                     this.trigger('paperEndDrag', {nativeEvent: e, offset});
                 }
             } else {
-                if (this.mouseDownElement) {
-                    this.trigger('elementClick', {nativeEvent: e, element: this.mouseDownElement});
+                if (this.mouseDownOnElement) {
+                    this.trigger('elementClick', {nativeEvent: e, element: this.mouseDownOnElement});
                 } else {
                     this.trigger('paperClick', e);
                 }
             }
-            this.isDrugging = false;
-            this.mouseDownElement = undefined;
+            this.dragging = false;
+            this.mouseDownOnElement = undefined;
         });
     }
 
     onScroll(event: MouseWheelEvent, element?: Element) {
-        if (this.mouseDownElement) {
-            this.isDrugging = true;
-            this.trigger('elementDrag', {nativeEvent: event, element: this.mouseDownElement});
+        if (this.mouseDownOnElement) {
+            this.dragging = true;
+            this.trigger('elementDrag', {nativeEvent: event, element: this.mouseDownOnElement});
         } else {
             if (element) {
                 this.trigger('elementScroll', {nativeEvent: event, element});

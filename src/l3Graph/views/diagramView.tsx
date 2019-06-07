@@ -6,8 +6,8 @@ import { GraphView } from './graphView';
 import { DiagramModel } from '../models/diagramModel';
 import { Element, GraphModelEvents } from '../models/graphModel';
 import { WidgetsView } from './widgetsView';
-import { Widget } from '../models/widgets/widget';
-import { vector3DToTreeVector3, Subscribable, EventObject } from '../utils';
+import { Widget } from '../models/widgets';
+import { vector3DToTreeVector3, EventObject } from '../utils';
 import { WidgetsModelEvents } from '../models/widgets/widgetsModel';
 
 export interface ViewOptions {

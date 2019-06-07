@@ -3,7 +3,7 @@ import { Subscribable, EventObject } from '../utils/subscribeable';
 import { NodeModel, Node } from '../models/node';
 import { LinkModel, Link, getLinkId } from '../models/link';
 import { WidgetsModel } from './widgets/widgetsModel';
-import { Selection } from './widgets/selection';
+import { Selection } from './selection';
 import { isTypesEqual } from '../utils';
 
 export interface Graph {
@@ -41,7 +41,7 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         super();
         this.graph = new GraphModel();
         this.widgets = new WidgetsModel();
-        this.initSelectionWidget();
+        this.selection = new Selection({graph: this.graph});
 
         this.graph.on('add:elements', this.groupGraphEvents);
         this.graph.on('remove:elements', this.groupGraphEvents);
@@ -178,10 +178,5 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
     private groupWidgetEvents = (event: EventObject) => {
         this.widgetEvents.add(event);
         this.performSyncUpdate();
-    }
-
-    private initSelectionWidget() {
-        this.selection = new Selection({graph: this.graph});
-        this.widgets.registerWidget(this.selection);
     }
 }

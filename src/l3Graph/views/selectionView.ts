@@ -1,13 +1,14 @@
 import * as THREE from 'three';
-import { DiagramElementView } from './diagramElementView';
-import { Selection } from '../models/widgets/selection';
+import { DiagramWidgetView } from '.';
+import { Selection } from '../models/selection';
 import { isNode } from '../models/graphModel';
 import { Node } from '../models/node';
+import { SelectionWidget } from '../models/widgets/selectionWidget';
 
 const SELECTION_PADDING = 15;
 
-export class SelectionView implements DiagramElementView<Selection> {
-    public readonly model: Selection;
+export class SelectionView implements DiagramWidgetView<SelectionWidget> {
+    public readonly model: SelectionWidget;
     public readonly material: THREE.MeshLambertMaterial;
     public readonly geometry: THREE.CubeGeometry;
     public readonly mesh: THREE.Group;
@@ -15,7 +16,7 @@ export class SelectionView implements DiagramElementView<Selection> {
 
     private boundingBox: THREE.Box3;
 
-    constructor(model: Selection) {
+    constructor(model: SelectionWidget) {
         this.model = model;
         this.material = new THREE.MeshLambertMaterial({color: 'red', opacity: 0.1, transparent: true});
         this.geometry = new THREE.CubeGeometry(1, 1, 1);
@@ -51,11 +52,11 @@ export class SelectionView implements DiagramElementView<Selection> {
         //     this.mesh.visible = false;
         // }
         const nodes: Node[] = [];
-        this.model.elements.forEach(element => {
+        for (const element of this.model.selectedElements) {
             if (isNode(element)) {
                 nodes.push(element);
             }
-        });
+        }
         if (nodes.length > 0) {
             this.mesh.visible = true;
             const node = nodes[0];

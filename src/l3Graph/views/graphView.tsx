@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GraphModel, Element, isNode, isLink, LinkGroup } from '../models/graphModel';
-import { DiagramElementView } from './diagramElementView';
+import { DiagramElementView } from '.';
 import { NodeView } from './nodeView';
 import { LinkView } from './linkView';
 import {
@@ -29,7 +29,7 @@ export interface GraphViewEvents {
 export class GraphView extends Subscribable<GraphViewEvents> {
     camera: THREE.PerspectiveCamera;
     scene: THREE.Scene;
-    views: Map<string, DiagramElementView<Element>>;
+    views: Map<string, DiagramElementView>;
 
     renderer: THREE.WebGLRenderer;
     overlayRenderer: THREE.CSS3DRenderer;
@@ -51,7 +51,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         if (elementViewExists) {
             return; // We already have view for this element
         }
-        let view: DiagramElementView<Element>;
+        let view: DiagramElementView;
         if (isNode(element)) {
             view = this.createNodeView(element);
         } else {
@@ -89,12 +89,12 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         this.views.delete(element.id);
     }
 
-    private createNodeView(node: Node): DiagramElementView<Node> {
+    private createNodeView(node: Node): DiagramElementView {
         const templateProvider =  this.props.nodeTemplateProvider || DEFAULT_NODE_TEMPLATE_PROVIDER;
         return new NodeView(node, templateProvider(node.types));
     }
 
-    private createLinkView(link: Link, group: LinkGroup): DiagramElementView<Link> | undefined {
+    private createLinkView(link: Link, group: LinkGroup): DiagramElementView | undefined {
         const templateProvider = this.props.linkTemplateProvider || DEFAULT_LINK_TEMPLATE_PROVIDER;
         if (this.props.simpleLinks) {
             return new SimpleLinkView(link, templateProvider(link.types));

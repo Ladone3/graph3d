@@ -1,24 +1,18 @@
 import { vector3DToTreeVector3, KeyHandler, KEY_CODES } from '../utils';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
-import { ArrowHelper } from '../models/widgets/arrowHelper';
 import { Element, isLink, ElementModel } from '../models/graphModel';
 import { MouseHandler } from '../utils/mouseHandler';
 
 const WHEEL_STEP = 100;
 
 export class DefaultEditor {
-    private arrowHelper: ArrowHelper;
-
     constructor(
         private diagramModel: DiagramModel,
         private diagramView: DiagramView,
         private mouseHandler: MouseHandler,
         private keyHandler: KeyHandler,
     ) {
-        this.arrowHelper = new ArrowHelper();
-        this.diagramModel.widgets.registerWidget(this.arrowHelper);
-
         this.mouseHandler.on('elementClick', e => {
             this.diagramModel.selection.setSelection(new Set([e.data.element]));
             e.data.nativeEvent.stopPropagation();
@@ -59,7 +53,6 @@ export class DefaultEditor {
     onElementDrag(event: MouseEvent | MouseWheelEvent, target: Element) {
         if (isLink(target)) { return; }
 
-        this.arrowHelper.setFocusNode(target);
         const nodeTreePos = vector3DToTreeVector3(target.position);
         const cameraPos = this.diagramView.camera.position;
         let distanceToNode = nodeTreePos.distanceTo(cameraPos);
@@ -72,7 +65,6 @@ export class DefaultEditor {
 
     onElementDragEnd(event: MouseEvent | MouseWheelEvent, target: Element) {
         this.onElementDrag(event, target);
-        this.arrowHelper.setFocusNode(undefined);
     }
 }
 

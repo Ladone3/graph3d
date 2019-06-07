@@ -1,45 +1,28 @@
-import { Vector3D } from '../primitives';
-import { Subscribable } from '../../utils/subscribeable';
-import { Widget, WidgetEvents } from './widget';
-import { Node } from '../node';
+import { NodeWidget } from './nodeWidget';
+import { WidgetParameters } from '.';
+import { MouseHandler } from '../../utils/mouseHandler';
+import { isNode } from '../graphModel';
 
-export interface ArrowHelperParameters {
-    focusNode?: Node;
-}
+export class ArrowHelper extends NodeWidget {
+    private mouseHandler: MouseHandler;
 
-export interface ArrowHelperEvents extends WidgetEvents {
-    'change:focus': Node;
-}
+    constructor(parameters: WidgetParameters) {
+        super(parameters);
+        this.mouseHandler = parameters.mouseHandler;
 
-export class ArrowHelper extends Subscribable<ArrowHelperEvents> implements Widget {
-    private _focusNode?: Node;
-    public readonly widgetId: string;
-
-    constructor(parameters: ArrowHelperParameters = {}) {
-        super();
-        this.widgetId = 'l3graph-arrow-helper-widget';
-        this.setFocusNode(parameters.focusNode);
-    }
-
-    setFocusNode(target: Node | undefined) {
-        if (target !== this._focusNode) {
-            if (this._focusNode) {
-                this._focusNode.unsubscribe(this.updateView);
+        this.mouseHandler.on('elementStartDrag', () => {
+            const draggedElement = this.mouseHandler.draggedElement;
+            if (isNode(draggedElement)) {
+                this.setFocusNode(draggedElement);
             }
-            if (target) {
-                target.on('change:position', this.updateView);
-            }
-        }
+        });
 
-        this._focusNode = target;
-        this.updateView();
+        this.mouseHandler.on('elementEndDrag', () => {
+            this.setFocusNode(undefined);
+        });
     }
 
-    get focusNode(): Node {
-        return this._focusNode;
-    }
-
-    private updateView = () => {
-        this.trigger('update:widget', this);
+    get isVisible() {
+        return this.mouseHandler.isDragging;
     }
 }

@@ -29,3 +29,11 @@ export * from './l3Graph/utils/subscribeable';
 
 export { applyForceLayout3d } from './l3Graph/layout/layouts';
 export * from './l3Graph/utils/colorUtils';
+
+export {
+    Widget,
+    ReactNodeWidget,
+    WidgetContext,
+} from './l3Graph/models/widgets';
+export { DiagramWidgetView, ReactNodeWidgetView } from './l3Graph/views';
+export * from './l3Graph/defaultWidgetsSet';

@@ -1,5 +1,5 @@
 import { Subscribable } from '../../utils/subscribeable';
-import { Widget } from './widget';
+import { Widget } from '.';
 
 export interface WidgetsModelEvents {
     'add:widget': Widget;

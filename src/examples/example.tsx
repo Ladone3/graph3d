@@ -5,6 +5,11 @@ import {
     applyForceLayout3d,
     MeshObj,
     NodeViewTemplate,
+    WidgetContext,
+    ReactNodeWidget,
+    Widget,
+    ReactNodeWidgetView,
+    DiagramWidgetView,
 } from '../index';
 import { generateData } from './generateData';
 import { MeshKind } from '../l3Graph/customisation';
@@ -24,6 +29,16 @@ export class NodeOverlay extends React.Component<NodeData> {
 
         return <div className='l3graph-node-template'>
             Label: {label} - redefined template.
+        </div>;
+    }
+}
+
+export class WidgetOverlay extends React.Component<NodeData> {
+    render() {
+        const {label} = this.props;
+
+        return <div className='l3graph-widget-overlay'>
+            Super overlay with label: {label}.
         </div>;
     }
 }
@@ -99,7 +114,20 @@ document.addEventListener('DOMContentLoaded', () => {
         onComponentMount: onComponentMount,
     }), rootHtml);
 
-    function onComponentMount(graph: L3Graph) {
-        applyForceLayout3d(graph.model.graph, 30, 100);
+    function onComponentMount(l3graph: L3Graph) {
+        applyForceLayout3d(l3graph.model.graph, 30, 100);
+        l3graph.registerWidget({
+            model: (context: WidgetContext) => new ReactNodeWidget({
+                ...context,
+                widgetId: 'l3graph-react-node-widget',
+                overlay: {
+                    get: (node: {label: string}) => {
+                        return WidgetOverlay;
+                    },
+                    context: undefined,
+                },
+            }),
+            view: (widget: Widget) => new ReactNodeWidgetView(widget as any),
+        });
     }
 });
