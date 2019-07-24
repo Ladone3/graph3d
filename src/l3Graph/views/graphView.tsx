@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GraphModel, Element, isNode, isLink, LinkGroup } from '../models/graphModel';
+import { GraphModel, Element, isNode, LinkGroup } from '../models/graphModel';
 import { DiagramElementView } from '.';
 import { NodeView } from './nodeView';
 import { LinkView } from './linkView';
@@ -8,11 +8,12 @@ import {
     DEFAULT_NODE_TEMPLATE_PROVIDER,
     LinkTemplateProvider,
     DEFAULT_LINK_TEMPLATE_PROVIDER,
+    DEFAULT_NODE_TEMPLATE,
+    DEFAULT_LINK_TEMPLATE,
 } from '../customisation';
-import { SimpleLinkView } from './simpleLinkView';
 import { Subscribable } from '../utils';
-import { Node } from '../models/node';
 import { Link } from '../models/link';
+import { Node } from '../models/node';
 
 export interface GraphViewProps {
     graphModel: GraphModel;
@@ -42,14 +43,14 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         this.views = new Map();
         this.scene = props.scene;
         this.graphModel = props.graphModel;
-        this.graphModel.nodes.forEach(node => this.addElementView(node));
-        this.graphModel.links.forEach(link => this.addElementView(link));
+        this.graphModel.nodes.forEach(node => this.registerElement(node));
+        this.graphModel.links.forEach(link => this.registerElement(link));
     }
 
-    public addElementView(element: Element) {
+    public registerElement(element: Element) {
         const elementViewExists = this.views.get(element.id);
         if (elementViewExists) {
-            return; // We already have view for this element
+            return; // We'v registered the view for this element
         }
         let view: DiagramElementView;
         if (isNode(element)) {
@@ -59,17 +60,11 @@ export class GraphView extends Subscribable<GraphViewEvents> {
             view = this.createLinkView(element, group);
         }
         if (view) {
-            const mesh = view.mesh;
-            if (mesh) {
-                this.scene.add(mesh);
+            if (view.mesh) {
+                this.scene.add(view.mesh);
             }
-            const overlay = view.overlay;
-            if (overlay) {
-                const htmlElement: HTMLElement = overlay.element.firstChild;
-                htmlElement.addEventListener('mousedown', (event: Event) => {
-                    this.trigger('click:overlay', {event: event as MouseEvent, target: element});
-                });
-                this.scene.add(overlay);
+            if (view.overlayAnchor.isVisible()) {
+                this.scene.add(view.overlayAnchor.getSprite());
             }
             this.views.set(element.id, view);
         }
@@ -81,9 +76,8 @@ export class GraphView extends Subscribable<GraphViewEvents> {
             if (view.mesh) {
                 this.scene.remove(view.mesh);
             }
-
-            if (view.overlay) {
-                this.scene.remove(view.overlay);
+            if (view.overlayAnchor.isVisible()) {
+                this.scene.remove(view.overlayAnchor.getSprite());
             }
         }
         this.views.delete(element.id);
@@ -91,20 +85,20 @@ export class GraphView extends Subscribable<GraphViewEvents> {
 
     private createNodeView(node: Node): DiagramElementView {
         const templateProvider =  this.props.nodeTemplateProvider || DEFAULT_NODE_TEMPLATE_PROVIDER;
-        return new NodeView(node, templateProvider(node.types));
+        const nodeTemplate = {
+            ...DEFAULT_NODE_TEMPLATE,
+            ...templateProvider(node.types),
+        };
+        return new NodeView(node, nodeTemplate);
     }
 
     private createLinkView(link: Link, group: LinkGroup): DiagramElementView | undefined {
         const templateProvider = this.props.linkTemplateProvider || DEFAULT_LINK_TEMPLATE_PROVIDER;
-        if (this.props.simpleLinks) {
-            return new SimpleLinkView(link, templateProvider(link.types));
-        } else {
-            return new LinkView(
-                link,
-                group,
-                templateProvider(link.types),
-            );
-        }
+        const linkTemplate = {
+            ...DEFAULT_LINK_TEMPLATE,
+            ...templateProvider(link.types),
+        };
+        return new LinkView(link, group, linkTemplate);
     }
 
     update(specificIds: string[]) {
@@ -112,7 +106,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
             const element = this.graphModel.getElementById(elementId);
             if (element.modelIsChanged) {
                 this.removeElementView(element);
-                this.addElementView(element);
+                this.registerElement(element);
                 element.modelIsChanged = false;
             }
             const view = this.views.get(elementId);
@@ -120,14 +114,15 @@ export class GraphView extends Subscribable<GraphViewEvents> {
                 view.update();
             }
         };
-        if (!specificIds) {
+        if (specificIds) {
+            for (const id of specificIds) {
+                updateView(id);
+            }
+        } else {
             specificIds = [];
             this.views.forEach(view => {
-                specificIds.push(view.model.id);
+                updateView(view.model.id);
             });
-        }
-        for (const id of specificIds) {
-            updateView(id);
         }
     }
 }

@@ -33,7 +33,8 @@ export * from './l3Graph/utils/colorUtils';
 export {
     Widget,
     ReactNodeWidget,
-    WidgetContext,
+    WidgetModelContext,
+    WidgetViewContext,
 } from './l3Graph/models/widgets';
 export { DiagramWidgetView, ReactNodeWidgetView } from './l3Graph/views';
 export * from './l3Graph/defaultWidgetsSet';

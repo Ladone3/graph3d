@@ -1,9 +1,10 @@
 import * as _ from 'lodash';
 import { Subscribable } from '../../utils/subscribeable';
-import { DiagramModel } from '../diagramModel';
 import { MouseHandler } from '../../utils/mouseHandler';
 import { KeyHandler } from '../../utils';
-import { DiagramWidgetView } from '../../views';
+import { DiagramWidgetView, GraphView } from '../../views';
+import { GraphModel } from '../graphModel';
+import { DiagramModel } from '../diagramModel';
 
 export const DEFAULT_SELECTION_TYPE_ID = 'l3graph-selection';
 
@@ -26,16 +27,21 @@ export abstract class Widget<Events extends WidgetEvents = any> extends Subscrib
     }
 }
 
-export interface WidgetContext {
+export interface WidgetModelContext {
     diagramModel: DiagramModel;
     keyHandler: KeyHandler;
     mouseHandler: MouseHandler;
 }
 
-export type WidgetModelResolver = (diagramModel: WidgetContext) => Widget;
-export type WidgetViewResolver = (model: Widget) => DiagramWidgetView;
+export interface WidgetViewContext {
+    graphView: GraphView;
+    widget: Widget;
+}
 
-export interface WidgetResolver {
+export type WidgetModelResolver = (context: WidgetModelContext) => Widget;
+export type WidgetViewResolver = (context: WidgetViewContext) => DiagramWidgetView;
+
+export interface WidgetFabric {
     model: WidgetModelResolver;
     view: WidgetViewResolver;
 }

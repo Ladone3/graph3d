@@ -154,10 +154,6 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
                     nodeMeshMap.push(node);
                 }
             }
-            if (nodeView.overlay) {
-                meshes.push(nodeView.overlay);
-                nodeMeshMap.push(node);
-            }
         });
 
         this.raycaster.set(

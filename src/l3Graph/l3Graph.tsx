@@ -11,14 +11,14 @@ import { MouseHandler } from './utils/mouseHandler';
 import { EventObject } from './utils';
 import { Element } from './models/graphModel';
 import { Node } from './models/node';
-import { DEFAULT_WIDGET_SET } from './defaultWidgetsSet';
-import { WidgetResolver } from './models/widgets';
+import { DEFAULT_WIDGET_FABRICS } from './defaultWidgetsSet';
+import { WidgetFabric } from './models/widgets';
 
 export interface L3GraphProps {
     graph: Graph;
     viewOptions?: ViewOptions;
     viewControllers?: ViewControllersSet;
-    widgetResolvers?: WidgetResolver[];
+    widgetFabrics?: WidgetFabric[];
     onComponentMount?: (graph: L3Graph) => void;
     onComponentUnmount?: (graph: L3Graph) => void;
 }
@@ -34,7 +34,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
     private mouseHandler: MouseHandler;
     private viewControllers: ViewController[] = [];
     private defaultEditor: DefaultEditor;
-    private widgetResolvers: WidgetResolver[];
+    private widgetFabrics: WidgetFabric[];
 
     constructor(props: L3GraphProps) {
         super(props);
@@ -44,7 +44,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
             nodes: this.props.graph.nodes,
             links: this.props.graph.links,
         });
-        this.widgetResolvers = props.widgetResolvers || DEFAULT_WIDGET_SET;
+        this.widgetFabrics = props.widgetFabrics || DEFAULT_WIDGET_FABRICS;
     }
 
     componentDidUpdate(props: L3GraphProps) {
@@ -124,7 +124,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
             this.mouseHandler,
             this.keyHandler,
         );
-        for (const widgetResolver of this.widgetResolvers) {
+        for (const widgetResolver of this.widgetFabrics) {
             this.registerWidget(widgetResolver);
         }
         this.forceUpdate();
@@ -138,7 +138,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         this.keyHandler.switchOff();
     }
 
-    public registerWidget(widgetResolver: WidgetResolver) {
+    public registerWidget(widgetResolver: WidgetFabric) {
         const widgetModel = widgetResolver.model({
             diagramModel: this.diagramModel,
             keyHandler: this.keyHandler,

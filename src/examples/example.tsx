@@ -5,14 +5,12 @@ import {
     applyForceLayout3d,
     MeshObj,
     NodeViewTemplate,
-    WidgetContext,
     ReactNodeWidget,
-    Widget,
     ReactNodeWidgetView,
-    DiagramWidgetView,
 } from '../index';
 import { generateData } from './generateData';
 import { MeshKind } from '../l3Graph/customisation';
+import { WidgetViewContext, WidgetModelContext } from '../l3Graph/models/widgets';
 
 require('./example.scss');
 const cubePortal = require<string>('./portalCube.obj');
@@ -46,7 +44,7 @@ export class WidgetOverlay extends React.Component<NodeData> {
 const rootHtml = document.getElementById('rootHtml');
 
 const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
-    mesh: (node: {label: string}) => {
+    mesh: () => {
         const shapeNumber = Math.round(Math.random() * 8);
         const randomSize = 10 + Math.round(Math.random() * 20);
         const size = {x: randomSize, y: randomSize, z: randomSize};
@@ -81,12 +79,12 @@ const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
 };
 
 const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
-    mesh: (node: {label: string}): MeshObj => ({
+    mesh: (): MeshObj => ({
         type: MeshKind.Obj,
         markup: cubePortal,
     }),
     overlay: {
-        get: (node: {label: string}) => {
+        get: () => {
             return NodeOverlay;
         },
         context: undefined,
@@ -94,7 +92,7 @@ const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    const graphElements = generateData(5);
+    const graphElements = generateData(10);
     ReactDOM.render(React.createElement(L3Graph, {
         viewOptions: {
             nodeTemplateProvider: (types: string[]) => {
@@ -108,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 color: 'green',
                 thickness: 2,
             }),
-            // simpleLinks: true,
         },
         graph: graphElements,
         onComponentMount: onComponentMount,
@@ -117,17 +114,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function onComponentMount(l3graph: L3Graph) {
         applyForceLayout3d(l3graph.model.graph, 30, 100);
         l3graph.registerWidget({
-            model: (context: WidgetContext) => new ReactNodeWidget({
+            model: (context: WidgetModelContext) => new ReactNodeWidget({
                 ...context,
                 widgetId: 'l3graph-react-node-widget',
                 overlay: {
-                    get: (node: {label: string}) => {
+                    get: () => {
                         return WidgetOverlay;
                     },
                     context: undefined,
                 },
             }),
-            view: (widget: Widget) => new ReactNodeWidgetView(widget as any),
+            view: (context: WidgetViewContext) => new ReactNodeWidgetView({
+                model: context.widget as any,
+                graphView: context.graphView,
+            }),
         });
     }
 });

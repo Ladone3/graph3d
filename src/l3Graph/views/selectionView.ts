@@ -1,28 +1,34 @@
 import * as THREE from 'three';
-import { DiagramWidgetView } from '.';
-import { Selection } from '../models/selection';
+import { DiagramWidgetView, DiagramWidgetViewParameters } from '.';
 import { isNode } from '../models/graphModel';
 import { Node } from '../models/node';
 import { SelectionWidget } from '../models/widgets/selectionWidget';
+import { OverlayAnchor, MockOverlayAnchor } from './overlayAnchor';
 
 const SELECTION_PADDING = 15;
 
-export class SelectionView implements DiagramWidgetView<SelectionWidget> {
-    public readonly model: SelectionWidget;
+export interface SelectionViewParameters extends DiagramWidgetViewParameters {
+    model: SelectionWidget;
+}
+
+export class SelectionView extends DiagramWidgetView {
     public readonly material: THREE.MeshLambertMaterial;
     public readonly geometry: THREE.CubeGeometry;
     public readonly mesh: THREE.Group;
-    public readonly overlay: THREE.CSS3DObject | null;
+    public readonly overlayAnchor: OverlayAnchor;
 
+    private readonly model: SelectionWidget;
     private boundingBox: THREE.Box3;
 
-    constructor(model: SelectionWidget) {
-        this.model = model;
+    constructor(parameters: SelectionViewParameters) {
+        super(parameters);
+
+        this.model = parameters.model;
         this.material = new THREE.MeshLambertMaterial({color: 'red', opacity: 0.1, transparent: true});
         this.geometry = new THREE.CubeGeometry(1, 1, 1);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
 
-        this.overlay = null;
+        this.overlayAnchor = new MockOverlayAnchor();
         this.update();
     }
 

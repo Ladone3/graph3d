@@ -2,13 +2,16 @@ import * as THREE from 'three';
 import { DiagramWidgetView, View } from '.';
 import { WidgetsModel } from '../models/widgets/widgetsModel';
 import { Widget, WidgetViewResolver } from '../models/widgets';
+import { GraphView } from './graphView';
 
 export interface WidgetsViewProps {
+    graphView: GraphView;
     widgetsModel: WidgetsModel;
     scene: THREE.Scene;
 }
 
 export class WidgetsView {
+    graphView: GraphView;
     camera: THREE.PerspectiveCamera;
     scene: THREE.Scene;
     views: Map<string, View>;
@@ -21,8 +24,9 @@ export class WidgetsView {
 
     private viewRegistry: Map<string, WidgetViewResolver>;
 
-    constructor(private props: WidgetsViewProps) {
+    constructor(props: WidgetsViewProps) {
         this.views = new Map();
+        this.graphView = props.graphView;
         this.viewRegistry = new Map();
         this.widgetsModel = props.widgetsModel;
         this.scene = props.scene;
@@ -44,8 +48,9 @@ export class WidgetsView {
             if (view.mesh) {
                 this.scene.add(view.mesh);
             }
-            if (view.overlay) {
-                this.scene.add(view.overlay);
+
+            if (view.overlayAnchor.isVisible()) {
+                this.scene.add(view.overlayAnchor.getSprite());
             }
             this.views.set(widget.widgetId, view);
         }
@@ -58,14 +63,14 @@ export class WidgetsView {
                 this.scene.remove(view.mesh);
             }
 
-            if (view.overlay) {
-                this.scene.remove(view.overlay);
+            if (view.overlayAnchor.isVisible()) {
+                this.scene.remove(view.overlayAnchor.getSprite());
             }
         }
         this.views.delete(widget.widgetId);
     }
 
-    private findViewForWidget(model: Widget): DiagramWidgetView | undefined {
+    private findViewForWidget(widget: Widget): DiagramWidgetView | undefined {
         // if (model.widgetId === 'l3graph-arrow-helper-widget') {
         //     return new ArrowHelperView(model as ArrowHelper);
         // } else if (model.widgetId === 'l3graph-selection-widget') {
@@ -73,7 +78,10 @@ export class WidgetsView {
         // } else {
         //     return undefined;
         // }
-        return this.viewRegistry.get(model.widgetId)(model);
+        return this.viewRegistry.get(widget.widgetId)({
+            widget,
+            graphView: this.graphView,
+        });
     }
 
     update(specificIds?: string[]) {

@@ -1,41 +1,30 @@
 import * as THREE from 'three';
-import { createElement } from 'react';
-import * as ReactDOM from 'react-dom';
 import { Node } from '../models/node';
 import { DiagramElementView } from '.';
 import {
     NodeViewTemplate,
-    DEFAULT_NODE_TEMPLATE,
-    createContextProvider,
     MeshKind,
 } from '../customisation';
 import { getColorByTypes } from '../utils/colorUtils';
 import { getPrimitive } from '../utils/shapeUtils';
 import { Vector3D } from '../models/primitives';
 import { treeVector3ToVector3D } from '../utils';
+import { NodeOverlayAnchor } from './overlayAnchor';
 
 export class NodeView implements DiagramElementView {
     public readonly model: Node;
     public readonly mesh: THREE.Object3D;
-    public readonly overlay: THREE.CSS3DSprite;
+    public readonly overlayAnchor: NodeOverlayAnchor;
 
     private boundingBox: THREE.Box3;
     private meshOriginalSize: THREE.Vector3;
     private meshOffset: Vector3D;
-    private htmlOverlay: HTMLElement;
-    private htmlBody: HTMLElement;
-
     private preserveRatio: boolean;
 
-    constructor(model: Node, customTemplate?: NodeViewTemplate) {
+    constructor(model: Node, template: NodeViewTemplate) {
         this.model = model;
         this.boundingBox = new THREE.Box3();
-        const template: NodeViewTemplate = {
-            ...DEFAULT_NODE_TEMPLATE,
-            ...customTemplate,
-        };
-        const meshDescriptor = template.mesh(model.data);
-        const Overlay = template.overlay.get(model.data);
+        const meshDescriptor = template.mesh();
 
         this.preserveRatio = meshDescriptor.preserveRatio || meshDescriptor.preserveRatio === undefined;
 
@@ -68,26 +57,14 @@ export class NodeView implements DiagramElementView {
             this.mesh = null;
         }
 
-        if (Overlay) {
-            this.htmlOverlay = document.createElement('DIV');
-            this.htmlOverlay.className = 'l3graph-overlayed-html-container';
-
-            this.htmlBody = document.createElement('DIV');
-            this.htmlBody.className = 'l3graph-overlayed-html-view';
-            this.htmlOverlay.appendChild(this.htmlBody);
-
-            if (template.overlay.context) {
-                const Context = createContextProvider(template.overlay.context);
-                ReactDOM.render(createElement(Context, null,
-                    createElement(Overlay, model.data),
-                ), this.htmlBody);
-            } else {
-                ReactDOM.render(createElement(Overlay, model.data), this.htmlBody);
-            }
-            this.overlay = new THREE.CSS3DSprite(this.htmlOverlay);
-        } else {
-            this.overlay = null;
+        this.overlayAnchor = new NodeOverlayAnchor(this.model);
+        if (template.overlay) {
+            this.overlayAnchor.attachOverlay({
+                overlay: template.overlay,
+                position: 'e',
+            });
         }
+
         this.update();
     }
 
@@ -113,15 +90,7 @@ export class NodeView implements DiagramElementView {
                 position.z + this.meshOffset.z * scale.z,
             );
         }
-
-        // Update overlay
-        if (this.overlay) {
-            this.overlay.position.set(
-                position.x,
-                position.y,
-                position.z,
-            );
-        }
+        this.overlayAnchor.update();
     }
 
     private calcScale(): Vector3D {

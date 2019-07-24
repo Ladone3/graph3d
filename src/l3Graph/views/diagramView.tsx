@@ -13,7 +13,6 @@ import { WidgetsModelEvents } from '../models/widgets/widgetsModel';
 export interface ViewOptions {
     nodeTemplateProvider?: NodeTemplateProvider;
     linkTemplateProvider?: LinkTemplateProvider;
-    simpleLinks?: boolean; // simple links are rendering wrong sometime, but they provide more performable rendering
 }
 
 export interface DiagramViewProps {
@@ -192,7 +191,6 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.scene.add(sphere);
 
         // Finalize
-
         this.renderer.render(this.scene, this.camera);
         this.overlayRenderer.render(this.scene, this.camera);
     }
@@ -204,9 +202,9 @@ export class DiagramView extends React.Component<DiagramViewProps> {
             scene: this.scene,
             nodeTemplateProvider: viewOptions.nodeTemplateProvider,
             linkTemplateProvider: viewOptions.linkTemplateProvider,
-            simpleLinks: viewOptions.simpleLinks,
         });
         this.widgetsView = new WidgetsView({
+            graphView: this.graphView,
             widgetsModel: this.props.model.widgets,
             scene: this.scene,
         });
@@ -221,7 +219,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
                 switch (event.eventId) {
                     case 'add:elements':
                         for (const el of event.data) {
-                            this.graphView.addElementView(el);
+                            this.graphView.registerElement(el);
                         }
                         break;
                     case 'remove:elements':

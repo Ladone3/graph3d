@@ -2,13 +2,12 @@ import * as THREE from 'three';
 import { Link } from '../models/link';
 import { Node } from '../models/node';
 import { Widget } from '../models/widgets';
-import { DiagramModel } from '../models/diagramModel';
-import { KeyHandler } from '../utils';
-import { MouseHandler } from '../utils/mouseHandler';
+import { OverlayAnchor } from './overlayAnchor';
+import { GraphView } from './graphView';
 
 export interface View {
     readonly mesh: THREE.Object3D | null;
-    readonly overlay: THREE.CSS3DObject | null;
+    readonly overlayAnchor: OverlayAnchor;
     getBoundingBox(): THREE.Box3;
     update(): void;
 }
@@ -17,8 +16,22 @@ export interface DiagramElementView extends View {
     model: Node | Link;
 }
 
-export interface DiagramWidgetView<WidgetModel extends Widget = any> extends View {
-    model: WidgetModel;
+export interface DiagramWidgetViewParameters {
+    graphView: GraphView;
+}
+
+export abstract class DiagramWidgetView implements View {
+    readonly mesh: THREE.Object3D | null;
+    readonly overlayAnchor: OverlayAnchor;
+
+    abstract getBoundingBox(): THREE.Box3;
+    abstract update(): void;
+
+    protected graphView: GraphView;
+
+    constructor(parameters: DiagramWidgetViewParameters) {
+        this.graphView = parameters.graphView;
+    }
 }
 
 export * from './arrowHelperView';
@@ -28,5 +41,4 @@ export * from './linkView';
 export * from './nodeView';
 export * from './reactNodeWidgetView';
 export * from './selectionView';
-export * from './simpleLinkView';
 export * from './widgetsView';

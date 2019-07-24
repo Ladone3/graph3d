@@ -1,5 +1,14 @@
 import * as React from 'react';
 
+export class DefaultLinkOverlay extends React.Component<{label: string}> {
+    render() {
+        const {label} = this.props;
+        return <div className='l3graph-link-html-view'>
+            {label}
+        </div>;
+    }
+}
+
 export class DefaultNodeOverlay extends React.Component<{label: string}> {
     render() {
         const {label} = this.props;

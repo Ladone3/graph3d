@@ -1,9 +1,8 @@
 import * as THREE from 'three';
 import { Link } from '../models/link';
 import { DiagramElementView } from '.';
-import { LinkViewTemplate, DEFAULT_LINK_TEMPLATE } from '../customisation';
+import { LinkViewTemplate, DEFAULT_LINK_TEMPLATE, DefaultLinkOverlay } from '../customisation';
 import {
-    vector3DToTreeVector3,
     normalize,
     multiply,
     sum,
@@ -15,6 +14,7 @@ import {
 } from '../utils';
 import { LinkGroup } from '../models/graphModel';
 import { Vector3D } from '../models/primitives';
+import { OverlayAnchor, LinkOverlayAnchor } from './overlayAnchor';
 
 const LINK_OFFSET = 30;
 const ARROW_LENGTH = 10;
@@ -23,13 +23,9 @@ export class LinkView implements DiagramElementView {
     public readonly model: Link;
     public readonly group: LinkGroup;
     public readonly mesh: THREE.Group;
-    public readonly overlay: THREE.CSS3DObject | null;
+    public readonly overlayAnchor: OverlayAnchor;
 
     private readonly lines: THREE.Group[];
-
-    private htmlOverlay: HTMLElement;
-    private htmlBody: HTMLElement;
-
     private arrowGeometry: THREE.Geometry;
     private arrowMaterial: THREE.MeshBasicMaterial;
     private arrow: THREE.Mesh;
@@ -38,14 +34,10 @@ export class LinkView implements DiagramElementView {
     constructor(
         model: Link,
         group: LinkGroup,
-        customTemplate?: LinkViewTemplate,
+        template: LinkViewTemplate,
     ) {
         this.model = model;
         this.group = group;
-        const template: LinkViewTemplate = {
-            ...DEFAULT_LINK_TEMPLATE,
-            ...customTemplate,
-        };
 
         this.boundingBox = new THREE.Box3();
 
@@ -68,18 +60,12 @@ export class LinkView implements DiagramElementView {
         }
 
         // Overlay
+        this.overlayAnchor = new LinkOverlayAnchor(this.model);
         if (this.model.label) {
-            this.htmlOverlay = document.createElement('DIV');
-            this.htmlOverlay.className = 'l3graph-link-html-container';
-
-            this.htmlBody = document.createElement('DIV');
-            this.htmlBody.className = 'l3graph-link-html-view';
-            this.htmlOverlay.appendChild(this.htmlBody);
-            this.htmlBody.innerText = this.model.label;
-
-            this.overlay = new THREE.CSS3DSprite(this.htmlOverlay);
-        } else {
-            this.overlay = null;
+            this.overlayAnchor.attachOverlay({
+                overlay: { get: () => DefaultLinkOverlay },
+                position: 'c',
+            });
         }
 
         this.update();
@@ -141,8 +127,8 @@ export class LinkView implements DiagramElementView {
         }
 
         // Update overlay
-        if (this.overlay) {
-            this.overlay.position.set(overlayPosition.x, overlayPosition.y, overlayPosition.z);
+        if (this.overlayAnchor) {
+            this.overlayAnchor.update(overlayPosition);
         }
     }
 

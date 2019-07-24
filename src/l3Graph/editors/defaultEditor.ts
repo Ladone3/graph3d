@@ -5,6 +5,7 @@ import { Element, isLink, ElementModel } from '../models/graphModel';
 import { MouseHandler } from '../utils/mouseHandler';
 
 const WHEEL_STEP = 100;
+const MIN_DISTANCE_TO_CAMERA = 10;
 
 export class DefaultEditor {
     constructor(
@@ -60,7 +61,11 @@ export class DefaultEditor {
             const delata = -(event.deltaX || event.deltaY || event.deltaZ);
             distanceToNode += (delata > 0 ? 1 : -1) * WHEEL_STEP;
         }
-        target.setPosition(this.diagramView.mouseTo3dPos(event, distanceToNode));
+        const size = target.size;
+        const minDist = Math.max(size.x, size.y, size.z) / 2 + MIN_DISTANCE_TO_CAMERA;
+        const limitedDistance = Math.max(distanceToNode, minDist);
+        const newNodePosition = this.diagramView.mouseTo3dPos(event, limitedDistance);
+        target.setPosition(newNodePosition);
     }
 
     onElementDragEnd(event: MouseEvent | MouseWheelEvent, target: Element) {

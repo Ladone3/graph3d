@@ -40,13 +40,13 @@ export interface MeshPrimitive extends Mesh {
 
 export type L3Mesh = MeshNative | MeshObj | MeshPrimitive;
 export interface ReactOverlay<ReactProps = any> {
-    get: (props: ReactProps) => React.ComponentClass<ReactProps>;
+    get: () => React.ComponentClass<ReactProps>;
     context?: any;
 }
 
-export interface NodeViewTemplate<NodeContent = any> {
-    overlay?: ReactOverlay<NodeContent>;
-    mesh?: (data: NodeContent) => L3Mesh;
+export interface NodeViewTemplate<Content = any> {
+    overlay?: ReactOverlay<Content>;
+    mesh?: () => L3Mesh;
 }
 
 export type NodeTemplateProvider = (types: string[]) => NodeViewTemplate;
@@ -54,6 +54,7 @@ export type NodeTemplateProvider = (types: string[]) => NodeViewTemplate;
 export interface LinkViewTemplate {
     color: number | string;
     thickness?: number;
+    overlay?: ReactOverlay<{label: string}>;
 }
 
 export type LinkTemplateProvider = (types: string[]) => LinkViewTemplate;

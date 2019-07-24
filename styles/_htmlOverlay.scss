@@ -25,60 +25,162 @@
     }
 }
 
-.l3graph-overlayed-html-container {
-    box-sizing: border-box;
-    padding-left: 20px;
-    padding-top: 10px;
-    width: 40px;
-    height: 20px;
+.l3g-node-overlay-anchor {
+    position: relative;
+}
+
+.l3g-html-overlay-aligner {
+    position: relative;
+}
+
+.l3g-html-overlay__body {
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+    opacity: 0.4;
+    transition: transform 0.5s, opacity 0.5s;
+    width: max-content;
+    // box-shadow: 0px 0px 26px -5px;
+    display: flex;
+}
+
+@mixin l3g-position {
+    position: absolute;
+}
+
+.l3g-position-nw {
+    @include l3g-position;
+    right: 100%;
+    bottom: calc(100% + 5px);
+        
+    .l3g-html-overlay__body {
+        flex-direction: column-reverse;
+    }
+}
+
+.l3g-position-n {
+    @include l3g-position;
+    bottom: calc(100% + 5px);
+    left: 50%;
+
+    .l3g-html-overlay-aligner {
+        transform: translate(-50%, 0);
+    }
+        
+    .l3g-html-overlay__body {
+        flex-direction: column-reverse;
+    }
+}
+
+.l3g-position-ne {
+    @include l3g-position;
+    left: calc(100% + 3.5px);
+    bottom: calc(100% + 3.5px);
     
-    .l3graph-sphere {
-        margin-left: -8px;
-        margin-top: -8px;
-        position: absolute;
-        width: 16px;
-        height: 16px;
-        // background-color: green;
-        border-radius: 32px;
-        // box-shadow: inset 0px 0px 10px -1px black;
-        cursor: pointer;
-        // display: none;
+    .l3g-html-overlay__body {
+        flex-direction: column-reverse;
     }
+}
 
-    .l3graph-overlayed-html-view {
-        position: relative;
-        overflow: hidden;
-        cursor: pointer;
-        user-select: none;
-        opacity: 0.8;
-        transform: scale(0.5);
-        transform-origin: top left;
-        transition: transform 0.5s, opacity 0.5s;
-        width: max-content;
-        // box-shadow: 0px 0px 26px -5px;
+.l3g-position-e {
+    @include l3g-position;
+    left: calc(100% + 5px);
+    top: 50%;
 
-        .l3graph-default-node-view {
-            // width: 100px;
-            // height: 40px;
-            background-color: #268eb8;
-            color: white;
-            border-radius: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            text-overflow: ellipsis;
-            font-size: 12px;
-            user-select: none;
-            border: 1px solid black;
-            padding: 10px;
-        }
+    .l3g-html-overlay-aligner {
+        transform: translate(0, -50%);
     }
+}
+
+.l3g-position-se {
+    @include l3g-position;
+    left: calc(100% + 3.5px);
+    top: calc(100% + 3.5px);
+
+    .l3g-html-overlay__body {
+        flex-direction: column;
+    }
+}
+
+.l3g-position-s {
+    @include l3g-position;
+    top: calc(100% + 5px);
+    left: 50%;
+    
+    .l3g-html-overlay-aligner {
+        transform: translate(-50%, 0);
+    }
+    
+    .l3g-html-overlay__body {
+        flex-direction: column;
+    }
+}
+
+.l3g-position-sw {
+    @include l3g-position;
+    right: calc(100% + 3.5px);
+    top: calc(100% + 3.5px);
+    
+    .l3g-html-overlay__body {
+        flex-direction: column;
+    }
+}
+
+.l3g-position-w {
+    @include l3g-position;
+    right: calc(100% + 5px);
+    top: 50%;
+
+    .l3g-html-overlay-aligner {
+        transform: translate(0, -50%);
+    }
+}
+
+.l3g-position-c {
+    @include l3g-position;
+}
+
+.l3g-html-overlay {
+    // box-sizing: border-box;
+    // padding-left: 20px;
+    // padding-top: 10px;
+    // width: 40px;
+    // height: 20px;
 
     &:hover {
-        .l3graph-overlayed-html-view {
+        .l3g-html-overlay__body {
             opacity: 1;
             transform: scale(1);
         }
     }
+}
+
+.l3graph-default-node-view {
+    // width: 100px;
+    // height: 40px;
+    background-color: #268eb8;
+    color: white;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    user-select: none;
+    border: 1px solid black;
+    padding: 10px;
+}
+
+.l3graph-sphere {
+    margin-left: -8px;
+    margin-top: -8px;
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    // background-color: green;
+    border-radius: 32px;
+    // box-shadow: inset 0px 0px 10px -1px black;
+    cursor: pointer;
+    // display: none;
 }
