@@ -37,7 +37,7 @@ export class ReactNodeWidgetView extends DiagramWidgetView {
         if (!this.model.isFocusNodeChanged) {
             return;
         }
-        if (this.model.prevFocusNode) {
+        if (this.model.prevFocusNode && this.curOverlay) {
             const prevAnchor = this.graphView.views.get(
                 this.model.prevFocusNode.id,
             ).overlayAnchor;
@@ -48,12 +48,14 @@ export class ReactNodeWidgetView extends DiagramWidgetView {
             const curAnchor = this.graphView.views.get(
                 this.model.focusNode.id,
             ).overlayAnchor;
-            const positionedOverlay: PositionedReactOverlay = {
-                position: 'w',
-                overlay: this.model.overlay,
-            };
-            curAnchor.attachOverlay(positionedOverlay);
-            this.curOverlay = positionedOverlay;
+            if (!this.curOverlay || this.curOverlay && !curAnchor.hasOverlay(this.curOverlay)) {
+                const positionedOverlay: PositionedReactOverlay = {
+                    position: 'w',
+                    overlay: this.model.overlay,
+                };
+                curAnchor.attachOverlay(positionedOverlay);
+                this.curOverlay = positionedOverlay;
+            }
         } else {
             this.curOverlay = undefined;
         }
