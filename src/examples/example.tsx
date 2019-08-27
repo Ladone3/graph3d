@@ -17,11 +17,11 @@ const cubePortal = require<string>('./portalCube.obj');
 const cat3d = require<string>('./cat.obj');
 const person3d = require<string>('./dummy_obj.obj');
 
-export interface NodeData {
+interface NodeData {
     label: string;
 }
 
-export class NodeOverlay extends React.Component<NodeData> {
+class NodeSprite extends React.Component<NodeData> {
     render() {
         const {label} = this.props;
 
@@ -31,7 +31,7 @@ export class NodeOverlay extends React.Component<NodeData> {
     }
 }
 
-export class WidgetOverlay extends React.Component<NodeData> {
+class WidgetSprite extends React.Component<NodeData> {
     render() {
         const {label} = this.props;
 
@@ -41,6 +41,8 @@ export class WidgetOverlay extends React.Component<NodeData> {
     }
 }
 
+const NODE_OVERLAY = {value: <NodeSprite label=''/>};
+const WIDGET_OVERLAY = {value: <WidgetSprite label=''/>};
 const rootHtml = document.getElementById('rootHtml');
 
 const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
@@ -83,12 +85,7 @@ const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
         type: MeshKind.Obj,
         markup: cubePortal,
     }),
-    overlay: {
-        get: () => {
-            return NodeOverlay;
-        },
-        context: undefined,
-    },
+    overlay: NODE_OVERLAY,
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -117,12 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
             model: (context: WidgetModelContext) => new ReactNodeWidget({
                 ...context,
                 widgetId: 'l3graph-react-node-widget',
-                overlay: {
-                    get: () => {
-                        return WidgetOverlay;
-                    },
-                    context: undefined,
-                },
+                overlay: WIDGET_OVERLAY,
             }),
             view: (context: WidgetViewContext) => new ReactNodeWidgetView({
                 model: context.widget as any,

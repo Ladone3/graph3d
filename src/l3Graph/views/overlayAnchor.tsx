@@ -2,11 +2,10 @@ import * as THREE from 'three';
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
 import { Node, Size } from '../models/node';
-import { ReactOverlay, createContextProvider } from '../customisation';
-import { Element } from '../models/graphModel';
+import { ReactOverlay, createContextProvider, enriachOverlay } from '../customisation';
 import { Link } from '../models/link';
 import { sum, multiply } from '../utils';
-import { Vector3D } from '../models/primitives';
+import { Vector3D, Box } from '../models/primitives';
 
 export type OverlayPosition = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'c';
 
@@ -16,6 +15,7 @@ export interface PositionedReactOverlay {
 }
 
 export interface OverlayAnchor {
+    html: HTMLElement;
     isVisible(): boolean;
     getSprite(): THREE.CSS3DSprite | undefined;
     hasOverlay(positionedOverlay: PositionedReactOverlay): boolean;
@@ -25,6 +25,7 @@ export interface OverlayAnchor {
 }
 
 export class MockOverlayAnchor implements OverlayAnchor {
+    public html = document.createElement('div');
     isVisible() {
         return false;
     }
@@ -46,18 +47,18 @@ export class MockOverlayAnchor implements OverlayAnchor {
     }
 
     update() {
-        // do nothing
+        // do nothing<
     }
 }
 
-export class NodeOverlayAnchor implements OverlayAnchor {
-    private sprite: THREE.CSS3DSprite;
-    private htmlOverlay: HTMLElement;
-    private overlaysByPosition: Map<OverlayPosition, ReactOverlay[]>;
+export abstract class AbstractOverlayAnchor<Model> implements OverlayAnchor {
+    public html: HTMLElement;
+    protected sprite: THREE.CSS3DSprite;
+    protected overlaysByPosition: Map<OverlayPosition, ReactOverlay[]>;
 
-    constructor(public meshModel: Node) {
-        this.htmlOverlay = document.createElement('DIV');
-        this.sprite = new THREE.CSS3DSprite(this.htmlOverlay);
+    constructor(protected meshModel: Model) {
+        this.html = document.createElement('DIV');
+        this.sprite = new THREE.CSS3DSprite(this.html);
         this.overlaysByPosition = new Map();
     }
 
@@ -101,27 +102,38 @@ export class NodeOverlayAnchor implements OverlayAnchor {
         this.update();
     }
 
-    update() {
-        const model = this.meshModel;
+    protected enriachOverlay(pooreOverlay: ReactOverlay): ReactOverlay {
+        return enriachOverlay(pooreOverlay, this.meshModel);
+        // const enrichedOverlay = enriachOverlay(pooreOverlay, this.meshModel);
+        // return {
+        //     context: pooreOverlay.context,
+        //     value: <div onMouseDown={event => {
+        //         if (this.onMouseDown) { this.onMouseDown(event); }
+        //     }}>
+        //         {enrichedOverlay.value}
+        //     </div>,
+        // };
+    }
+
+    // todo: move vertexes to the model
+    update(prefferedPosition?: Vector3D) {
         if (this.overlaysByPosition.size === 0) {
-            ReactDOM.unmountComponentAtNode(this.htmlOverlay);
+            ReactDOM.unmountComponentAtNode(this.html);
         } else {
             let index = 0;
             const overlayGroups: JSX.Element[] = [];
             this.overlaysByPosition.forEach((overlays, position) => {
                 const overlayViews: JSX.Element[] = [];
-                for (const overlay of overlays) {
-                    const OverlayView = overlay.get();
+                for (const o of overlays) {
+                    const overlay = this.enriachOverlay(o);
                     const key = `position-${position}-${index}`;
                     if (overlay.context) {
                         const Context = createContextProvider(overlay.context);
                         overlayViews.push(<Context key={key}>
-                            <OverlayView link={...model.data}></OverlayView>
+                            {overlay.value}
                         </Context>);
                     } else {
-                        overlayViews.push(
-                            <OverlayView key={key} {...model.data}></OverlayView>
-                        );
+                        overlayViews.push(overlay.value);
                     }
                     index++;
                 }
@@ -137,118 +149,48 @@ export class NodeOverlayAnchor implements OverlayAnchor {
                     </div>,
                 );
             });
-            const maxSide = Math.max(
-                model.size.x,
-                model.size.y,
-                model.size.z,
-            );
+
+            const {x, y, z, width, height} = this.getModelFittingBox(prefferedPosition);
+            this.sprite.position.set(x, y, z);
+
             ReactDOM.render(
                 <div
                     className='l3g-node-overlay-anchor'
-                    style={{width: maxSide, height: maxSide}}>
+                    style={{width, height}}>
                     {overlayGroups}
                 </div>,
-                this.htmlOverlay,
+                this.html,
             );
-
-            const {x, y, z} = this.meshModel.position;
-            this.sprite.position.set(x, y, z);
         }
+    }
+
+    protected abstract getModelFittingBox(prefferedPosition?: Vector3D): Box;
+}
+
+export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node> {
+    getModelFittingBox() {
+        const {x, y, z} = this.meshModel.size;
+        const maxSide = Math.max(x, y, z);
+
+        return {
+            ...this.meshModel.position,
+            width: maxSide,
+            height: maxSide,
+            deep: maxSide,
+        };
+    }
+
+    protected enriachOverlay(pooreOverlay: ReactOverlay): ReactOverlay {
+        return enriachOverlay(pooreOverlay, this.meshModel.data);
     }
 }
 
-export class LinkOverlayAnchor implements OverlayAnchor {
-    private sprite: THREE.CSS3DSprite;
-    private htmlOverlay: HTMLElement;
-    private overlaysByPosition: Map<OverlayPosition, ReactOverlay[]>;
-
-    constructor(public meshModel: Link) {
-        this.htmlOverlay = document.createElement('DIV');
-        this.sprite = new THREE.CSS3DSprite(this.htmlOverlay);
-        this.overlaysByPosition = new Map();
-    }
-
-    getSprite() {
-        if (!this.isVisible()) {
-            return undefined;
-        }
-        return this.sprite;
-    }
-
-    hasOverlay(positionedOverlay: PositionedReactOverlay): boolean {
-        return this.overlaysByPosition.
-            get(positionedOverlay.position).
-            indexOf(positionedOverlay.overlay) !== -1;
-    }
-
-    isVisible() {
-        return this.overlaysByPosition.size > 0;
-    }
-
-    attachOverlay(positionedOverlay: PositionedReactOverlay) {
-        const {position: pos, overlay} = positionedOverlay;
-        if (!this.overlaysByPosition.has(pos)) {
-            this.overlaysByPosition.set(pos, []);
-        }
-        this.overlaysByPosition.get(pos).push(overlay);
-        this.update();
-    }
-
-    removeOverlay(positionedOverlay: PositionedReactOverlay) {
-        const {position: pos, overlay} = positionedOverlay;
-        if (this.overlaysByPosition.has(pos)) {
-            const newListForPosition =
-                this.overlaysByPosition.get(pos).filter(o => o !== overlay);
-            if (newListForPosition.length === 0) {
-                this.overlaysByPosition.set(pos, newListForPosition);
-            } else {
-                this.overlaysByPosition.delete(pos);
-            }
-        }
-        this.update();
-    }
-
-    update(position?: Vector3D) {
-        const model = this.meshModel;
-        if (this.overlaysByPosition.size === 0) {
-            ReactDOM.unmountComponentAtNode(this.htmlOverlay);
-        } else {
-            let index = 0;
-            const overlayGroups: JSX.Element[] = [];
-            this.overlaysByPosition.forEach((overlays, pos) => {
-                const overlayViews: JSX.Element[] = [];
-                for (const overlay of overlays) {
-                    const OverlayView = overlay.get();
-                    const key = `position-${pos}-${index}`;
-                    if (overlay.context) {
-                        const Context = createContextProvider(overlay.context);
-                        overlayViews.push(<Context key={key}>
-                            <OverlayView label={model.label}></OverlayView>
-                        </Context>);
-                    } else {
-                        overlayViews.push(
-                            <OverlayView key={key} label={model.label}></OverlayView>
-                        );
-                    }
-                    index++;
-                }
-                overlayGroups.push(
-                    <div
-                        key={`overlay-group-${position}`}
-                        className={`l3g-link-html-overlay l3g-position-${position}`}>
-                        <div className='l3g-link-html-overlay__body'>
-                            {overlayViews}
-                        </div>
-                    </div>
-                );
-            });
-            ReactDOM.render(<div>{overlayGroups}</div>, this.htmlOverlay);
-
-            const {x, y, z} = position || multiply(sum(
-                this.meshModel.source.position,
-                this.meshModel.target.position,
-            ), 0.5);
-            this.sprite.position.set(x, y, z);
-        }
+export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link> {
+    getModelFittingBox(prefferedPosition?: Vector3D) {
+        const {x, y, z} = multiply(prefferedPosition || sum(
+            this.meshModel.source.position,
+            this.meshModel.target.position,
+        ), 0.5);
+        return {x, y, z, width: 0, height: 0, deep: 0};
     }
 }

@@ -1,4 +1,4 @@
-import { DefaultNodeOverlay } from './defaultOverlay';
+import { DEFAULT_NODE_OVERLAY } from './defaultOverlay';
 import { NodeViewTemplate, NodeTemplateProvider, MeshKind } from '.';
 
 export const DEFAULT_NODE_TEMPLATE: NodeViewTemplate<{label: string}> = {
@@ -6,12 +6,7 @@ export const DEFAULT_NODE_TEMPLATE: NodeViewTemplate<{label: string}> = {
         type: MeshKind.Primitive,
         shape: 'sphere',
     }),
-    overlay: {
-        get: () => {
-            return DefaultNodeOverlay;
-        },
-        context: undefined,
-    },
+    overlay: DEFAULT_NODE_OVERLAY,
 };
 
 export const DEFAULT_NODE_TEMPLATE_PROVIDER: NodeTemplateProvider = (types: string[]) => {

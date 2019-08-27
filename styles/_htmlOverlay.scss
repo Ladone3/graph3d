@@ -53,10 +53,13 @@
     position: absolute;
 }
 
+$anchor-offset: 5px;
+$anchor-offset-sqrt: 3.5px;
+
 .l3g-position-nw {
     @include l3g-position;
     right: 100%;
-    bottom: calc(100% + 5px);
+    bottom: calc(100% + #{$anchor-offset});
         
     .l3g-html-overlay__body {
         flex-direction: column-reverse;
@@ -66,7 +69,7 @@
 
 .l3g-position-n {
     @include l3g-position;
-    bottom: calc(100% + 5px);
+    bottom: calc(100% + #{$anchor-offset});
     left: 50%;
 
     .l3g-html-overlay-aligner {
@@ -81,8 +84,8 @@
 
 .l3g-position-ne {
     @include l3g-position;
-    left: calc(100% + 3.5px);
-    bottom: calc(100% + 3.5px);
+    left: calc(100% + #{$anchor-offset-sqrt});
+    bottom: calc(100% + #{$anchor-offset-sqrt});
     
     .l3g-html-overlay__body {
         flex-direction: column-reverse;
@@ -92,7 +95,7 @@
 
 .l3g-position-e {
     @include l3g-position;
-    left: calc(100% + 5px);
+    left: calc(100% + #{$anchor-offset});
     top: 50%;
 
     .l3g-html-overlay-aligner {
@@ -106,8 +109,8 @@
 
 .l3g-position-se {
     @include l3g-position;
-    left: calc(100% + 3.5px);
-    top: calc(100% + 3.5px);
+    left: calc(100% + #{$anchor-offset-sqrt});
+    top: calc(100% + #{$anchor-offset-sqrt});
 
     .l3g-html-overlay__body {
         flex-direction: column;
@@ -117,7 +120,7 @@
 
 .l3g-position-s {
     @include l3g-position;
-    top: calc(100% + 5px);
+    top: calc(100% + #{$anchor-offset});
     left: 50%;
     
     .l3g-html-overlay-aligner {
@@ -132,8 +135,8 @@
 
 .l3g-position-sw {
     @include l3g-position;
-    right: calc(100% + 3.5px);
-    top: calc(100% + 3.5px);
+    right: calc(100% + #{$anchor-offset-sqrt});
+    top: calc(100% + #{$anchor-offset-sqrt});
     
     .l3g-html-overlay__body {
         flex-direction: column;
@@ -143,7 +146,7 @@
 
 .l3g-position-w {
     @include l3g-position;
-    right: calc(100% + 5px);
+    right: calc(100% + #{$anchor-offset});
     top: 50%;
 
     .l3g-html-overlay-aligner {

@@ -1,6 +1,7 @@
 import * as React from 'react';
+import { ReactOverlay } from '.';
 
-export class DefaultLinkOverlay extends React.Component<{label: string}> {
+class DefaultLinkOverlayClass extends React.Component<{label: string}> {
     render() {
         const {label} = this.props;
         return <div className='l3graph-link-html-view'>
@@ -9,7 +10,7 @@ export class DefaultLinkOverlay extends React.Component<{label: string}> {
     }
 }
 
-export class DefaultNodeOverlay extends React.Component<{label: string}> {
+class DefaultNodeOverlayClass extends React.Component<{label: string}> {
     render() {
         const {label} = this.props;
         return <div className='l3graph-default-node-view'>
@@ -17,6 +18,9 @@ export class DefaultNodeOverlay extends React.Component<{label: string}> {
         </div>;
     }
 }
+
+export const DEFAULT_LINK_OVERLAY: ReactOverlay = {value: <DefaultLinkOverlayClass label=''/>};
+export const DEFAULT_NODE_OVERLAY: ReactOverlay = {value: <DefaultNodeOverlayClass label=''/>};
 
 export function createContextProvider(context: any): React.ComponentClass {
     class ContextProvider extends React.Component {
@@ -33,4 +37,19 @@ export function createContextProvider(context: any): React.ComponentClass {
         ContextProvider.childContextTypes[key] = React.PropTypes.any.isRequired;
     });
     return ContextProvider;
+}
+
+export function enriachOverlay<Data>(
+    pooreOverlay: ReactOverlay<Data>,
+    data: Data,
+): ReactOverlay<Data> {
+    const overlayProps: Data = {
+        ...pooreOverlay.value.props as any,
+        ...data as any,
+    };
+
+    return {
+        context: pooreOverlay.context,
+        value: React.cloneElement(pooreOverlay.value, overlayProps),
+    };
 }

@@ -89,28 +89,10 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         return this.view.pos3dToClientPos(position);
     }
 
-    private onWheel(e: React.WheelEvent<HTMLDivElement>) {
-        if (this.mouseHandler) {
-            this.mouseHandler.onScroll(e.nativeEvent);
-        }
-    }
-
-    private onMouseDown(event: React.MouseEvent<HTMLDivElement>) {
-        if (this.mouseHandler) {
-            this.mouseHandler.onMouseDown(event.nativeEvent);
-        }
-    }
-
-    private onOverlayDown(event: EventObject<'click:overlay', {event: MouseEvent; target: Element}>) {
-        if (this.mouseHandler) {
-            this.mouseHandler.onMouseDown(event.data.event, event.data.target);
-            event.data.event.stopPropagation();
-        }
-    }
-
     private onViewMount = (view: DiagramView) => {
         this.view = view;
-        this.view.graphView.on('click:overlay', (event) => this.onOverlayDown(event));
+        this.view.graphView.on('overlay:down',
+            ({data: {event, target}}) => this.mouseHandler.onMouseDown(event, target));
         this.mouseHandler = new MouseHandler(this.diagramModel, this.view);
         this.keyHandler = new KeyHandler();
 
@@ -157,8 +139,10 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
             onBlur={this.onBlur}>
             <div
                 className='l3graph-main__touch-panel'
-                onMouseDown={event => this.onMouseDown(event)}
-                onWheel={event => this.onWheel(event)}>
+                onMouseDown={event => {
+                    this.mouseHandler.onMouseDown(event.nativeEvent);
+                }}
+                onWheel={event => this.mouseHandler.onScroll(event.nativeEvent)}>
                 <DiagramView
                     model={this.diagramModel}
                     onViewMount={this.onViewMount}

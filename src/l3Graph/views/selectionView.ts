@@ -5,7 +5,7 @@ import { Node } from '../models/node';
 import { SelectionWidget } from '../models/widgets/selectionWidget';
 import { OverlayAnchor, MockOverlayAnchor } from './overlayAnchor';
 
-const SELECTION_PADDING = 15;
+const SELECTION_PADDING = 5;
 
 export interface SelectionViewParameters extends DiagramWidgetViewParameters {
     model: SelectionWidget;

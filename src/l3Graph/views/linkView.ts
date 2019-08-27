@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Link } from '../models/link';
 import { DiagramElementView } from '.';
-import { LinkViewTemplate, DEFAULT_LINK_TEMPLATE, DefaultLinkOverlay } from '../customisation';
+import { LinkViewTemplate, DEFAULT_LINK_TEMPLATE, DEFAULT_LINK_OVERLAY, enriachOverlay } from '../customisation';
 import {
     normalize,
     multiply,
@@ -63,7 +63,7 @@ export class LinkView implements DiagramElementView {
         this.overlayAnchor = new LinkOverlayAnchor(this.model);
         if (this.model.label) {
             this.overlayAnchor.attachOverlay({
-                overlay: { get: () => DefaultLinkOverlay },
+                overlay: enriachOverlay(DEFAULT_LINK_OVERLAY, {label: this.model.label}),
                 position: 'c',
             });
         }

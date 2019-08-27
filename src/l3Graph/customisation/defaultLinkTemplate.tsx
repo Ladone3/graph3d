@@ -1,15 +1,10 @@
 import { LinkViewTemplate, LinkTemplateProvider } from '.';
-import { DefaultLinkOverlay } from './defaultOverlay';
+import { DEFAULT_LINK_OVERLAY } from './defaultOverlay';
 
 export const DEFAULT_LINK_TEMPLATE: LinkViewTemplate = {
     color: 'gray',
     thickness: 1,
-    overlay: {
-        get: () => {
-            return DefaultLinkOverlay;
-        },
-        context: undefined,
-    },
+    overlay: DEFAULT_LINK_OVERLAY,
 };
 
 export const DEFAULT_LINK_TEMPLATE_PROVIDER: LinkTemplateProvider = (types: string[]) => {

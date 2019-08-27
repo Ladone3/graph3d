@@ -24,7 +24,7 @@ export interface GraphViewProps {
 }
 
 export interface GraphViewEvents {
-    'click:overlay': {event: MouseEvent; target: Element};
+    'overlay:down': {event: MouseEvent; target: Element};
 }
 
 export class GraphView extends Subscribable<GraphViewEvents> {
@@ -64,6 +64,10 @@ export class GraphView extends Subscribable<GraphViewEvents> {
                 this.scene.add(view.mesh);
             }
             if (view.overlayAnchor.isVisible()) {
+                view.overlayAnchor.html.onmousedown = e => {
+                    e.stopPropagation();
+                    this.trigger('overlay:down', {event: e, target: element});
+                };
                 this.scene.add(view.overlayAnchor.getSprite());
             }
             this.views.set(element.id, view);

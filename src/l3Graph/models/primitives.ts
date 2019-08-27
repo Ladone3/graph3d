@@ -9,6 +9,17 @@ export interface Vector2D {
     y: number;
 }
 
+export interface Rectangle extends Vector2D {
+    width: number;
+    height: number;
+}
+
+export interface Box extends Vector3D {
+    width: number;
+    height: number;
+    deep: number;
+}
+
 export enum Object3dKind {
     Mesh = 'mesh',
     Line = 'line',

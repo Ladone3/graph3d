@@ -110,6 +110,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
     }
 
     onScroll(event: MouseWheelEvent, element?: Element) {
+        event.stopPropagation();
         if (this.mouseDownOnElement) {
             this.dragging = true;
             this.trigger('elementDrag', {nativeEvent: event, element: this.mouseDownOnElement});

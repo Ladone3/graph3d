@@ -40,7 +40,7 @@ export interface MeshPrimitive extends Mesh {
 
 export type L3Mesh = MeshNative | MeshObj | MeshPrimitive;
 export interface ReactOverlay<ReactProps = any> {
-    get: () => React.ComponentClass<ReactProps>;
+    value: React.ReactElement<ReactProps>;
     context?: any;
 }
 
