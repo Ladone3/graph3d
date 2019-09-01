@@ -160,6 +160,7 @@ $anchor-offset-sqrt: 3.5px;
 
 .l3g-position-c {
     @include l3g-position;
+    transform: translate(-50%, -50%);
 }
 
 .l3graph-default-node-view {

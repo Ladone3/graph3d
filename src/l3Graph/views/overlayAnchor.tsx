@@ -104,19 +104,23 @@ export abstract class AbstractOverlayAnchor<Model> implements OverlayAnchor {
 
     protected enriachOverlay(pooreOverlay: ReactOverlay): ReactOverlay {
         return enriachOverlay(pooreOverlay, this.meshModel);
-        // const enrichedOverlay = enriachOverlay(pooreOverlay, this.meshModel);
-        // return {
-        //     context: pooreOverlay.context,
-        //     value: <div onMouseDown={event => {
-        //         if (this.onMouseDown) { this.onMouseDown(event); }
-        //     }}>
-        //         {enrichedOverlay.value}
-        //     </div>,
-        // };
+    }
+
+    protected overlayedGroup = (props: any) => {
+        return <div
+            key={`overlay-group-${props.position}`}
+            className={`l3g-html-overlay l3g-position-${props.position}`}>
+                <div className='l3g-html-overlay-aligner'>
+                    <div className='l3g-html-overlay__body'>
+                        {props.children}
+                    </div>
+                </div>
+        </div>;
     }
 
     // todo: move vertexes to the model
     update(prefferedPosition?: Vector3D) {
+        const OverlayedGroup = this.overlayedGroup;
         if (this.overlaysByPosition.size === 0) {
             ReactDOM.unmountComponentAtNode(this.html);
         } else {
@@ -137,17 +141,7 @@ export abstract class AbstractOverlayAnchor<Model> implements OverlayAnchor {
                     }
                     index++;
                 }
-                overlayGroups.push(
-                    <div
-                        key={`overlay-group-${position}`}
-                        className={`l3g-html-overlay l3g-position-${position}`}>
-                            <div className='l3g-html-overlay-aligner'>
-                                <div className='l3g-html-overlay__body'>
-                                    {overlayViews}
-                                </div>
-                            </div>
-                    </div>,
-                );
+                overlayGroups.push(<OverlayedGroup position={position}>{overlayViews}</OverlayedGroup>);
             });
 
             const {x, y, z, width, height} = this.getModelFittingBox(prefferedPosition);
@@ -187,10 +181,20 @@ export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node> {
 
 export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link> {
     getModelFittingBox(prefferedPosition?: Vector3D) {
-        const {x, y, z} = multiply(prefferedPosition || sum(
+        const {x, y, z} = prefferedPosition || multiply(sum(
             this.meshModel.source.position,
             this.meshModel.target.position,
         ), 0.5);
         return {x, y, z, width: 0, height: 0, deep: 0};
+    }
+
+    protected overlayedGroup = (props: any) => {
+        return <div
+            key={`overlay-group-${props.position}`}
+            className={`l3g-link-html-overlay l3g-position-${props.position}`}>
+            <div className='l3g-link-html-overlay__body'>
+                {props.children}
+            </div>
+        </div>;
     }
 }
