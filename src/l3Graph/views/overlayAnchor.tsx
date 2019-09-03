@@ -6,6 +6,8 @@ import { ReactOverlay, createContextProvider, enriachOverlay } from '../customis
 import { Link } from '../models/link';
 import { sum, multiply } from '../utils';
 import { Vector3D, Box } from '../models/primitives';
+import { NodeView, LinkView } from '.';
+import { getPointAlongPolylineByRatio } from '../utils/linkRouter';
 
 export type OverlayPosition = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'c';
 
@@ -51,12 +53,15 @@ export class MockOverlayAnchor implements OverlayAnchor {
     }
 }
 
-export abstract class AbstractOverlayAnchor<Model> implements OverlayAnchor {
+export abstract class AbstractOverlayAnchor<Model, View> implements OverlayAnchor {
     public html: HTMLElement;
     protected sprite: THREE.CSS3DSprite;
     protected overlaysByPosition: Map<OverlayPosition, ReactOverlay[]>;
 
-    constructor(protected meshModel: Model) {
+    constructor(
+        protected meshModel: Model,
+        protected meshView: View,
+    ) {
         this.html = document.createElement('DIV');
         this.sprite = new THREE.CSS3DSprite(this.html);
         this.overlaysByPosition = new Map();
@@ -70,9 +75,8 @@ export abstract class AbstractOverlayAnchor<Model> implements OverlayAnchor {
     }
 
     hasOverlay(positionedOverlay: PositionedReactOverlay): boolean {
-        return this.overlaysByPosition.
-            get(positionedOverlay.position).
-            indexOf(positionedOverlay.overlay) !== -1;
+        const spriteSet = this.overlaysByPosition.get(positionedOverlay.position);
+        return spriteSet && spriteSet.indexOf(positionedOverlay.overlay) !== -1;
     }
 
     isVisible() {
@@ -118,7 +122,6 @@ export abstract class AbstractOverlayAnchor<Model> implements OverlayAnchor {
         </div>;
     }
 
-    // todo: move vertexes to the model
     update(prefferedPosition?: Vector3D) {
         const OverlayedGroup = this.overlayedGroup;
         if (this.overlaysByPosition.size === 0) {
@@ -144,7 +147,7 @@ export abstract class AbstractOverlayAnchor<Model> implements OverlayAnchor {
                 overlayGroups.push(<OverlayedGroup position={position}>{overlayViews}</OverlayedGroup>);
             });
 
-            const {x, y, z, width, height} = this.getModelFittingBox(prefferedPosition);
+            const {x, y, z, width, height} = this.getModelFittingBox();
             this.sprite.position.set(x, y, z);
 
             ReactDOM.render(
@@ -158,10 +161,10 @@ export abstract class AbstractOverlayAnchor<Model> implements OverlayAnchor {
         }
     }
 
-    protected abstract getModelFittingBox(prefferedPosition?: Vector3D): Box;
+    protected abstract getModelFittingBox(): Box;
 }
 
-export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node> {
+export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node, NodeView> {
     getModelFittingBox() {
         const {x, y, z} = this.meshModel.size;
         const maxSide = Math.max(x, y, z);
@@ -179,13 +182,18 @@ export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node> {
     }
 }
 
-export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link> {
-    getModelFittingBox(prefferedPosition?: Vector3D) {
-        const {x, y, z} = prefferedPosition || multiply(sum(
-            this.meshModel.source.position,
-            this.meshModel.target.position,
-        ), 0.5);
-        return {x, y, z, width: 0, height: 0, deep: 0};
+export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link, LinkView> {
+    getModelFittingBox() {
+        const polyline = this.meshView.polyline;
+        if (polyline.length > 0) {
+            const endPoint = polyline[polyline.length - 1];
+            const perEndPoint = polyline[polyline.length - 2];
+            const lastSegment = [perEndPoint, endPoint];
+            const {x, y, z} = getPointAlongPolylineByRatio(lastSegment, 0.5);
+            return {x, y, z, width: 0, height: 0, deep: 0};
+        } else {
+            return {x: 0, y: 0, z: 0, width: 0, height: 0, deep: 0};
+        }
     }
 
     protected overlayedGroup = (props: any) => {

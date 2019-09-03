@@ -12,32 +12,30 @@ import {
     inverse,
     distance,
 } from '../utils';
-import { LinkGroup } from '../models/graphModel';
 import { Vector3D } from '../models/primitives';
 import { OverlayAnchor, LinkOverlayAnchor } from './overlayAnchor';
+import { LinkRouter, getPointAlongPolylineByRatio } from '../utils/linkRouter';
 
-const LINK_OFFSET = 30;
 const ARROW_LENGTH = 10;
 
 export class LinkView implements DiagramElementView {
-    public readonly model: Link;
-    public readonly group: LinkGroup;
     public readonly mesh: THREE.Group;
     public readonly overlayAnchor: OverlayAnchor;
+    public polyline: Vector3D[] = [];
 
-    private readonly lines: THREE.Group[];
+    private lines: THREE.Group[];
+
     private arrowGeometry: THREE.Geometry;
     private arrowMaterial: THREE.MeshBasicMaterial;
     private arrow: THREE.Mesh;
     private boundingBox: THREE.Box3;
 
     constructor(
-        model: Link,
-        group: LinkGroup,
-        template: LinkViewTemplate,
+        public readonly model: Link,
+        public readonly router: LinkRouter,
+        private template: LinkViewTemplate,
     ) {
         this.model = model;
-        this.group = group;
 
         this.boundingBox = new THREE.Box3();
 
@@ -50,17 +48,10 @@ export class LinkView implements DiagramElementView {
             this.arrowMaterial,
         );
         this.mesh.add(this.arrow);
-        if (group.links.length > 1) {
-            this.lines = [this.createLine(template), this.createLine(template)];
-            this.mesh.add(this.lines[0]);
-            this.mesh.add(this.lines[1]);
-        } else {
-            this.lines = [this.createLine(template)];
-            this.mesh.add(this.lines[0]);
-        }
+        this.lines = [];
 
         // Overlay
-        this.overlayAnchor = new LinkOverlayAnchor(this.model);
+        this.overlayAnchor = new LinkOverlayAnchor(this.model, this);
         if (this.model.label) {
             this.overlayAnchor.attachOverlay({
                 overlay: enriachOverlay(DEFAULT_LINK_OVERLAY, {label: this.model.label}),
@@ -77,86 +68,64 @@ export class LinkView implements DiagramElementView {
     }
 
     public update() {
-        const sourcePos = this.model.source.position;
-        const targetPos = this.model.target.position;
-        const mediana = multiply(sum(sourcePos, targetPos), 0.5);
+        const polyline = this.router.getRout(this.model);
+        const lineNumber = polyline.length - 1;
 
-        let overlayPosition: Vector3D;
-        if (this.lines.length === 1) {
-            this.stretchLineBetween(this.lines[0], sourcePos, targetPos);
-            overlayPosition = mediana;
-            this.arrow.position.set(mediana.x, mediana.y, mediana.z);
-            this.arrow.lookAt(targetPos.x, targetPos.y, targetPos.z);
-            this.arrow.rotateX(Math.PI / 2);
-        } else {
-            const linkIndex = this.group.links.indexOf(this.model);
-            const groupSize = this.group.links.length;
-            const inverseDirection = this.model.source.id === this.group.targetId;
-            const angle = (2 * Math.PI / groupSize) * (linkIndex + 1);
-            // Calculate the kink point
-            const originalDirection = normalize(sub(sourcePos, targetPos));
-            const direction = inverseDirection ? inverse(originalDirection) : originalDirection;
-            const dirRight = normalRight(direction);
-            const dirUp = normalUp(direction);
-            const offsetDir = normalize(sum(
-                multiply(dirRight, Math.cos(angle)),
-                multiply(dirUp, Math.sin(angle)),
-            ));
-            const offset = multiply(offsetDir, groupSize > 1 ? LINK_OFFSET : 0);
-            const kinkPoint = sum(mediana, offset);
-            // Move arrow
-            this.arrow.position.set(kinkPoint.x, kinkPoint.y, kinkPoint.z);
-            // Stretch lines
-            this.stretchLineBetween(
-                this.lines[0],
-                sourcePos,
-                kinkPoint,
-            );
-            this.stretchLineBetween(
-                this.lines[1],
-                kinkPoint,
-                targetPos,
-            );
-            // Orient arrow
-            const mediana2 = multiply(sum(kinkPoint, targetPos), 0.5);
-            this.arrow.position.set(mediana2.x, mediana2.y, mediana2.z);
-            this.arrow.lookAt(targetPos.x, targetPos.y, targetPos.z);
-            this.arrow.rotateX(Math.PI / 2);
-            // Set overlay position
-            overlayPosition = kinkPoint;
+        if (this.lines.length !== lineNumber) {
+            for (const line of this.lines) {
+                this.mesh.remove(line);
+            }
+            for (let i = 0; i < lineNumber; i++) {
+                const line = createLine(this.template);
+                this.lines.push(line);
+                this.mesh.add(line);
+            }
         }
+
+        this.lines.forEach((line, index) => {
+            stretchLineBetween(line, polyline[index], polyline[index + 1]);
+        });
+
+        const endPoint = polyline[polyline.length - 1];
+        const perEndPoint = polyline[polyline.length - 2];
+        const lastSegment = [perEndPoint, endPoint];
+        const arrowPosition = getPointAlongPolylineByRatio(lastSegment, 0.5);
+        this.arrow.position.set(arrowPosition.x, arrowPosition.y, arrowPosition.z);
+        this.arrow.lookAt(endPoint.x, endPoint.y, endPoint.z);
+        this.arrow.rotateX(Math.PI / 2);
+        this.polyline = polyline;
 
         // Update overlay
         if (this.overlayAnchor) {
-            this.overlayAnchor.update(overlayPosition);
+            this.overlayAnchor.update();
         }
     }
+}
 
-    // It's implemented this way because:
-    // 1 - lines can't have thikness on Windows OS,
-    // 2 - There is bug with lines when they are too close to the camera
-    // There is simpleLinkView.ts - you can check the behavior
-    private createLine(template: LinkViewTemplate): THREE.Group {
-        const lineGeometry = new THREE.PlaneGeometry(1, 0.5 * template.thickness, 1, 1);
-        const lineMaterial = new THREE.MeshBasicMaterial({color: template.color, side: THREE.DoubleSide});
-        const line1 = new THREE.Mesh(lineGeometry, lineMaterial);
-        const line2 = new THREE.Mesh(lineGeometry, lineMaterial);
-        line2.rotateX(Math.PI / 2);
+// It's implemented this way because:
+// 1 - lines can't have thikness on Windows OS,
+// 2 - There is bug with lines when they are too close to the camera
+// There is simpleLinkView.ts - you can check the behavior
+function createLine(template: LinkViewTemplate): THREE.Group {
+    const lineGeometry = new THREE.PlaneGeometry(1, 0.5 * template.thickness, 1, 1);
+    const lineMaterial = new THREE.MeshBasicMaterial({color: template.color, side: THREE.DoubleSide});
+    const line1 = new THREE.Mesh(lineGeometry, lineMaterial);
+    const line2 = new THREE.Mesh(lineGeometry, lineMaterial);
+    line2.rotateX(Math.PI / 2);
 
-        const lineMesh = new THREE.Group();
-        lineMesh.add(line1);
-        lineMesh.add(line2);
+    const lineMesh = new THREE.Group();
+    lineMesh.add(line1);
+    lineMesh.add(line2);
 
-        return lineMesh;
-    }
+    return lineMesh;
+}
 
-    private stretchLineBetween(line: THREE.Group, from: Vector3D, to: Vector3D) {
-        const mediana = multiply(sum(from, to), 0.5);
-        const dist = distance(from, to);
+function stretchLineBetween(line: THREE.Group, from: Vector3D, to: Vector3D) {
+    const mediana = multiply(sum(from, to), 0.5);
+    const dist = distance(from, to);
 
-        line.position.set(mediana.x, mediana.y, mediana.z);
-        line.lookAt(to.x, to.y, to.z);
-        line.rotateY(Math.PI / 2);
-        line.scale.set(dist, 1, 1);
-    }
+    line.position.set(mediana.x, mediana.y, mediana.z);
+    line.lookAt(to.x, to.y, to.z);
+    line.rotateY(Math.PI / 2);
+    line.scale.set(dist, 1, 1);
 }

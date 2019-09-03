@@ -1,5 +1,5 @@
 import { Node, NodeModel, NodeParameters } from './node';
-import { Link, getGroupId, LinkModel, getLinkId, LinkParameters } from './link';
+import { Link, LinkModel, getLinkId, LinkParameters } from './link';
 import { Subscribable } from '../utils/subscribeable';
 
 export type NodeDefinition<Contetnt = any> = NodeModel<Contetnt> & NodeParameters;
@@ -29,8 +29,6 @@ export function isNodeDefinition(elementModel: ElementDefinition): elementModel 
     return !isLinkModel(elementModel) && Boolean(elementModel.position);
 }
 
-export interface LinkGroup { targetId: string; sourceId: string; links: Link[]; }
-
 export interface GraphModelEvents {
     'add:elements': Element[];
     'remove:elements': Element[];
@@ -54,7 +52,6 @@ export interface ImmutableSet<T> {
 export class GraphModel extends Subscribable<GraphModelEvents> {
     private _nodes: Map<string, Node> = new Map();
     private _links: Map<string, Link> = new Map();
-    private _alignedLinksMap: Map<string, LinkGroup> = new Map();
 
     get nodes(): ImmutableMap<string, Node> {
         return this._nodes;
@@ -62,11 +59,6 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
 
     get links(): ImmutableMap<string, Link> {
         return this._links;
-    }
-
-    public getGroup(link: Link): LinkGroup {
-        const groupId = getGroupId(link.model);
-        return this._alignedLinksMap.get(groupId);
     }
 
     public getElementById(id: string) {
@@ -89,11 +81,10 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
                 };
                 if (linkParams.source && linkParams.target) {
                     const link = new Link(model, linkParams);
-                    this.addToGroup(link);
 
                     this._links.set(link.id, link);
-                    link.source.outgoingLinks.set(link.id, link);
-                    link.target.incomingLinks.set(link.id, link);
+                    link.source.outgoingLinks.add(link);
+                    link.target.incomingLinks.add(link);
                     this.subscribeOnLink(link);
                     newElements.push(link);
                 }
@@ -121,35 +112,6 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
             const link = this._links.get(getLinkId(model));
             link.setTypes(model.types);
             link.setLabel(model.label);
-        }
-    }
-
-    private addToGroup(link: Link) {
-        const groupId = getGroupId(link.model);
-        if (!this._alignedLinksMap.has(groupId)) {
-            this._alignedLinksMap.set(groupId, {
-                sourceId: link.source.id,
-                targetId: link.target.id,
-                links: [link],
-            });
-        } else {
-            const group = this._alignedLinksMap.get(groupId);
-            group.links.push(link);
-            for (const l of group.links) {
-                if (l !== link) { l.forceUpdate(); }
-            }
-        }
-    }
-
-    private removeFromGroup(link: Link) {
-        const groupId = getGroupId(link.model);
-        if (this._alignedLinksMap.has(groupId)) {
-            const alignedLinks = this._alignedLinksMap.get(groupId);
-            const index = alignedLinks.links.indexOf(link);
-            alignedLinks.links.splice(index, 1);
-            if (alignedLinks.links.length === 0) {
-                this._alignedLinksMap.delete(groupId);
-            }
         }
     }
 
@@ -219,11 +181,10 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
 
                 deletedLinks.push(l);
                 this._links.delete(id);
-                this.removeFromGroup(l);
-                l.source.incomingLinks.delete(id);
-                l.source.outgoingLinks.delete(id);
-                l.target.incomingLinks.delete(id);
-                l.target.outgoingLinks.delete(id);
+                l.source.incomingLinks.delete(l);
+                l.source.outgoingLinks.delete(l);
+                l.target.incomingLinks.delete(l);
+                l.target.outgoingLinks.delete(l);
             }
         }
         this.trigger('remove:elements', deletedLinks);

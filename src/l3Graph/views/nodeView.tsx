@@ -57,7 +57,7 @@ export class NodeView implements DiagramElementView {
             this.mesh = null;
         }
 
-        this.overlayAnchor = new NodeOverlayAnchor(this.model);
+        this.overlayAnchor = new NodeOverlayAnchor(this.model, this);
         if (template.overlay) {
             this.overlayAnchor.attachOverlay({
                 overlay: template.overlay,

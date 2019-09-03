@@ -26,8 +26,8 @@ export interface NodeEvents<NodeContent> extends PointEvents {
 }
 
 export class Node<NodeContent = any> extends Point<NodeEvents<NodeContent>> {
-    public incomingLinks: Map<string, Link> = new Map();
-    public outgoingLinks: Map<string, Link> = new Map();
+    public incomingLinks: Set<Link> = new Set();
+    public outgoingLinks: Set<Link> = new Set();
     public modelIsChanged: boolean = false;
     private _size: Size;
 

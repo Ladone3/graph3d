@@ -70,10 +70,6 @@ export class Link extends Subscribable<LinkEvents> {
     }
 }
 
-export function getGroupId(link: LinkModel): string {
-    return `${[link.sourceId, link.targetId].sort().join('<==>')}`;
-}
-
 export function getLinkId(model: LinkModel): string {
     return `Link~From(${
         model.sourceId

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GraphModel, Element, isNode, LinkGroup } from '../models/graphModel';
+import { GraphModel, Element, isNode } from '../models/graphModel';
 import { DiagramElementView } from '.';
 import { NodeView } from './nodeView';
 import { LinkView } from './linkView';
@@ -14,6 +14,7 @@ import {
 import { Subscribable } from '../utils';
 import { Link } from '../models/link';
 import { Node } from '../models/node';
+import { LinkRouter, DefaultLinkRouter } from '../utils/linkRouter';
 
 export interface GraphViewProps {
     graphModel: GraphModel;
@@ -37,12 +38,14 @@ export class GraphView extends Subscribable<GraphViewEvents> {
     graphModel: GraphModel;
     meshHtmlContainer: HTMLElement;
     overlayHtmlContainer: HTMLElement;
+    linkRouter: LinkRouter;
 
     constructor(private props: GraphViewProps) {
         super();
         this.views = new Map();
         this.scene = props.scene;
         this.graphModel = props.graphModel;
+        this.linkRouter = new DefaultLinkRouter(props.graphModel);
         this.graphModel.nodes.forEach(node => this.registerElement(node));
         this.graphModel.links.forEach(link => this.registerElement(link));
     }
@@ -56,8 +59,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         if (isNode(element)) {
             view = this.createNodeView(element);
         } else {
-            const group = this.graphModel.getGroup(element);
-            view = this.createLinkView(element, group);
+            view = this.createLinkView(element);
         }
         if (view) {
             if (view.mesh) {
@@ -96,13 +98,13 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         return new NodeView(node, nodeTemplate);
     }
 
-    private createLinkView(link: Link, group: LinkGroup): DiagramElementView | undefined {
+    private createLinkView(link: Link): DiagramElementView | undefined {
         const templateProvider = this.props.linkTemplateProvider || DEFAULT_LINK_TEMPLATE_PROVIDER;
         const linkTemplate = {
             ...DEFAULT_LINK_TEMPLATE,
             ...templateProvider(link.types),
         };
-        return new LinkView(link, group, linkTemplate);
+        return new LinkView(link, this.linkRouter, linkTemplate);
     }
 
     update(specificIds: string[]) {

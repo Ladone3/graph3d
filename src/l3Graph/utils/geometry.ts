@@ -98,6 +98,10 @@ export function length(from: Vector3D | Vector2D): number {
     return distance(from, {x: 0, y: 0});
 }
 
+export function vectorLength({x, y, z}: Vector3D) {
+    return Math.sqrt(x * x + y * y + z * z);
+}
+
 export function distance(from: Vector3D | Vector2D, to: Vector3D | Vector2D): number {
     const from3d: Vector3D = {z: 0, ...from};
     const to3d: Vector3D = {z: 0, ...to};
