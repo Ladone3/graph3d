@@ -1,4 +1,4 @@
-import { Widget, WidgetFabric, WidgetModelContext, WidgetViewContext } from './models/widgets';
+import { WidgetFabric, WidgetModelContext, WidgetViewContext } from './models/widgets';
 import { SelectionWidget } from './models/widgets/selectionWidget';
 import { SelectionView } from './views/selectionView';
 import { ArrowHelperView } from './views/arrowHelperView';

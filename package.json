@@ -12,7 +12,9 @@
     "_typings-tsc": "./node_modules/.bin/tsc --declaration --outDir dist/temp/dts",
     "_typings-dts-bundle": "./node_modules/.bin/dts-bundle --main dist/temp/dts/index.d.ts --name l3-graph --out ../../l3-graph.d.ts",
     "start": "./node_modules/.bin/webpack-dev-server --port 5000 --host 0.0.0.0 --config webpack.examples.config.js --content-base dist/",
-    "lint": "./node_modules/.bin/tslint -c tslint.json 'src/**/*.ts' 'src/**/*.tsx' -t stylish"
+    "lint": "./node_modules/.bin/tslint -c tslint.json 'src/**/*.ts' 'src/**/*.tsx' -t stylish",
+    "cycle-stat": "./node_modules/.bin/webpack --json --config webpack.config.js > stats.json",
+    "check-cycles": "./node_modules/webpack-cyclic-dependency-checker/src/cli.js stats.json"
   },
   "dependencies": {
     "@types/lodash": "4.14.110",
@@ -41,10 +43,11 @@
     "ts-loader": "5.1.1",
     "tslib": "1.9.3",
     "tslint": "5.11.0",
-    "typescript": "2.7.2",
+    "typescript": "^3.6.2",
     "url-loader": "1.1.1",
     "webpack": "4.19.0",
     "webpack-cli": "3.1.0",
+    "webpack-cyclic-dependency-checker": "0.0.1",
     "webpack-dev-server": "3.1.8"
   },
   "resolutions": {

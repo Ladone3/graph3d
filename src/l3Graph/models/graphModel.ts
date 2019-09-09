@@ -8,25 +8,13 @@ export type Element = Node | Link;
 export type ElementModel = NodeModel | LinkModel;
 export type ElementDefinition = NodeDefinition | LinkModel;
 
-export function isNode(element: Element): element is Node {
-    return element instanceof Node;
-}
-
-export function isLink(element: Element): element is Link {
-    return element instanceof Link;
-}
-
-export function isNodeModel(elementModel: ElementModel): elementModel is NodeModel {
+function isNodeModel(elementModel: ElementModel): elementModel is NodeModel {
     return !isLinkModel(elementModel);
 }
 
-export function isLinkModel(elementModel: ElementModel): elementModel is LinkModel {
+function isLinkModel(elementModel: ElementModel): elementModel is LinkModel {
     return (elementModel as any).sourceId !== undefined &&
         (elementModel as any).targetId !== undefined;
-}
-
-export function isNodeDefinition(elementModel: ElementDefinition): elementModel is NodeDefinition {
-    return !isLinkModel(elementModel) && Boolean(elementModel.position);
 }
 
 export interface GraphModelEvents {

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { DiagramWidgetView, DiagramWidgetViewParameters } from '.';
-import { ArrowHelper } from '../models/widgets/ArrowHelper';
+import { DiagramWidgetView, DiagramWidgetViewParameters } from './viewInterface';
+import { ArrowHelper } from '../models/widgets';
 import { OverlayAnchor, MockOverlayAnchor } from './overlayAnchor';
 
 const LINES_LENGTH = 100;

@@ -8,9 +8,6 @@ import { DiagramView, ViewOptions } from './views/diagramView';
 import { Vector2D, Vector3D } from './models/primitives';
 import { applyForceLayout3d, applyRandomLayout } from './layout/layouts';
 import { MouseHandler } from './utils/mouseHandler';
-import { EventObject } from './utils';
-import { Element } from './models/graphModel';
-import { Node } from './models/node';
 import { DEFAULT_WIDGET_FABRICS } from './defaultWidgetsSet';
 import { WidgetFabric } from './models/widgets';
 
@@ -40,15 +37,12 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         super(props);
         this.diagramModel = new DiagramModel();
         this.state = {};
-        this.diagramModel.updateGraph({
-            nodes: this.props.graph.nodes,
-            links: this.props.graph.links,
-        });
+        this.diagramModel.updateGraph({...this.props.graph});
         this.widgetFabrics = props.widgetFabrics || DEFAULT_WIDGET_FABRICS;
     }
 
     componentDidUpdate(props: L3GraphProps) {
-        const {graph} = props;
+        const {graph} = this.props;
         this.diagramModel.updateGraph(graph);
     }
 

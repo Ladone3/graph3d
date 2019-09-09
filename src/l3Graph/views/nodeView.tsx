@@ -4,12 +4,14 @@ import { DiagramElementView } from '.';
 import {
     NodeViewTemplate,
     MeshKind,
+    ReactOverlay,
+    enrichOverlay,
 } from '../customisation';
 import { getColorByTypes } from '../utils/colorUtils';
 import { getPrimitive } from '../utils/shapeUtils';
 import { Vector3D } from '../models/primitives';
 import { treeVector3ToVector3D } from '../utils';
-import { NodeOverlayAnchor } from './overlayAnchor';
+import { AbstractOverlayAnchor } from './overlayAnchor';
 
 export class NodeView implements DiagramElementView {
     public readonly model: Node;
@@ -111,5 +113,23 @@ export class NodeView implements DiagramElementView {
         } else {
             return scale;
         }
+    }
+}
+
+export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node, NodeView> {
+    getModelFittingBox() {
+        const {x, y, z} = this.meshModel.size;
+        const maxSide = Math.max(x, y, z);
+
+        return {
+            ...this.meshModel.position,
+            width: maxSide,
+            height: maxSide,
+            deep: maxSide,
+        };
+    }
+
+    protected enrichOverlay(pooreOverlay: ReactOverlay): ReactOverlay {
+        return enrichOverlay(pooreOverlay, this.meshModel.data);
     }
 }

@@ -1,19 +1,16 @@
 import * as THREE from 'three';
+import * as React from 'react';
+
 import { Link } from '../models/link';
 import { DiagramElementView } from '.';
-import { LinkViewTemplate, DEFAULT_LINK_TEMPLATE, DEFAULT_LINK_OVERLAY, enriachOverlay } from '../customisation';
+import { LinkViewTemplate, DEFAULT_LINK_OVERLAY, enrichOverlay } from '../customisation';
 import {
-    normalize,
     multiply,
     sum,
-    sub,
-    normalRight,
-    normalUp,
-    inverse,
     distance,
 } from '../utils';
 import { Vector3D } from '../models/primitives';
-import { OverlayAnchor, LinkOverlayAnchor } from './overlayAnchor';
+import { OverlayAnchor, AbstractOverlayAnchor } from './overlayAnchor';
 import { LinkRouter, getPointAlongPolylineByRatio } from '../utils/linkRouter';
 
 const ARROW_LENGTH = 10;
@@ -54,7 +51,7 @@ export class LinkView implements DiagramElementView {
         this.overlayAnchor = new LinkOverlayAnchor(this.model, this);
         if (this.model.label) {
             this.overlayAnchor.attachOverlay({
-                overlay: enriachOverlay(DEFAULT_LINK_OVERLAY, {label: this.model.label}),
+                overlay: enrichOverlay(DEFAULT_LINK_OVERLAY, {label: this.model.label}),
                 position: 'c',
             });
         }
@@ -99,6 +96,31 @@ export class LinkView implements DiagramElementView {
         if (this.overlayAnchor) {
             this.overlayAnchor.update();
         }
+    }
+}
+
+export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link, LinkView> {
+    getModelFittingBox() {
+        const polyline = this.meshView.polyline;
+        if (polyline.length > 0) {
+            const endPoint = polyline[polyline.length - 1];
+            const perEndPoint = polyline[polyline.length - 2];
+            const lastSegment = [perEndPoint, endPoint];
+            const {x, y, z} = getPointAlongPolylineByRatio(lastSegment, 0.5);
+            return {x, y, z, width: 0, height: 0, deep: 0};
+        } else {
+            return {x: 0, y: 0, z: 0, width: 0, height: 0, deep: 0};
+        }
+    }
+
+    protected overlayedGroup = (props: any) => {
+        return <div
+            key={`overlay-group-${props.position}`}
+            className={`l3g-link-html-overlay l3g-position-${props.position}`}>
+            <div className='l3g-link-html-overlay__body'>
+                {props.children}
+            </div>
+        </div>;
     }
 }
 

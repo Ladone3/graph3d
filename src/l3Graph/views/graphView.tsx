@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GraphModel, Element, isNode } from '../models/graphModel';
+import { GraphModel, Element } from '../models/graphModel';
 import { DiagramElementView } from '.';
 import { NodeView } from './nodeView';
 import { LinkView } from './linkView';
@@ -45,7 +45,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         this.views = new Map();
         this.scene = props.scene;
         this.graphModel = props.graphModel;
-        this.linkRouter = new DefaultLinkRouter(props.graphModel);
+        this.linkRouter = new DefaultLinkRouter();
         this.graphModel.nodes.forEach(node => this.registerElement(node));
         this.graphModel.links.forEach(link => this.registerElement(link));
     }
@@ -56,7 +56,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
             return; // We'v registered the view for this element
         }
         let view: DiagramElementView;
-        if (isNode(element)) {
+        if (element instanceof Node) {
             view = this.createNodeView(element);
         } else {
             view = this.createLinkView(element);

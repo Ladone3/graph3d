@@ -1,7 +1,6 @@
 import { Link, LinkModel } from '../models/link';
 import { Vector3D } from '../models/primitives';
-import { vectorLength, multiply, sum, normalize, sub, inverse, normalRight, normalUp } from '.';
-import { GraphModel } from '../models/graphModel';
+import { sum, multiply, normalize, sub, inverse, normalRight, normalUp, vectorLength } from './geometry';
 
 export interface LinkRouter {
     getRout(link: Link): Vector3D[];
@@ -10,10 +9,6 @@ export interface LinkRouter {
 const LINK_OFFSET = 30;
 
 export class DefaultLinkRouter implements LinkRouter {
-    constructor(
-        private graphModel: GraphModel
-    ) { }
-    
     private getLinkNeighbours(link: Link): Link[] {
         return Array.from(link.source.outgoingLinks).filter(l => l.target === link.target).concat(
             Array.from(link.target.outgoingLinks).filter(l => l.target === link.source)
@@ -27,7 +22,6 @@ export class DefaultLinkRouter implements LinkRouter {
         const targetPos = link.target.position;
         const mediana = multiply(sum(sourcePos, targetPos), 0.5);
 
-        let overlayPosition: Vector3D;
         if (group.length === 1) {
             return [sourcePos, targetPos];
         } else {

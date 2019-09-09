@@ -7,12 +7,14 @@ require('./js/OBJLoader2.js');
 export { L3Graph, L3GraphProps } from './l3Graph/l3Graph';
 export { ViewOptions } from './l3Graph/views/diagramView';
 export { Graph } from './l3Graph/models/diagramModel';
-export { Node } from './l3Graph/models/node';
-export { Link } from './l3Graph/models/link';
+export { Node, NodeModel } from './l3Graph/models/node';
+export { Link, LinkModel } from './l3Graph/models/link';
+export { NodeDefinition } from './l3Graph/models/graphModel';
 
 export {
     NodeViewTemplate,
     LinkViewTemplate,
+    MeshKind,
     L3Mesh,
     MeshObj,
     MeshPrimitive,

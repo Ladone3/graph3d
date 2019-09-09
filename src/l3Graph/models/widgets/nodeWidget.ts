@@ -1,5 +1,5 @@
-import { Widget, WidgetEvents } from '.';
 import { Node } from '../node';
+import { WidgetEvents, Widget } from './widget';
 
 export interface NodeWidgetEvents extends WidgetEvents {
     'change:focus': Node;

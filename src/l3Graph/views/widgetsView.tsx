@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { DiagramWidgetView, View } from '.';
 import { WidgetsModel } from '../models/widgets/widgetsModel';
 import { Widget, WidgetViewResolver } from '../models/widgets';
 import { GraphView } from './graphView';
+import { View, DiagramWidgetView } from './viewInterface';
 
 export interface WidgetsViewProps {
     graphView: GraphView;

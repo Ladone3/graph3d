@@ -7,10 +7,11 @@ import {
     NodeViewTemplate,
     ReactNodeWidget,
     ReactNodeWidgetView,
+    Graph,
+    WidgetViewContext, WidgetModelContext,
+    MeshKind,
 } from '../index';
 import { generateData } from './generateData';
-import { MeshKind } from '../l3Graph/customisation';
-import { WidgetViewContext, WidgetModelContext } from '../l3Graph/models/widgets';
 
 require('./example.scss');
 const cubePortal = require<string>('./portalCube.obj');
@@ -89,7 +90,7 @@ const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    const graphElements = generateData(10);
+    const graphElements: Graph = generateData(10);
     ReactDOM.render(React.createElement(L3Graph, {
         viewOptions: {
             nodeTemplateProvider: (types: string[]) => {

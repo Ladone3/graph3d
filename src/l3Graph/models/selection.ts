@@ -1,6 +1,5 @@
 import { Subscribable } from '../utils/subscribeable';
-import { Widget, WidgetEvents } from './widgets';
-import { Element, isNode, GraphModel } from './graphModel';
+import { Element, GraphModel } from './graphModel';
 
 export interface SelectionParameters {
     selection?: Set<Element>;

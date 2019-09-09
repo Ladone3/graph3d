@@ -1,8 +1,9 @@
 import { vector3DToTreeVector3, KeyHandler, KEY_CODES } from '../utils';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
-import { Element, isLink, ElementModel } from '../models/graphModel';
+import { Element, ElementModel } from '../models/graphModel';
 import { MouseHandler } from '../utils/mouseHandler';
+import { Link } from '../models/link';
 
 const WHEEL_STEP = 100;
 const MIN_DISTANCE_TO_CAMERA = 10;
@@ -52,7 +53,7 @@ export class DefaultEditor {
     }
 
     onElementDrag(event: MouseEvent | MouseWheelEvent, target: Element) {
-        if (isLink(target)) { return; }
+        if (target instanceof Link) { return; }
 
         const nodeTreePos = vector3DToTreeVector3(target.position);
         const cameraPos = this.diagramView.camera.position;

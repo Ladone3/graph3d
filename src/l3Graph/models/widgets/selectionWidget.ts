@@ -1,6 +1,7 @@
-import { Widget, WidgetParameters } from '.';
-import { Element, isNode } from '../graphModel';
+import { Element } from '../graphModel';
 import { DiagramModel } from '../diagramModel';
+import { Widget, WidgetParameters } from './widget';
+import { Node } from '../node';
 
 export class SelectionWidget extends Widget {
     public readonly widgetId: string;
@@ -31,7 +32,7 @@ export class SelectionWidget extends Widget {
         const newSelection = this.diagramModel.selection.elements;
         if (newSelection.size > 0) {
             newSelection.forEach(el => {
-                if (isNode(el)) {
+                if (el instanceof Node) {
                     el.on('change:position', this.updateView);
                     el.on('change:size', this.updateView);
                 }

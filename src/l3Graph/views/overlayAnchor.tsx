@@ -1,13 +1,9 @@
 import * as THREE from 'three';
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
-import { Node, Size } from '../models/node';
-import { ReactOverlay, createContextProvider, enriachOverlay } from '../customisation';
-import { Link } from '../models/link';
-import { sum, multiply } from '../utils';
+import { Size } from '../models/node';
+import { ReactOverlay, createContextProvider, enrichOverlay } from '../customisation';
 import { Vector3D, Box } from '../models/primitives';
-import { NodeView, LinkView } from '.';
-import { getPointAlongPolylineByRatio } from '../utils/linkRouter';
 
 export type OverlayPosition = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'c';
 
@@ -106,8 +102,8 @@ export abstract class AbstractOverlayAnchor<Model, View> implements OverlayAncho
         this.update();
     }
 
-    protected enriachOverlay(pooreOverlay: ReactOverlay): ReactOverlay {
-        return enriachOverlay(pooreOverlay, this.meshModel);
+    protected enrichOverlay(pooreOverlay: ReactOverlay): ReactOverlay {
+        return enrichOverlay(pooreOverlay, this.meshModel);
     }
 
     protected overlayedGroup = (props: any) => {
@@ -132,7 +128,7 @@ export abstract class AbstractOverlayAnchor<Model, View> implements OverlayAncho
             this.overlaysByPosition.forEach((overlays, position) => {
                 const overlayViews: JSX.Element[] = [];
                 for (const o of overlays) {
-                    const overlay = this.enriachOverlay(o);
+                    const overlay = this.enrichOverlay(o);
                     const key = `position-${position}-${index}`;
                     if (overlay.context) {
                         const Context = createContextProvider(overlay.context);
@@ -162,47 +158,4 @@ export abstract class AbstractOverlayAnchor<Model, View> implements OverlayAncho
     }
 
     protected abstract getModelFittingBox(): Box;
-}
-
-export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node, NodeView> {
-    getModelFittingBox() {
-        const {x, y, z} = this.meshModel.size;
-        const maxSide = Math.max(x, y, z);
-
-        return {
-            ...this.meshModel.position,
-            width: maxSide,
-            height: maxSide,
-            deep: maxSide,
-        };
-    }
-
-    protected enriachOverlay(pooreOverlay: ReactOverlay): ReactOverlay {
-        return enriachOverlay(pooreOverlay, this.meshModel.data);
-    }
-}
-
-export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link, LinkView> {
-    getModelFittingBox() {
-        const polyline = this.meshView.polyline;
-        if (polyline.length > 0) {
-            const endPoint = polyline[polyline.length - 1];
-            const perEndPoint = polyline[polyline.length - 2];
-            const lastSegment = [perEndPoint, endPoint];
-            const {x, y, z} = getPointAlongPolylineByRatio(lastSegment, 0.5);
-            return {x, y, z, width: 0, height: 0, deep: 0};
-        } else {
-            return {x: 0, y: 0, z: 0, width: 0, height: 0, deep: 0};
-        }
-    }
-
-    protected overlayedGroup = (props: any) => {
-        return <div
-            key={`overlay-group-${props.position}`}
-            className={`l3g-link-html-overlay l3g-position-${props.position}`}>
-            <div className='l3g-link-html-overlay__body'>
-                {props.children}
-            </div>
-        </div>;
-    }
 }

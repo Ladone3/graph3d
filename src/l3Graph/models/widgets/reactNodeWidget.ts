@@ -1,7 +1,7 @@
 import { NodeWidget } from './nodeWidget';
-import { WidgetParameters } from '.';
-import { isNode } from '../graphModel';
 import { ReactOverlay } from '../../customisation';
+import { Node } from '../node';
+import { WidgetParameters } from './widget';
 
 export interface ReactNodeWidgetParameters extends WidgetParameters {
     overlay: ReactOverlay;
@@ -20,7 +20,7 @@ export class ReactNodeWidget extends NodeWidget {
             const selecteElements = selection.elements;
             if (selecteElements.size === 1) {
                 selecteElements.forEach(element => {
-                    if (isNode(element)) {
+                    if (element instanceof Node) {
                         this.setFocusNode(element);
                     }
                 });

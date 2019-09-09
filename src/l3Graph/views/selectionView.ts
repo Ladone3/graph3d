@@ -1,9 +1,8 @@
 import * as THREE from 'three';
-import { DiagramWidgetView, DiagramWidgetViewParameters } from '.';
-import { isNode } from '../models/graphModel';
 import { Node } from '../models/node';
 import { SelectionWidget } from '../models/widgets/selectionWidget';
 import { OverlayAnchor, MockOverlayAnchor } from './overlayAnchor';
+import { DiagramWidgetViewParameters, DiagramWidgetView } from './viewInterface';
 
 const SELECTION_PADDING = 5;
 
@@ -37,29 +36,9 @@ export class SelectionView extends DiagramWidgetView {
     }
 
     public update() {
-        // Right now it work only for one node
-        // const points: Vector3D[] = [];
-        // this.model.selection.forEach(element => {
-        //     if (isNode(element)) {
-        //         points.push(element.position);
-        //     }
-        // });
-        // if (points.length > 0) {
-        //     this.mesh.visible = true;
-        //     const {min, max, average} = calcBounds(points);
-
-        //     this.mesh.position.set(average.x, average.y, average.z);
-        //     this.mesh.scale.set(
-        //         max.x - min.x + SELECTION_PADDING * 2,
-        //         max.y - min.y + SELECTION_PADDING * 2,
-        //         max.z - min.z + SELECTION_PADDING * 2
-        //     );
-        // } else {
-        //     this.mesh.visible = false;
-        // }
         const nodes: Node[] = [];
         for (const element of this.model.selectedElements) {
-            if (isNode(element)) {
+            if (element instanceof Node) {
                 nodes.push(element);
             }
         }

@@ -1,7 +1,7 @@
 import { NodeWidget } from './nodeWidget';
-import { WidgetParameters } from '.';
 import { MouseHandler } from '../../utils/mouseHandler';
-import { isNode } from '../graphModel';
+import { WidgetParameters } from './widget';
+import { Node } from '../node';
 
 export class ArrowHelper extends NodeWidget {
     private mouseHandler: MouseHandler;
@@ -12,7 +12,7 @@ export class ArrowHelper extends NodeWidget {
 
         this.mouseHandler.on('elementStartDrag', () => {
             const draggedElement = this.mouseHandler.draggedElement;
-            if (isNode(draggedElement)) {
+            if (draggedElement instanceof Node) {
                 this.setFocusNode(draggedElement);
             }
         });

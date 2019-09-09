@@ -39,7 +39,7 @@ export function createContextProvider(context: any): React.ComponentClass {
     return ContextProvider;
 }
 
-export function enriachOverlay<Data>(
+export function enrichOverlay<Data>(
     pooreOverlay: ReactOverlay<Data>,
     data: Data,
 ): ReactOverlay<Data> {

@@ -1,5 +1,6 @@
 import { DEFAULT_NODE_OVERLAY } from './defaultOverlay';
-import { NodeViewTemplate, NodeTemplateProvider, MeshKind } from '.';
+import { NodeViewTemplate, NodeTemplateProvider } from './templates';
+import { MeshKind } from './mesh';
 
 export const DEFAULT_NODE_TEMPLATE: NodeViewTemplate<{label: string}> = {
     mesh: () => ({
