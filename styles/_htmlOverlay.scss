@@ -10,6 +10,7 @@
 }
 
 .l3graph-link-html-view {
+    pointer-events: none;
     opacity: 0.7;
     margin-top: 10px;
     font-size: 5px;
@@ -27,13 +28,16 @@
 
 .l3g-node-overlay-anchor {
     position: relative;
+    pointer-events: none;
 }
 
 .l3g-html-overlay-aligner {
     position: relative;
+    pointer-events: none;
 }
 
 .l3g-html-overlay__body {
+    pointer-events: all;
     overflow: hidden;
     cursor: pointer;
     user-select: none;
