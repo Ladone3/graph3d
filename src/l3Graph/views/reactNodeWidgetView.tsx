@@ -38,10 +38,15 @@ export class ReactNodeWidgetView extends DiagramWidgetView {
             return;
         }
         if (this.model.prevFocusNode && this.curOverlay) {
-            const prevAnchor = this.graphView.views.get(
+            const prevView = this.graphView.views.get(
                 this.model.prevFocusNode.id,
-            ).overlayAnchor;
-            prevAnchor.removeOverlay(this.curOverlay);
+            );
+            if (prevView) {
+                const prevAnchor = this.graphView.views.get(
+                    this.model.prevFocusNode.id,
+                ).overlayAnchor;
+                prevAnchor.removeOverlay(this.curOverlay);
+            }
         }
 
         if (this.model.focusNode) {
