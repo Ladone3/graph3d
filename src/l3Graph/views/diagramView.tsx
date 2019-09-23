@@ -205,7 +205,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         });
         this.widgetsView = new WidgetsView({
             graphView: this.graphView,
-            widgetsModel: this.props.model.widgets,
+            widgetsModel: this.props.model.widgetRegistry,
             scene: this.scene,
         });
     }
@@ -238,10 +238,10 @@ export class DiagramView extends React.Component<DiagramViewProps> {
             events.widgetEvents.forEach((event: EventObject<keyof WidgetsModelEvents, any>) => {
                 switch (event.eventId) {
                     case 'add:widget':
-                        this.widgetsView.addWidgetView(event.data);
+                        this.widgetsView.registerWidgetViewForModel(event.data);
                         break;
                     case 'remove:widget':
-                        this.widgetsView.removeWidgetView(event.data);
+                        this.widgetsView.removeWidgetViewOfModel(event.data);
                         break;
                     case 'update:widget':
                         const widget: Widget = event.data;

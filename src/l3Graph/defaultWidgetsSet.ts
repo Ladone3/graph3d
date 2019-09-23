@@ -1,25 +1,25 @@
-import { WidgetFabric, WidgetModelContext, WidgetViewContext } from './models/widgets';
+import { WidgetFactory, WidgetModelContext, WidgetViewContext, Widget } from './models/widgets';
 import { SelectionWidget } from './models/widgets/selectionWidget';
 import { SelectionView } from './views/selectionView';
 import { ArrowHelperView } from './views/arrowHelperView';
 import { ArrowHelper } from './models/widgets/arrowHelper';
 
-export const DEFAULT_WIDGET_FABRICS: WidgetFabric[] = [{
-    model: (context: WidgetModelContext) => new SelectionWidget({
-        ...context,
+export const DEFAULT_MESH_WIDGET_SET: WidgetFactory[] = [{
+    getModel: (context: WidgetModelContext) => new SelectionWidget({
         widgetId: 'l3graph-selection-widget',
+        diagramModel: context.diagramModel,
     }),
-    view: (context: WidgetViewContext) => new SelectionView({
-        model: context.widget as any,
-        graphView: context.graphView,
+    getView: (context: WidgetViewContext) => new SelectionView({
+        model: context.widget as SelectionWidget,
     }),
 }, {
-    model: (context: WidgetModelContext) => new ArrowHelper({
-        ...context,
-        widgetId: 'l3graph-arrow-helper-widget',
-    }),
-    view: (context: WidgetViewContext) => new ArrowHelperView({
+    getModel: (context: WidgetModelContext) => {
+        return new ArrowHelper({
+            widgetId: 'l3graph-arrow-helper-widget',
+            mouseHandler: context.mouseHandler,
+        }) as any;
+    },
+    getView: (context: WidgetViewContext) => new ArrowHelperView({
         model: context.widget as any,
-        graphView: context.graphView,
     }),
 }];

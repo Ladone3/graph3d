@@ -93,7 +93,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         const templateProvider =  this.props.nodeTemplateProvider || DEFAULT_NODE_TEMPLATE_PROVIDER;
         const nodeTemplate = {
             ...DEFAULT_NODE_TEMPLATE,
-            ...templateProvider(node.types),
+            ...templateProvider(node.data),
         };
         return new NodeView(node, nodeTemplate);
     }
@@ -102,14 +102,14 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         const templateProvider = this.props.linkTemplateProvider || DEFAULT_LINK_TEMPLATE_PROVIDER;
         const linkTemplate = {
             ...DEFAULT_LINK_TEMPLATE,
-            ...templateProvider(link.types),
+            ...templateProvider(link.model),
         };
         return new LinkView(link, this.linkRouter, linkTemplate);
     }
 
     update(specificIds: string[]) {
         const updateView = (elementId: string) => {
-            const element = this.graphModel.getElementById(elementId);
+            const element = this.graphModel.getNodeById(elementId) || this.graphModel.getLinkById(elementId);
             if (element.modelIsChanged) {
                 this.removeElementView(element);
                 this.registerElement(element);

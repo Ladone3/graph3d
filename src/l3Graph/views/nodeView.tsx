@@ -7,8 +7,7 @@ import {
     ReactOverlay,
     enrichOverlay,
 } from '../customisation';
-import { getColorByTypes } from '../utils/colorUtils';
-import { getPrimitive } from '../utils/shapeUtils';
+import { preparePrimitive, prepareMesh } from '../utils/shapeUtils';
 import { Vector3D } from '../models/primitives';
 import { treeVector3ToVector3D } from '../utils';
 import { AbstractOverlayAnchor } from './overlayAnchor';
@@ -34,16 +33,9 @@ export class NodeView implements DiagramElementView {
             if (meshDescriptor.type === MeshKind.ThreeNative) {
                 this.mesh = meshDescriptor.mesh;
             } else if (meshDescriptor.type === MeshKind.Primitive) {
-                this.mesh = getPrimitive(meshDescriptor);
+                this.mesh = preparePrimitive(meshDescriptor);
             } else if (meshDescriptor.type === MeshKind.Obj) {
-                const color = meshDescriptor.color || getColorByTypes(this.model.types);
-                const loader = new THREE.OBJLoader();
-                this.mesh = loader.parse(meshDescriptor.markup);
-
-                const material = new THREE.MeshPhongMaterial({color});
-                this.mesh.traverse(child => {
-                    if (child instanceof THREE.Mesh) { child.material = material; }
-                });
+                this.mesh = prepareMesh(meshDescriptor);
             }
             // Calc bounding box
             this.boundingBox.setFromObject(this.mesh)
@@ -61,10 +53,7 @@ export class NodeView implements DiagramElementView {
 
         this.overlayAnchor = new NodeOverlayAnchor(this.model, this);
         if (template.overlay) {
-            this.overlayAnchor.attachOverlay({
-                overlay: template.overlay,
-                position: 'e',
-            });
+            this.overlayAnchor.setOverlay(template.overlay, 'e');
         }
 
         this.update();

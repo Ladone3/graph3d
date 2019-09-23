@@ -5,10 +5,19 @@ export interface NodeWidgetEvents extends WidgetEvents {
     'change:focus': Node;
 }
 
+export interface NodeWidgetParameters {
+    widgetId: string;
+}
+
 export abstract class NodeWidget extends Widget {
     private _focusNode?: Node;
     private _prevFocusNode?: Node;
     public readonly widgetId: string;
+
+    constructor(parameters: NodeWidgetParameters) {
+        super();
+        this.widgetId = parameters.widgetId;
+    }
 
     setFocusNode(target: Node | undefined) {
         this._prevFocusNode = this._focusNode;
@@ -40,5 +49,9 @@ export abstract class NodeWidget extends Widget {
 
     private updateView = () => {
         this.trigger('update:widget', this);
+    }
+
+    onRemove() {
+        if (this._focusNode) { this._focusNode.unsubscribe(this.updateView); }
     }
 }

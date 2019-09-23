@@ -1,14 +1,19 @@
 import { Element } from '../graphModel';
 import { DiagramModel } from '../diagramModel';
-import { Widget, WidgetParameters } from './widget';
+import { Widget } from './widget';
 import { Node } from '../node';
+
+export interface SelectionParameters {
+    widgetId: string;
+    diagramModel: DiagramModel;
+}
 
 export class SelectionWidget extends Widget {
     public readonly widgetId: string;
     private readonly diagramModel: DiagramModel;
 
-    constructor(parameters: WidgetParameters) {
-        super(parameters);
+    constructor(parameters: SelectionParameters) {
+        super();
         this.diagramModel = parameters.diagramModel;
 
         this.diagramModel.selection.on('change', e => {

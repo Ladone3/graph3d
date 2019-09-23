@@ -4,6 +4,7 @@ import { DiagramView } from '../views/diagramView';
 import { Element, ElementModel } from '../models/graphModel';
 import { MouseHandler } from '../utils/mouseHandler';
 import { Link } from '../models/link';
+import { Node } from '../models/node';
 
 const WHEEL_STEP = 100;
 const MIN_DISTANCE_TO_CAMERA = 10;
@@ -44,11 +45,17 @@ export class DefaultEditor {
 
     private onKeyPressed(keyMap: Set<number>) {
         if (keyMap.has(KEY_CODES.DELETE) && this.diagramModel.selection.elements.size > 0) {
-            const elementsToDelete: ElementModel[] = [];
+            const nodesToDelete: Node[] = [];
+            const linksToDelete: Link[] = [];
             this.diagramModel.selection.elements.forEach(el => {
-                elementsToDelete.push(el.model);
+                if (el instanceof Node) {
+                    nodesToDelete.push(el);
+                } else {
+                    linksToDelete.push(el);
+                }
             });
-            this.diagramModel.removeElements(elementsToDelete);
+            this.diagramModel.graph.removeLinks(linksToDelete);
+            this.diagramModel.graph.removeNodes(nodesToDelete);
         }
     }
 

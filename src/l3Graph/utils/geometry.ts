@@ -51,10 +51,6 @@ export function handleDragging(
     document.body.addEventListener('mouseup', _onend);
 }
 
-export function isTypesEqual(types1: string[], types2: string[]): boolean {
-    return types1.sort().join('') === types2.sort().join('');
-}
-
 export function calcBounds(points: Vector3D[]) {
     const averagePos: Vector3D = {x: 0, y: 0, z: 0};
     const minPos: Vector3D = {x: Infinity, y: Infinity, z: Infinity};

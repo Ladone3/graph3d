@@ -2,26 +2,24 @@ import * as THREE from 'three';
 import { Node } from '../models/node';
 import { SelectionWidget } from '../models/widgets/selectionWidget';
 import { OverlayAnchor, MockOverlayAnchor } from './overlayAnchor';
-import { DiagramWidgetViewParameters, DiagramWidgetView } from './viewInterface';
+import { DiagramWidgetView } from './viewInterface';
 
 const SELECTION_PADDING = 5;
 
-export interface SelectionViewParameters extends DiagramWidgetViewParameters {
+export interface SelectionViewParameters {
     model: SelectionWidget;
 }
 
-export class SelectionView extends DiagramWidgetView {
+export class SelectionView implements DiagramWidgetView {
     public readonly material: THREE.MeshLambertMaterial;
     public readonly geometry: THREE.CubeGeometry;
     public readonly mesh: THREE.Group;
     public readonly overlayAnchor: OverlayAnchor;
 
-    private readonly model: SelectionWidget;
+    readonly model: SelectionWidget;
     private boundingBox: THREE.Box3;
 
     constructor(parameters: SelectionViewParameters) {
-        super(parameters);
-
         this.model = parameters.model;
         this.material = new THREE.MeshLambertMaterial({color: 'red', opacity: 0.1, transparent: true});
         this.geometry = new THREE.CubeGeometry(1, 1, 1);

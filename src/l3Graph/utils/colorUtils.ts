@@ -1,17 +1,3 @@
-export function getColorByTypes(strings: string[]): string {
-    let hash;
-    for (const name of strings) {
-        hash = hashFnv32a(name, hash);
-    }
-    const MAX_INT32 = 0x7fffffff;
-
-    const TON = 360 * ((hash === undefined ? 0 : hash) / MAX_INT32);
-    const SATURATION = 40;
-    const BRIGHTNESS = 75;
-    const {r, g, b} = HSVtoRGB(TON, SATURATION, BRIGHTNESS);
-    return rgbToHex(r, g, b);
-}
-
 export function rgbToHex(r: number, g: number, b: number): string {
     let rH = Number(r).toString(16);
     if (rH.length < 2) {

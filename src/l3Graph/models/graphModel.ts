@@ -1,27 +1,15 @@
 import { Node, NodeModel, NodeParameters } from './node';
-import { Link, LinkModel, getLinkId, LinkParameters } from './link';
+import { Link, LinkModel, LinkParameters } from './link';
 import { Subscribable } from '../utils/subscribeable';
 
 export type NodeDefinition<Contetnt = any> = NodeModel<Contetnt> & NodeParameters;
-
 export type Element = Node | Link;
 export type ElementModel = NodeModel | LinkModel;
-export type ElementDefinition = NodeDefinition | LinkModel;
-
-function isNodeModel(elementModel: ElementModel): elementModel is NodeModel {
-    return !isLinkModel(elementModel);
-}
-
-function isLinkModel(elementModel: ElementModel): elementModel is LinkModel {
-    return (elementModel as any).sourceId !== undefined &&
-        (elementModel as any).targetId !== undefined;
-}
 
 export interface GraphModelEvents {
     'add:elements': Element[];
     'remove:elements': Element[];
     'update:element': Element;
-    'update:element:model': Element;
 }
 
 export interface ImmutableMap<K, V> {
@@ -49,20 +37,43 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         return this._links;
     }
 
-    public getElementById(id: string) {
-        return this.nodes.get(id) || this.links.get(id);
+    public getNodeById(id: string) {
+        return this.nodes.get(id);
     }
 
-    public addElements(models: ElementDefinition[]) {
-        const newElements: Element[] = [];
-        for (const model of models) {
-            if (isNodeModel(model) && !this._nodes.has(model.id)) {
+    public getLinkById(id: string) {
+        return this.links.get(id);
+    }
+
+    public addNodes(nodes: NodeDefinition[]) {
+        const newNodes: Node[] = [];
+        for (const model of nodes) {
+            if (!this._nodes.has(model.id)) {
                 const parameters: NodeParameters = model;
                 const node = new Node(model, parameters);
                 this._nodes.set(model.id, node);
                 this.subscribeOnNode(node);
-                newElements.push(node);
-            } else if (isLinkModel(model) && !this._links.has(getLinkId(model))) {
+                newNodes.push(node);
+            }
+        }
+        if (newNodes.length > 0) {
+            this.trigger('add:elements', newNodes);
+        }
+    }
+
+    public addLinks(models: LinkModel[]) {
+        const newLinks: Link[] = [];
+        for (const model of models) {
+            if (!this._links.has(model.id)) {
+                const endpointsAreNotExists = !(
+                    this._nodes.has(model.sourceId) &&
+                    this._nodes.has(model.targetId)
+                );
+                if (endpointsAreNotExists) {
+                    throw new Error(`Endpoint ${this._nodes.has(model.sourceId) ?
+                        model.targetId : model.sourceId
+                    } is not exists!`);
+                }
                 const linkParams = {
                     source: this._nodes.get(model.sourceId),
                     target: this._nodes.get(model.targetId),
@@ -74,12 +85,12 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
                     link.source.outgoingLinks.add(link);
                     link.target.incomingLinks.add(link);
                     this.subscribeOnLink(link);
-                    newElements.push(link);
+                    newLinks.push(link);
                 }
             }
         }
-        if (newElements.length > 0) {
-            this.trigger('add:elements', newElements);
+        if (newLinks.length > 0) {
+            this.trigger('add:elements', newLinks);
         }
     }
 
@@ -87,7 +98,6 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         for (const definition of definitions) {
             const node = this._nodes.get(definition.id);
             node.setData(definition.data);
-            node.setTypes(definition.types);
             node.setPosition(definition.position);
             if (definition.size) {
                 node.setSize(definition.size);
@@ -97,9 +107,8 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
 
     public updateLinks(models: LinkModel[]) {
         for (const model of models) {
-            const link = this._links.get(getLinkId(model));
-            link.setTypes(model.types);
-            link.setLabel(model.label);
+            const link = this._links.get(model.id);
+            link.setData(model.data);
         }
     }
 
@@ -135,9 +144,9 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         this.trigger('update:element', link);
     }
 
-    public removeNodes(nodes: NodeModel[]) {
+    public removeNodes(nodes: Node[]) {
         const nodesToDelete: Node[] = [];
-        const linksToDelete: LinkModel[] = [];
+        const linksToDelete: Link[] = [];
         for (const {id} of nodes) {
             if (this._nodes.has(id)) {
                 const n = this._nodes.get(id);
@@ -145,10 +154,10 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
 
                 nodesToDelete.push(n);
                 n.incomingLinks.forEach(l => {
-                    linksToDelete.push(l.model);
+                    linksToDelete.push(l);
                 });
                 n.outgoingLinks.forEach(l => {
-                    linksToDelete.push(l.model);
+                    linksToDelete.push(l);
                 });
             }
         }
@@ -159,10 +168,10 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         this.trigger('remove:elements', nodesToDelete);
     }
 
-    public removeLinks(links: LinkModel[]) {
+    public removeLinks(links: Link[]) {
         const deletedLinks: Link[] = [];
         for (const link of links) {
-            const id = getLinkId(link);
+            const id = link.id;
             if (this._links.has(id)) {
                 const l = this._links.get(id);
                 this.unsubscribeFromElement(l);
@@ -176,23 +185,5 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
             }
         }
         this.trigger('remove:elements', deletedLinks);
-    }
-
-    public removeElements(models: ElementModel[]) {
-        const nodesToDelete: NodeModel[] = [];
-        const linksToDelete: LinkModel[] = [];
-        for (const model of models) {
-            if (isNodeModel(model)) {
-                nodesToDelete.push(model);
-            } else if (isLinkModel(model)) {
-                linksToDelete.push(model);
-            }
-        }
-        if (linksToDelete.length > 0) {
-            this.removeLinks(linksToDelete);
-        }
-        if (nodesToDelete.length > 0) {
-            this.removeNodes(nodesToDelete);
-        }
     }
 }

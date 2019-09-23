@@ -49,11 +49,8 @@ export class LinkView implements DiagramElementView {
 
         // Overlay
         this.overlayAnchor = new LinkOverlayAnchor(this.model, this);
-        if (this.model.label) {
-            this.overlayAnchor.attachOverlay({
-                overlay: enrichOverlay(DEFAULT_LINK_OVERLAY, {label: this.model.label}),
-                position: 'c',
-            });
+        if (this.model.data) {
+            this.overlayAnchor.setOverlay(enrichOverlay(DEFAULT_LINK_OVERLAY, this.model.data), 'c');
         }
 
         this.update();

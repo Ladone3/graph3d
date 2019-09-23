@@ -1,12 +1,16 @@
-import { NodeWidget } from './nodeWidget';
+import { NodeWidget, NodeWidgetParameters } from './nodeWidget';
 import { MouseHandler } from '../../utils/mouseHandler';
-import { WidgetParameters } from './widget';
 import { Node } from '../node';
+
+export interface ArrowHelperParameters extends NodeWidgetParameters {
+    widgetId: string;
+    mouseHandler: MouseHandler;
+}
 
 export class ArrowHelper extends NodeWidget {
     private mouseHandler: MouseHandler;
 
-    constructor(parameters: WidgetParameters) {
+    constructor(parameters: ArrowHelperParameters) {
         super(parameters);
         this.mouseHandler = parameters.mouseHandler;
 

@@ -1,14 +1,14 @@
 import { Node } from './node';
 import { Subscribable } from '../utils/subscribeable';
-import { isTypesEqual as equalTypes } from '../utils';
+import { generate128BitID } from '../utils';
 
 export const DEFAULT_LINK_ID = 'l3graph-link';
 
-export interface LinkModel {
+export interface LinkModel<LinkContent = any> {
+    id: string;
     sourceId: string;
     targetId: string;
-    label: string;
-    types?: string[];
+    data?: LinkContent;
 }
 
 export interface LinkParameters {
@@ -20,16 +20,13 @@ export interface LinkEvents {
     'force-update': void;
 }
 
-export class Link extends Subscribable<LinkEvents> {
-    get id() {
-        return getLinkId(this._model);
-    }
+export class Link<LinkContent = any> extends Subscribable<LinkEvents> {
     public readonly source: Node;
     public readonly target: Node;
     public modelIsChanged: boolean = false;
 
     constructor(
-        private _model: LinkModel,
+        public readonly model: LinkModel,
         parameters: LinkParameters,
     ) {
         super();
@@ -37,43 +34,20 @@ export class Link extends Subscribable<LinkEvents> {
         this.target = parameters.target;
     }
 
-    get types() {
-        return this._model.types;
-    }
-    setTypes(types: string[]) {
-        if (!equalTypes(this._model.types, types)) {
-            this._model = {
-                ...this._model,
-                types,
-            };
-            this.modelIsChanged = true;
-            this.forceUpdate();
-        }
+    get id() {
+        return this.model.id;
     }
 
-    get label() {
-        return this._model.label;
+    get data() {
+        return this.model.data;
     }
-    setLabel(label: string) {
-        if (this._model.label !== label) {
-            this._model.label = label;
-            this.trigger('force-update');
-        }
-    }
-
-    get model(): LinkModel {
-        return this._model;
+    setData(data: LinkContent) {
+        this.model.data = data;
+        this.modelIsChanged = true;
+        this.forceUpdate();
     }
 
     forceUpdate() {
         this.trigger('force-update');
     }
-}
-
-export function getLinkId(model: LinkModel): string {
-    return `Link~From(${
-        model.sourceId
-    })With(${model.types.join('/')})To(${
-        model.targetId
-    })`;
 }

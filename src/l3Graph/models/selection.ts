@@ -30,6 +30,7 @@ export class Selection extends Subscribable<SelectionEvents> {
         });
     }
 
+    // todo: make better check of changes
     setSelection(elements: ReadonlySet<Element>) {
         elements = elements || new Set<Element>();
         if (this._elements !== elements) {

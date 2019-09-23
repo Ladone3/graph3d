@@ -1,27 +1,35 @@
 import * as THREE from 'three';
-import * as ReactDOM from 'react-dom';
-import * as React from 'react';
 
-import { DiagramWidgetView, DiagramWidgetViewParameters } from '.';
-import { ReactNodeWidget } from '../models/widgets/reactNodeWidget';
-import { OverlayAnchor, MockOverlayAnchor, PositionedReactOverlay } from './overlayAnchor';
+import { DiagramWidgetView } from '.';
+import { FocusNodeWidget } from '../models/widgets/focusNodeWidget';
+import { OverlayAnchor, MockOverlayAnchor, OverlayPosition } from './overlayAnchor';
+import { Node } from '../models/node';
+import { GraphView } from './graphView';
+import { ReactOverlay } from '../customisation';
 
-export interface ReactNodeWidgetViewParameters extends DiagramWidgetViewParameters {
-    model: ReactNodeWidget;
+export interface ReactNodeWidgetViewParameters {
+    graphView: GraphView;
+    model: FocusNodeWidget;
+    overlay: ReactOverlay;
+    position?: OverlayPosition;
 }
 
-export class ReactNodeWidgetView extends DiagramWidgetView {
-    public readonly model: ReactNodeWidget;
+export class ReactNodeWidgetView implements DiagramWidgetView {
+    public readonly model: FocusNodeWidget;
     public readonly mesh: THREE.Group;
     public readonly overlayAnchor: OverlayAnchor;
 
     private htmlOverlay: HTMLElement;
-    private curOverlay: PositionedReactOverlay;
+    private overlay: ReactOverlay;
+    private position: OverlayPosition;
+    private graphView: GraphView;
 
     constructor(parameters: ReactNodeWidgetViewParameters) {
-        super(parameters);
         this.model = parameters.model;
+        this.position = parameters.position || 'c';
         this.mesh = null;
+        this.graphView = parameters.graphView;
+        this.overlay = parameters.overlay;
 
         this.htmlOverlay = document.createElement('DIV');
         this.overlayAnchor = new MockOverlayAnchor();
@@ -37,32 +45,28 @@ export class ReactNodeWidgetView extends DiagramWidgetView {
         if (!this.model.isFocusNodeChanged) {
             return;
         }
-        if (this.model.prevFocusNode && this.curOverlay) {
-            const prevView = this.graphView.views.get(
-                this.model.prevFocusNode.id,
-            );
-            if (prevView) {
-                const prevAnchor = this.graphView.views.get(
-                    this.model.prevFocusNode.id,
-                ).overlayAnchor;
-                prevAnchor.removeOverlay(this.curOverlay);
-            }
-        }
+        this.clearNode(this.model.prevFocusNode);
 
         if (this.model.focusNode) {
-            const curAnchor = this.graphView.views.get(
-                this.model.focusNode.id,
-            ).overlayAnchor;
-            if (!this.curOverlay || this.curOverlay && !curAnchor.hasOverlay(this.curOverlay)) {
-                const positionedOverlay: PositionedReactOverlay = {
-                    position: 'w',
-                    overlay: this.model.overlay,
-                };
-                curAnchor.attachOverlay(positionedOverlay);
-                this.curOverlay = positionedOverlay;
+            const curAnchor = this.graphView.views.get(this.model.focusNode.id).overlayAnchor;
+            if (!curAnchor.hasOverlay(this.overlay.id)) {
+                curAnchor.setOverlay(this.overlay, this.position);
             }
-        } else {
-            this.curOverlay = undefined;
+        }
+    }
+
+    onRemove() {
+        this.clearNode(this.model.focusNode);
+        this.clearNode(this.model.prevFocusNode);
+    }
+
+    private clearNode(node: Node) {
+        if (node && this.overlay) {
+            const view = this.graphView.views.get(node.id);
+            if (view) {
+                const anchor = this.graphView.views.get(node.id).overlayAnchor;
+                anchor.removeOverlay(this.overlay.id);
+            }
         }
     }
 }

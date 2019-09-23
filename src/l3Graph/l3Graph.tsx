@@ -3,19 +3,20 @@ import { ViewController, ViewControllersSet } from './controllers/viewController
 import { DEFAULT_VIEW_CONTROLLERS_SET } from './controllers/defaultViewControllers';
 import { KeyHandler } from './utils/keyHandler';
 import { DefaultEditor } from './editors/defaultEditor';
-import { DiagramModel, Graph } from './models/diagramModel';
+import { DiagramModel } from './models/diagramModel';
 import { DiagramView, ViewOptions } from './views/diagramView';
 import { Vector2D, Vector3D } from './models/primitives';
 import { applyForceLayout3d, applyRandomLayout } from './layout/layouts';
 import { MouseHandler } from './utils/mouseHandler';
-import { DEFAULT_WIDGET_FABRICS } from './defaultWidgetsSet';
-import { WidgetFabric } from './models/widgets';
+import { DEFAULT_MESH_WIDGET_SET } from './defaultWidgetsSet';
+import { WidgetFactory } from './models/widgets';
+import { Node } from './models/node';
+import { OverlayPosition } from './views/overlayAnchor';
+import { ReactOverlay } from './customisation';
 
 export interface L3GraphProps {
-    graph: Graph;
     viewOptions?: ViewOptions;
     viewControllers?: ViewControllersSet;
-    widgetFabrics?: WidgetFabric[];
     onComponentMount?: (graph: L3Graph) => void;
     onComponentUnmount?: (graph: L3Graph) => void;
 }
@@ -31,19 +32,11 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
     private mouseHandler: MouseHandler;
     private viewControllers: ViewController[] = [];
     private defaultEditor: DefaultEditor;
-    private widgetFabrics: WidgetFabric[];
 
     constructor(props: L3GraphProps) {
         super(props);
         this.diagramModel = new DiagramModel();
         this.state = {};
-        this.diagramModel.updateGraph({...this.props.graph});
-        this.widgetFabrics = props.widgetFabrics || DEFAULT_WIDGET_FABRICS;
-    }
-
-    componentDidUpdate(props: L3GraphProps) {
-        const {graph} = this.props;
-        this.diagramModel.updateGraph(graph);
     }
 
     get model() {
@@ -60,6 +53,20 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         }
         viewController.switchOn();
         this.setState({viewController});
+    }
+
+    attachOverlayToNode(node: Node, overlay: ReactOverlay, position: OverlayPosition) {
+        const nodeView = this.view.graphView.views.get(node.id);
+        if (nodeView) {
+            nodeView.overlayAnchor.setOverlay(overlay, position);
+        }
+    }
+
+    removeOverlayFromNode(node: Node, overlayId: string) {
+        const nodeView = this.view.graphView.views.get(node.id);
+        if (nodeView) {
+            nodeView.overlayAnchor.removeOverlay(overlayId);
+        }
     }
 
     componentDidMount() {
@@ -100,8 +107,8 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
             this.mouseHandler,
             this.keyHandler,
         );
-        for (const widgetResolver of this.widgetFabrics) {
-            this.registerWidget(widgetResolver);
+        for (const widgetFactory of DEFAULT_MESH_WIDGET_SET) {
+            this.registerWidget(widgetFactory);
         }
         this.forceUpdate();
     }
@@ -114,14 +121,21 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         this.keyHandler.switchOff();
     }
 
-    public registerWidget(widgetResolver: WidgetFabric) {
-        const widgetModel = widgetResolver.model({
+    public registerWidget(widgetResolver: WidgetFactory) {
+        const widgetModel = widgetResolver.getModel({
             diagramModel: this.diagramModel,
             keyHandler: this.keyHandler,
             mouseHandler: this.mouseHandler,
         });
-        this.view.widgetsView.registerView(widgetModel.widgetId, widgetResolver.view);
-        this.diagramModel.widgets.registerWidget(widgetModel);
+        this.view.widgetsView.registerViewResolver(widgetModel.widgetId, widgetResolver.getView);
+        this.diagramModel.widgetRegistry.registerWidget(widgetModel);
+    }
+
+    public removeWidget(widgetId: string) {
+        const widget = this.model.widgetRegistry.widgets.get(widgetId);
+        if (widget) {
+            this.model.widgetRegistry.removeWidget(widget);
+        }
     }
 
     render() {

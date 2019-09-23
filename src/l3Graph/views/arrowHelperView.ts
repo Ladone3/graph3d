@@ -1,15 +1,15 @@
 import * as THREE from 'three';
-import { DiagramWidgetView, DiagramWidgetViewParameters } from './viewInterface';
+import { DiagramWidgetView } from './viewInterface';
 import { ArrowHelper } from '../models/widgets';
 import { OverlayAnchor, MockOverlayAnchor } from './overlayAnchor';
 
 const LINES_LENGTH = 100;
 
-export interface ArrowHelperViewParameters extends DiagramWidgetViewParameters {
+export interface ArrowHelperViewParameters {
     model: ArrowHelper;
 }
 
-export class ArrowHelperView extends DiagramWidgetView {
+export class ArrowHelperView implements DiagramWidgetView {
     public readonly model: ArrowHelper;
     public readonly mesh: THREE.Group;
     public readonly overlayAnchor: OverlayAnchor;
@@ -17,7 +17,6 @@ export class ArrowHelperView extends DiagramWidgetView {
     private boundingBox: THREE.Box3;
 
     constructor(parameters: ArrowHelperViewParameters) {
-        super(parameters);
         this.model = parameters.model;
 
         this.mesh = new THREE.Group();

@@ -19,8 +19,8 @@ class DefaultNodeOverlayClass extends React.Component<{label: string}> {
     }
 }
 
-export const DEFAULT_LINK_OVERLAY: ReactOverlay = {value: <DefaultLinkOverlayClass label=''/>};
-export const DEFAULT_NODE_OVERLAY: ReactOverlay = {value: <DefaultNodeOverlayClass label=''/>};
+export const DEFAULT_LINK_OVERLAY: ReactOverlay = {id: 'link-overlay', value: <DefaultLinkOverlayClass label=''/>};
+export const DEFAULT_NODE_OVERLAY: ReactOverlay = {id: 'node-overlay', value: <DefaultNodeOverlayClass label=''/>};
 
 export function createContextProvider(context: any): React.ComponentClass {
     class ContextProvider extends React.Component {
@@ -49,7 +49,7 @@ export function enrichOverlay<Data>(
     };
 
     return {
-        context: pooreOverlay.context,
+        ...pooreOverlay,
         value: React.cloneElement(pooreOverlay.value, overlayProps),
     };
 }

@@ -8,17 +8,22 @@ export interface WidgetsModelEvents {
 }
 
 export class WidgetsModel extends Subscribable<WidgetsModelEvents> {
-    public widgets: Map<string, Widget> = new Map();
+    private widgetModels: Map<string, Widget> = new Map();
+
+    get widgets(): ReadonlyMap<string, Widget> {
+        return this.widgetModels;
+    }
 
     public registerWidget(widget: Widget) {
         this.subscribeOnWidget(widget);
-        this.widgets.set(widget.widgetId, widget);
+        this.widgetModels.set(widget.widgetId, widget);
         this.trigger('add:widget', widget);
     }
 
     public removeWidget(widget: Widget) {
         this.unsubscribeFromElement(widget);
-        this.widgets.delete(widget.widgetId);
+        this.widgetModels.delete(widget.widgetId);
+        if (widget.onRemove) { widget.onRemove(); }
         this.trigger('remove:widget', widget);
     }
 

@@ -1,6 +1,5 @@
 import { Vector3D } from './primitives';
 import { Link } from './link';
-import { isTypesEqual } from '../utils';
 import { Point, PointEvents } from './point';
 
 const DEFAULT_NODE_PARAMETERS: NodeParameters = {
@@ -12,7 +11,6 @@ export type Size = Vector3D & { placeholder?: boolean };
 
 export interface NodeModel<NodeContent = any> {
     id: string;
-    types: string[];
     data?: NodeContent;
 }
 
@@ -43,36 +41,15 @@ export class Node<NodeContent = any> extends Point<NodeEvents<NodeContent>> {
         this._size = parameters.size || DEFAULT_NODE_PARAMETERS.size;
     }
 
-    get types() {
-        return this._model.types;
-    }
-    setTypes(types: string[]) {
-        this.setModel({
-            ...this.model,
-            types,
-        });
-    }
-
     get data() {
         return this._model.data;
     }
     setData(data: NodeContent) {
-        this.setModel({
-            ...this.model,
-            data,
-        });
+        this._model.data = data;
+        this.modelIsChanged = true;
+        this.forceUpdate();
     }
 
-    setModel(model: NodeModel<NodeContent>) {
-        const typesAreChanged = !isTypesEqual(this._model.types, model.types);
-        const dataAreChanged = this._model.data !== model.data;
-        const equalIds = this._model.id === model.id;
-        if (equalIds && (typesAreChanged || dataAreChanged)) {
-            this._model = model;
-            this.modelIsChanged = true;
-            this.forceUpdate();
-        }
-    }
     get model(): NodeModel<NodeContent> {
         return this._model;
     }

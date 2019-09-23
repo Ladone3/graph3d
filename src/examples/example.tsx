@@ -7,7 +7,6 @@ import {
     NodeViewTemplate,
     ReactNodeWidget,
     ReactNodeWidgetView,
-    Graph,
     WidgetViewContext, WidgetModelContext,
     MeshKind,
 } from '../index';
@@ -42,8 +41,8 @@ class WidgetSprite extends React.Component<NodeData> {
     }
 }
 
-const NODE_OVERLAY = {value: <NodeSprite label=''/>};
-const WIDGET_OVERLAY = {value: <WidgetSprite label=''/>};
+const NODE_OVERLAY = {id: 'node-overlay', value: <NodeSprite label=''/>};
+const WIDGET_OVERLAY = {id: 'test-widget-overlay', value: <WidgetSprite label=''/>};
 const rootHtml = document.getElementById('rootHtml');
 
 const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
@@ -90,11 +89,10 @@ const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    const graphElements: Graph = generateData(10);
     ReactDOM.render(React.createElement(L3Graph, {
         viewOptions: {
-            nodeTemplateProvider: (types: string[]) => {
-                if (types.indexOf('l3graph-node-custome') !== -1) {
+            nodeTemplateProvider: (data: {label: string; types: string[]}) => {
+                if (data.types.indexOf('l3graph-node-custome') !== -1) {
                     return CUSTOM_NODE_TEMPLATE_2;
                 } else {
                     return CUSTOM_NODE_TEMPLATE_1;
@@ -105,21 +103,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 thickness: 2,
             }),
         },
-        graph: graphElements,
         onComponentMount: onComponentMount,
     }), rootHtml);
 
     function onComponentMount(l3graph: L3Graph) {
+        const graphElements = generateData(10);
+        l3graph.model.graph.addNodes(graphElements.nodes);
+        l3graph.model.graph.addLinks(graphElements.links);
         applyForceLayout3d(l3graph.model.graph, 30, 100);
+
         l3graph.registerWidget({
-            model: (context: WidgetModelContext) => new ReactNodeWidget({
+            getModel: (context: WidgetModelContext) => new ReactNodeWidget({
                 ...context,
                 widgetId: 'l3graph-react-node-widget',
-                overlay: WIDGET_OVERLAY,
-            }),
-            view: (context: WidgetViewContext) => new ReactNodeWidgetView({
+            }) as any,
+            getView: (context: WidgetViewContext) => new ReactNodeWidgetView({
                 model: context.widget as any,
                 graphView: context.graphView,
+                position: 'w',
+                overlay: WIDGET_OVERLAY,
             }),
         });
     }

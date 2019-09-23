@@ -11,10 +11,12 @@ export interface WidgetsViewProps {
 }
 
 export class WidgetsView {
+    private views: Map<string, DiagramWidgetView>;
+    private viewRegistry: Map<string, WidgetViewResolver>;
+
     graphView: GraphView;
     camera: THREE.PerspectiveCamera;
     scene: THREE.Scene;
-    views: Map<string, View>;
 
     renderer: THREE.WebGLRenderer;
     overlayRenderer: THREE.CSS3DRenderer;
@@ -22,22 +24,21 @@ export class WidgetsView {
     meshHtmlContainer: HTMLElement;
     overlayHtmlContainer: HTMLElement;
 
-    private viewRegistry: Map<string, WidgetViewResolver>;
-
     constructor(props: WidgetsViewProps) {
         this.views = new Map();
         this.graphView = props.graphView;
         this.viewRegistry = new Map();
         this.widgetsModel = props.widgetsModel;
         this.scene = props.scene;
-        this.widgetsModel.widgets.forEach(widget => this.addWidgetView(widget));
+        this.widgetsModel.widgets.forEach(widget => this.registerWidgetViewForModel(widget));
     }
 
-    public registerView(widgetId: string, viewResolver: WidgetViewResolver) {
+    public registerViewResolver(widgetId: string, viewResolver: WidgetViewResolver) {
         this.viewRegistry.set(widgetId, viewResolver);
     }
 
-    public addWidgetView(widget: Widget) {
+    // todo - rename it
+    public registerWidgetViewForModel(widget: Widget) {
         const widgetViewExists = this.views.get(widget.widgetId);
         if (widgetViewExists) {
             return; // We already have view for this widget
@@ -56,7 +57,8 @@ export class WidgetsView {
         }
     }
 
-    public removeWidgetView(widget: Widget) {
+    // todo: Make methods like this more protected - nobody exept DiagramView should use them
+    public removeWidgetViewOfModel(widget: Widget) {
         const view = this.views.get(widget.widgetId);
         if (view) {
             if (view.mesh) {
@@ -66,35 +68,32 @@ export class WidgetsView {
             if (view.overlayAnchor.isVisible()) {
                 this.scene.remove(view.overlayAnchor.getSprite());
             }
+            if (view.onRemove) { view.onRemove(); }
         }
         this.views.delete(widget.widgetId);
     }
 
     private findViewForWidget(widget: Widget): DiagramWidgetView | undefined {
-        // if (model.widgetId === 'l3graph-arrow-helper-widget') {
-        //     return new ArrowHelperView(model as ArrowHelper);
-        // } else if (model.widgetId === 'l3graph-selection-widget') {
-        //     return new SelectionView(model as SelectionWidget);
-        // } else {
-        //     return undefined;
-        // }
         return this.viewRegistry.get(widget.widgetId)({
             widget,
             graphView: this.graphView,
         });
     }
 
-    update(specificIds?: string[]) {
+    // Think about improved update of the components to support react continueus render
+    update(specificIds: string[]) {
+        const updateView = (widgetId: string) => {
+            const view = this.views.get(widgetId);
+            if (view) { view.update(); }
+        };
         if (specificIds) {
             for (const id of specificIds) {
-                const view = this.views.get(id);
-                if (view) { // View is added asynchronously
-                    view.update();
-                }
+                updateView(id);
             }
         } else {
+            specificIds = [];
             this.views.forEach(view => {
-                view.update();
+                updateView(view.model.widgetId);
             });
         }
     }

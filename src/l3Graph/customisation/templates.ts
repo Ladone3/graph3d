@@ -3,6 +3,7 @@ import * as _THREE from 'three';
 import { L3Mesh } from './mesh';
 
 export interface ReactOverlay<ReactProps = any> {
+    id: string;
     value: React.ReactElement<ReactProps>;
     context?: any;
 }
@@ -18,5 +19,5 @@ export interface LinkViewTemplate {
     overlay?: ReactOverlay<{label: string}>;
 }
 
-export type NodeTemplateProvider = (types: string[]) => NodeViewTemplate;
-export type LinkTemplateProvider = (types: string[]) => LinkViewTemplate;
+export type NodeTemplateProvider<Content = any> = (data: Content) => NodeViewTemplate;
+export type LinkTemplateProvider<Content = any> = (data: Content) => LinkViewTemplate;

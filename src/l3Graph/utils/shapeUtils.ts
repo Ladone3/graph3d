@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { MeshKind, MeshPrimitive } from '../customisation';
+import { MeshKind, MeshPrimitive, MeshObj } from '../customisation';
 
-export function getPrimitive(primitive: MeshPrimitive): THREE.Mesh {
+export function preparePrimitive(primitive: MeshPrimitive): THREE.Mesh {
     if (primitive.type !== MeshKind.Primitive) {
         throw new Error('Not a prmitive mesh was passed into function!');
     }
@@ -41,6 +41,19 @@ export function getPrimitive(primitive: MeshPrimitive): THREE.Mesh {
     mesh.position.x = 0;
     mesh.position.y = 0;
     mesh.position.z = 0;
+
+    return mesh;
+}
+
+export function prepareMesh(meshObj: MeshObj): THREE.Group {
+    const color = meshObj.color || Math.random() * 0xffffff;
+    const loader = new THREE.OBJLoader();
+    const mesh = loader.parse(meshObj.markup);
+
+    const material = new THREE.MeshPhongMaterial({color});
+    mesh.traverse(child => {
+        if (child instanceof THREE.Mesh) { child.material = material; }
+    });
 
     return mesh;
 }

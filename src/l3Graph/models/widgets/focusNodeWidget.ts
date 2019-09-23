@@ -1,19 +1,14 @@
-import { NodeWidget } from './nodeWidget';
-import { ReactOverlay } from '../../customisation';
+import { NodeWidget, NodeWidgetParameters } from './nodeWidget';
 import { Node } from '../node';
-import { WidgetParameters } from './widget';
+import { DiagramModel } from '../diagramModel';
 
-export interface ReactNodeWidgetParameters extends WidgetParameters {
-    overlay: ReactOverlay;
+export interface FocusNodeWidgetParameters extends NodeWidgetParameters {
+    diagramModel: DiagramModel;
 }
 
-export class ReactNodeWidget extends NodeWidget {
-    public readonly overlay: ReactOverlay;
-
-    constructor(parameters: ReactNodeWidgetParameters) {
+export class FocusNodeWidget extends NodeWidget {
+    constructor(parameters: FocusNodeWidgetParameters) {
         super(parameters);
-
-        this.overlay = parameters.overlay;
 
         const selection = parameters.diagramModel.selection;
         selection.on('change', () => {

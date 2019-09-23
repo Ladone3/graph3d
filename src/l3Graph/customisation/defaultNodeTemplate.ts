@@ -10,6 +10,6 @@ export const DEFAULT_NODE_TEMPLATE: NodeViewTemplate<{label: string}> = {
     overlay: DEFAULT_NODE_OVERLAY,
 };
 
-export const DEFAULT_NODE_TEMPLATE_PROVIDER: NodeTemplateProvider = (types: string[]) => {
+export const DEFAULT_NODE_TEMPLATE_PROVIDER: NodeTemplateProvider<{label: string}> = (data: {label: string}) => {
     return DEFAULT_NODE_TEMPLATE;
 };
