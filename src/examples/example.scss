@@ -13,6 +13,11 @@
     user-select: none;
     border: 1px solid black;
     padding: 20px;
+
+    opacity: 0.4;
+    &:hover {
+        opacity: 1;
+    }
 }
 
 .l3graph-widget-overlay {

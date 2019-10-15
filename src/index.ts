@@ -1,4 +1,3 @@
-require('./js/WebVR.js');
 require('../styles/main.scss');
 require('./js/CSS3DRenderer.js');
 require('./js/LoaderSupport.js');
