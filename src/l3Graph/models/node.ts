@@ -2,9 +2,10 @@ import { Vector3D } from './primitives';
 import { Link } from './link';
 import { Point, PointEvents } from './point';
 
+const SIZE_VALUE = 40;
 const DEFAULT_NODE_PARAMETERS: NodeParameters = {
     position: { x: 0, y: 0, z: 0 },
-    size: { x: 15, y: 15, z: 15, placeholder: true },
+    size: { x: SIZE_VALUE, y: SIZE_VALUE, z: SIZE_VALUE, placeholder: true },
 };
 
 export type Size = Vector3D & { placeholder?: boolean };

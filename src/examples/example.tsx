@@ -48,8 +48,8 @@ const rootHtml = document.getElementById('rootHtml');
 const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
     mesh: () => {
         const shapeNumber = Math.round(Math.random() * 8);
-        const randomSize = 10 + Math.round(Math.random() * 20);
-        const size = {x: randomSize, y: randomSize, z: randomSize};
+        // const randomSize = 10 + Math.round(Math.random() * 20);
+        const size: any = undefined; // {x: randomSize, y: randomSize, z: randomSize};
         if (shapeNumber === 0) {
             return {
                 type: MeshKind.Obj,
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const graphElements = generateData(10);
         l3graph.model.graph.addNodes(graphElements.nodes);
         l3graph.model.graph.addLinks(graphElements.links);
-        applyForceLayout3d(l3graph.model.graph, 30, 100);
+        applyForceLayout3d(l3graph.model.graph, 30, 200);
 
         l3graph.registerWidget({
             getModel: (context: WidgetModelContext) => new ReactNodeWidget({

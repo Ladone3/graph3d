@@ -175,7 +175,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                 <button
                     id='l3graph-force-layout-button'
                     title='Force layaout'
-                    onClick={() => { applyForceLayout3d(this.diagramModel.graph, 30, 150); }}>
+                    onClick={() => { applyForceLayout3d(this.diagramModel.graph, 30, 200); }}>
                     FL
                 </button>
                 <button
