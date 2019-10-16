@@ -1,6 +1,6 @@
 import { LinkViewTemplate, LinkTemplateProvider } from '.';
 import { DEFAULT_LINK_OVERLAY } from './defaultOverlay';
-import { LinkModel } from '../models/link';
+import { LinkModel } from '../models/graph/link';
 
 export const DEFAULT_LINK_TEMPLATE: LinkViewTemplate = {
     color: 'gray',

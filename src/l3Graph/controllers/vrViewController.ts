@@ -1,9 +1,8 @@
-import * as THREE from 'three';
 import { DiagramView } from '../views/diagramView';
 import { MouseHandler } from '../utils/mouseHandler';
 import { KeyHandler, KEY_CODES, EventObject } from '../utils';
 import { ViewController } from './viewController';
-import { VrManager } from '../utils/webVr';
+import { VrManager } from '../vrUtils/vrManager';
 
 export class VrViewController implements ViewController {
     public readonly id = 'vr-view-controller';
@@ -17,13 +16,10 @@ export class VrViewController implements ViewController {
         protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
     ) {
-        this.vrManager = new VrManager(this.view.renderer, () => {
-            this.view.renderer.render(this.view.scene, this.view.camera);
-        });
+        this.vrManager = new VrManager(this.view);
         this.connectionPromise = this.vrManager.connect();
     }
 
-    refreshCamera() { /* nothing */ }
     focusOn()  { /* nothing */ }
 
     switchOn() {
@@ -50,15 +46,21 @@ export class VrViewController implements ViewController {
 
     private subscribe() {
         this.keyHandler.on('keyPressed', this.onKeyPressed);
+        this.vrManager.on('exit:vr:mode', this.onAutoExit);
     }
 
     private unsubscribe() {
         this.keyHandler.unsubscribe(this.onKeyPressed);
+        this.vrManager.unsubscribe(this.onAutoExit);
     }
 
     private onKeyPressed = (e: EventObject<'keyPressed', Set<number>>) =>  {
         if (e.data.has(KEY_CODES.ESCAPE)) {
             this.switchOff();
         }
+    }
+
+    private onAutoExit = () =>  {
+        this.switchOff();
     }
 }

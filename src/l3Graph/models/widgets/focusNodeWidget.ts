@@ -1,5 +1,5 @@
 import { NodeWidget, NodeWidgetParameters } from './nodeWidget';
-import { Node } from '../node';
+import { Node } from '../graph/node';
 import { DiagramModel } from '../diagramModel';
 
 export interface FocusNodeWidgetParameters extends NodeWidgetParameters {

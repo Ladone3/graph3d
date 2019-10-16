@@ -1,4 +1,4 @@
-import { Node } from '../node';
+import { Node } from '../graph/node';
 import { WidgetEvents, Widget } from './widget';
 
 export interface NodeWidgetEvents extends WidgetEvents {

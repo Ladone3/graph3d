@@ -1,10 +1,10 @@
 import { vector3DToTreeVector3, KeyHandler, KEY_CODES } from '../utils';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
-import { Element, ElementModel } from '../models/graphModel';
+import { Element, ElementModel } from '../models/graph/graphModel';
 import { MouseHandler } from '../utils/mouseHandler';
-import { Link } from '../models/link';
-import { Node } from '../models/node';
+import { Link } from '../models/graph/link';
+import { Node } from '../models/graph/node';
 
 const WHEEL_STEP = 100;
 const MIN_DISTANCE_TO_CAMERA = 10;

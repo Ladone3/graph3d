@@ -1,9 +1,9 @@
-import { GraphModel, ImmutableMap, NodeDefinition, ElementModel } from './graphModel';
+import { GraphModel, ImmutableMap, NodeDefinition, ElementModel } from './graph/graphModel';
 import { Subscribable, EventObject } from '../utils/subscribeable';
-import { Node } from '../models/node';
-import { Link } from '../models/link';
+import { Node } from './graph/node';
+import { Link } from './graph/link';
 import { WidgetsModel } from './widgets/widgetsModel';
-import { Selection } from './selection';
+import { Selection } from './widgets/selection';
 
 export interface DiagramModelEvents {
     'syncupdate': {

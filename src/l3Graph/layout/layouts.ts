@@ -1,10 +1,10 @@
 import * as cola from 'webcola';
 
-import { Link } from '../models/link';
-import { Node } from '../models/node';
-import { GraphModel } from '../models/graphModel';
+import { Link } from '../models/graph/link';
+import { Node } from '../models/graph/node';
+import { GraphModel } from '../models/graph/graphModel';
 import { calcBounds } from '../utils';
-import { Vector3D } from '../models/primitives';
+import { Vector3D } from '../models/structures';
 
 export const PREFFERED_LINK_LENGTH = 75;
 

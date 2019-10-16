@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
-import { Size } from '../models/node';
-import { ReactOverlay, createContextProvider, enrichOverlay } from '../customisation';
-import { Vector3D, Box } from '../models/primitives';
+import { Size } from '../../models/graph/node';
+import { ReactOverlay, createContextProvider, enrichOverlay } from '../../customisation';
+import { Vector3D, Box } from '../../models/structures';
 
 export type OverlayPosition = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'c';
 

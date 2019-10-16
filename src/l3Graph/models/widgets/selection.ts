@@ -1,5 +1,5 @@
-import { Subscribable } from '../utils/subscribeable';
-import { Element, GraphModel } from './graphModel';
+import { Subscribable } from '../../utils/subscribeable';
+import { Element, GraphModel } from '../graph/graphModel';
 
 export interface SelectionParameters {
     selection?: Set<Element>;

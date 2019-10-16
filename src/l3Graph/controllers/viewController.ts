@@ -13,7 +13,6 @@ export const BORDER_OPACITY = 100;
 export interface ViewController {
     id: string;
     label: string;
-    refreshCamera: () => void;
     switchOn: () => void;
     switchOff: () => void;
     focusOn: (element: Element) => void;

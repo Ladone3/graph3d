@@ -1,4 +1,4 @@
-import { Vector2D } from '../models/primitives';
+import { Vector2D } from '../models/structures';
 import {
     ViewController,
     ROTATION_DECREASE_SPEED,
@@ -7,17 +7,16 @@ import {
     BORDER_OPACITY,
     ZERO_POSITION,
 } from './viewController';
-import { vector3DToTreeVector3, KEY_CODES, KeyHandler } from '../utils';
+import { vector3DToTreeVector3, KEY_CODES, KeyHandler, EventObject } from '../utils';
 
 import { DiagramView } from '../views/diagramView';
-import { MouseHandler } from '../utils/mouseHandler';
+import { MouseHandler, HandlerDragEvent } from '../utils/mouseHandler';
 
 const WHEEL_SPEED = 100;
 
 export class SphericalViewController implements ViewController {
     readonly id: string;
     public label: string;
-    protected isActive: boolean;
     protected cameraAngle: Vector2D = { x: 0, y: Math.PI / 4 };
     protected cameraDistance: number = 1000;
     protected startAngle: Vector2D;
@@ -30,42 +29,24 @@ export class SphericalViewController implements ViewController {
         this.id = 'spherical-view-controller';
         this.label = 'Spherical View Controller';
         this.updateCameraPosition();
-
-        this.keyHandler.on('keyPressed', e => {
-            if (this.isActive) {
-                this.onKeyPressed(e.data);
-            }
-        });
-        this.mouseHandler.on('paperStartDrag', e => {
-            if (this.isActive) {
-                this.onMouseDragStart();
-                e.data.nativeEvent.stopPropagation();
-            }
-        });
-        this.mouseHandler.on('paperDrag', e => {
-            if (this.isActive) {
-                this.onMouseDrag(e.data.offset);
-                e.data.nativeEvent.stopPropagation();
-            }
-        });
-        this.mouseHandler.on('paperScroll', e => {
-            if (this.isActive) {
-                this.onMouseWheel(e.data);
-                e.data.stopPropagation();
-            }
-        });
     }
 
     switchOn() {
-        this.isActive = true;
+        this.keyHandler.on('keyPressed', this.onKeyPressed);
+        this.mouseHandler.on('paperStartDrag', this.onMouseDragStart);
+        this.mouseHandler.on('paperDrag', this.onMouseDrag);
+        this.mouseHandler.on('paperScroll', this.onMouseWheel);
         this.refreshCamera();
     }
 
     switchOff() {
-        this.isActive = false;
+        this.keyHandler.unsubscribe(this.onKeyPressed);
+        this.mouseHandler.unsubscribe(this.onMouseDragStart);
+        this.mouseHandler.unsubscribe(this.onMouseDrag);
+        this.mouseHandler.unsubscribe(this.onMouseWheel);
     }
 
-    refreshCamera() {
+    private refreshCamera() {
         const {position} = this.view.cameraState;
         const curTreePos = vector3DToTreeVector3(position);
         const distance = curTreePos.distanceTo(ZERO_POSITION);
@@ -126,24 +107,30 @@ export class SphericalViewController implements ViewController {
         return Math.min(Math.max(0.001, distance), this.view.screenParameters.FAR / 2 - BORDER_OPACITY);
     }
 
-    private onMouseDragStart() {
+    private onMouseDragStart = (event: EventObject<"paperStartDrag", HandlerDragEvent>) => {
+        event.data.nativeEvent.stopPropagation();
         this.startAngle = this.cameraAngle;
     }
 
-    private onMouseDrag(offset: Vector2D) {
+    private onMouseDrag = (event: EventObject<"paperDrag", HandlerDragEvent>) => {
+        const offset = event.data.offset;
+        event.data.nativeEvent.stopPropagation();
         this.setCameraAngle({
             x: this.startAngle.x + offset.x / ROTATION_DECREASE_SPEED,
             y: this.startAngle.y + offset.y / (ROTATION_DECREASE_SPEED * 3),
         });
     }
 
-    private onMouseWheel(event: MouseWheelEvent) {
-        const delta = event.deltaY || event.deltaX || event.deltaZ;
+    private onMouseWheel = (event: EventObject<"paperScroll", WheelEvent>) => {
+        const wheelEvent = event.data;
+        event.data.stopPropagation();
+        const delta = wheelEvent.deltaY || wheelEvent.deltaX || wheelEvent.deltaZ;
         const deltaNorma = delta < 0 ? 1 : -1;
         this.zoom(deltaNorma * WHEEL_SPEED);
     }
 
-    private onKeyPressed(keyMap: Set<number>) {
+    private onKeyPressed = (event: EventObject<'keyPressed', Set<number>>) => {
+        const keyMap = event.data;
         const currentAngle = this.cameraAngle;
         let x = 0;
         let y = 0;

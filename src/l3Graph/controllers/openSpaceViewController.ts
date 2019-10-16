@@ -1,4 +1,4 @@
-import { Vector2D, Vector3D } from '../models/primitives';
+import { Vector2D, Vector3D } from '../models/structures';
 import {
     ViewController,
     ROTATION_DECREASE_SPEED,
@@ -7,7 +7,6 @@ import {
     BORDER_OPACITY,
 } from './viewController';
 import {
-    handleDragging,
     normalize,
     vector3DToTreeVector3,
     inverse,
@@ -19,15 +18,15 @@ import {
     normalUp,
     normalDown,
     KeyHandler,
+    EventObject,
 } from '../utils';
 
 import { DiagramView } from '../views/diagramView';
-import { MouseHandler } from '../utils/mouseHandler';
+import { MouseHandler, HandlerDragEvent } from '../utils/mouseHandler';
 
 export class OpenSpaceViewController implements ViewController {
     readonly id: string;
     public label: string;
-    protected isActive: boolean;
     protected cameraAngle: Vector2D = { x: 0, y: 0 };
     protected position: Vector3D = { x: 1000, y: 0, z: 0 };
     protected startAngle: Vector2D;
@@ -40,46 +39,28 @@ export class OpenSpaceViewController implements ViewController {
         this.id = 'open-space-view-controller';
         this.label = 'Open Space View Controller';
         this.updateCameraPosition();
-
-        this.keyHandler.on('keyPressed', e => {
-            if (this.isActive) {
-                this.onKeyPressed(e.data);
-            }
-        });
-        this.mouseHandler.on('paperStartDrag', e => {
-            if (this.isActive) {
-                this.onMouseDragStart();
-                e.data.nativeEvent.stopPropagation();
-            }
-        });
-        this.mouseHandler.on('paperDrag', e => {
-            if (this.isActive) {
-                this.onMouseDrag(e.data.offset);
-                e.data.nativeEvent.stopPropagation();
-            }
-        });
-        this.mouseHandler.on('paperScroll', e => {
-            if (this.isActive) {
-                this.onMouseWheel(e.data);
-                e.data.stopPropagation();
-            }
-        });
     }
 
     switchOn() {
-        this.isActive = true;
+        this.keyHandler.on('keyPressed', this.onKeyPressed);
+        this.mouseHandler.on('paperStartDrag', this.onMouseDragStart);
+        this.mouseHandler.on('paperDrag', this.onMouseDrag);
+        this.mouseHandler.on('paperScroll',  this.onMouseWheel);
         this.refreshCamera();
     }
 
     switchOff() {
-        this.isActive = false;
+        this.keyHandler.unsubscribe(this.onKeyPressed);
+        this.mouseHandler.unsubscribe(this.onMouseDragStart);
+        this.mouseHandler.unsubscribe(this.onMouseDrag);
+        this.mouseHandler.unsubscribe(this.onMouseWheel);
     }
 
     focusOn(element: Element) {
         // not implemented
     }
 
-    refreshCamera() {
+    private refreshCamera() {
         const {position} = this.view.cameraState;
         this.position = position;
 
@@ -130,19 +111,24 @@ export class OpenSpaceViewController implements ViewController {
         }
     }
 
-    private onMouseDragStart() {
+    private onMouseDragStart = (event: EventObject<'paperStartDrag', HandlerDragEvent>) => {
+        event.data.nativeEvent.stopPropagation()
         this.startAngle = this.cameraAngle;
     }
 
-    private onMouseDrag(offset: Vector2D) {
+    private onMouseDrag = (event: EventObject<'paperDrag', HandlerDragEvent>) => {
+        event.data.nativeEvent.stopPropagation();
+        const offset = event.data.offset;
         this.setCameraDirection({
             x: this.startAngle.x + offset.x / ROTATION_DECREASE_SPEED,
             y: this.startAngle.y - offset.y / ROTATION_DECREASE_SPEED,
         });
     }
 
-    private onMouseWheel(event: MouseWheelEvent) {
-        const delta = event.deltaY || event.deltaX || event.deltaZ;
+    private onMouseWheel = (event: EventObject<'paperScroll', WheelEvent>) => {
+        const mouseEvent = event.data;
+        mouseEvent.stopPropagation();
+        const delta = mouseEvent.deltaY || mouseEvent.deltaX || mouseEvent.deltaZ;
         if (delta > 0) {
             this.stepForward();
         } else {
@@ -150,7 +136,8 @@ export class OpenSpaceViewController implements ViewController {
         }
     }
 
-    private onKeyPressed(keyMap: Set<number>) {
+    private onKeyPressed = (event: EventObject<'keyPressed', Set<number>>) => {
+        const keyMap = event.data;
         if (keyMap.has(KEY_CODES.LEFT) && !keyMap.has(KEY_CODES.RIGHT)) {
             this.stepLeft();
         } else if (keyMap.has(KEY_CODES.RIGHT) && !keyMap.has(KEY_CODES.LEFT)) {

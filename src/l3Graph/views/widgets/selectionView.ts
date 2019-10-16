@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { Node } from '../models/node';
-import { SelectionWidget } from '../models/widgets/selectionWidget';
-import { OverlayAnchor, MockOverlayAnchor } from './overlayAnchor';
-import { DiagramWidgetView } from './viewInterface';
+import { Node } from '../../models/graph/node';
+import { SelectionWidget } from '../../models/widgets/selectionWidget';
+import { OverlayAnchor, MockOverlayAnchor } from '../graph/overlayAnchor';
+import { DiagramWidgetView } from '../viewInterface';
 
 const SELECTION_PADDING = 5;
 

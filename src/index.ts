@@ -6,9 +6,9 @@ require('./js/OBJLoader2.js');
 
 export { L3Graph, L3GraphProps } from './l3Graph/l3Graph';
 export { ViewOptions } from './l3Graph/views/diagramView';
-export { Node, NodeModel } from './l3Graph/models/node';
-export { Link, LinkModel } from './l3Graph/models/link';
-export { NodeDefinition } from './l3Graph/models/graphModel';
+export { Node, NodeModel } from './l3Graph/models/graph/node';
+export { Link, LinkModel } from './l3Graph/models/graph/link';
+export { NodeDefinition } from './l3Graph/models/graph/graphModel';
 
 export {
     NodeViewTemplate,
@@ -33,10 +33,11 @@ export * from './l3Graph/utils/colorUtils';
 
 export {
     Widget as MeshWidget,
-    FocusNodeWidget as ReactNodeWidget,
     WidgetModelContext,
     WidgetViewContext,
-} from './l3Graph/models/widgets';
-export { DiagramWidgetView, ReactNodeWidgetView } from './l3Graph/views';
-export { OverlayPosition } from './l3Graph/views/overlayAnchor';
+} from './l3Graph/models/widgets/widget';
+export { FocusNodeWidget }  from './l3Graph/models/widgets/focusNodeWidget';
+export { ReactNodeWidgetView } from './l3Graph/views/widgets/reactNodeWidgetView';
+export { DiagramWidgetView } from './l3Graph/views/viewInterface';
+export { OverlayPosition } from './l3Graph/views/graph/overlayAnchor';
 export * from './l3Graph/defaultWidgetsSet';

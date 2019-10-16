@@ -1,5 +1,5 @@
 import * as _THREE from 'three';
-import { Vector3D } from '../models/primitives';
+import { Vector3D } from '../models/structures';
 
 export enum MeshKind {
     Obj = 'obj',

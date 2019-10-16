@@ -5,7 +5,7 @@ import {
     applyForceLayout3d,
     MeshObj,
     NodeViewTemplate,
-    ReactNodeWidget,
+    FocusNodeWidget,
     ReactNodeWidgetView,
     WidgetViewContext, WidgetModelContext,
     MeshKind,
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         applyForceLayout3d(l3graph.model.graph, 30, 200);
 
         l3graph.registerWidget({
-            getModel: (context: WidgetModelContext) => new ReactNodeWidget({
+            getModel: (context: WidgetModelContext) => new FocusNodeWidget({
                 ...context,
                 widgetId: 'l3graph-react-node-widget',
             }) as any,

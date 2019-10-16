@@ -5,13 +5,13 @@ import { KeyHandler } from './utils/keyHandler';
 import { DefaultEditor } from './editors/defaultEditor';
 import { DiagramModel } from './models/diagramModel';
 import { DiagramView, ViewOptions } from './views/diagramView';
-import { Vector2D, Vector3D } from './models/primitives';
+import { Vector2D, Vector3D } from './models/structures';
 import { applyForceLayout3d, applyRandomLayout } from './layout/layouts';
 import { MouseHandler } from './utils/mouseHandler';
 import { DEFAULT_MESH_WIDGET_SET } from './defaultWidgetsSet';
-import { WidgetFactory } from './models/widgets';
-import { Node } from './models/node';
-import { OverlayPosition } from './views/overlayAnchor';
+import { WidgetFactory } from './models/widgets/widget';
+import { Node } from './models/graph/node';
+import { OverlayPosition } from './views/graph/overlayAnchor';
 import { ReactOverlay } from './customisation';
 
 export interface L3GraphProps {

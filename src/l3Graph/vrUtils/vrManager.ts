@@ -1,50 +1,11 @@
-import * as THREE from 'three';
-import Subscribable from './subscribeable';
-
-/**
- * This code was rewrited from example of webVR, so don't ask me why something is here
- * and how it works.
- */
-
-export interface UndocumentedOptions {
-	frameOfReferenceType: any;
-}
-
-export interface WebGLRenderer extends THREE.WebGLRenderer {
-	vr: any;
-}
-
-type Device = VRDisplay & {
-	isPresenting: boolean;
-	exitPresent: () => void;
-	requestPresent: (presenters: {source: HTMLCanvasElement}[]) => void;
-	requestSession: (options: {immersive: boolean, exclusive: boolean}) => Promise<Session>;
-	supportsSession: (options: {immersive: boolean, exclusive: boolean}) => Promise<void>;
-}
-
-interface VrEvent extends Event {
-	display: Device;
-}
-
-interface Session {
-	addEventListener: (eventId: string, handler: (event: Event) => void) => void;
-	removeEventListener: (eventId: string, handler: (event: Event) => void) => void;
-	end: () => void;
-}
-
-interface XrNavigator extends Navigator {
-	xr: {
-		requestDevice: () => Promise<Device>;
-	}
-}
-
-function isXrNavigator(n: Navigator): n is XrNavigator {
-	return ('xr' in n);
-}
+import Subscribable from '../utils/subscribeable';
+import { DiagramView } from '../views/diagramView';
+import { Device, Session, isXrNavigator, VrEvent, isWebkitNavigator } from './webVr';
 
 export interface VrManagerEvents {
 	'presenting:state:changed': void;
 	'connection:state:changed': void;
+	'exit:vr:mode': void;
 }
 
 export class VrManager extends Subscribable<VrManagerEvents> {
@@ -55,10 +16,10 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 	private errorMessages: string[] = [];
 
 	private isXr: boolean;
+	private _isCanceled: boolean = false;
 
 	constructor(
-		private renderer: WebGLRenderer,
-		private animationLoop: () => void,
+		private view: DiagramView,
 	) {
 		super();
 	}
@@ -78,20 +39,23 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 	start() {
 		if (this.isStarted) return;
 		this._initVr();
+		this._isCanceled = false;
+
+		const vr = this.view.renderer.vr;
 		if (this.isXr) {
 			const onSessionStarted = (session: Session) => {
 				this.session.addEventListener('end', onSessionEnded);
-				this.renderer.vr.setSession(session);
+				vr.setSession(session);
 			}
 	
 			const onSessionEnded = (event: Event) => {
 				this.session.removeEventListener( 'end', onSessionEnded );
-				this.renderer.vr.setSession(null);
+				vr.setSession(null);
 				this.session = null;
 			}
 			this.device.requestSession({immersive: true, exclusive: true}).then(onSessionStarted);
 		} else {
-			this.device.requestPresent([{source: this.renderer.domElement}]).catch(function (){ alert(JSON.stringify(arguments)) }) ;
+			this.device.requestPresent([{source: this.view.renderer.domElement}]);
 		}
 
 		this._isStarted = true;
@@ -157,13 +121,18 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 	}
 
 	private _initVr() {
-		this.renderer.vr.enabled = true;
-		(this.renderer as any).setAnimationLoop(this.animationLoop);
+		this.view.renderer.vr.enabled = true;
+		(this.view.renderer as any).setAnimationLoop(this.animationLoop);
+	}
+
+	private animationLoop = () => {
+		this.view.renderer.render(this.view.scene, this.view.camera);
+		// this.handleButtons();
 	}
 
 	private _cancelVr() {
-		this.renderer.vr.enabled = false;
-		(this.renderer as any).setAnimationLoop(null);
+		this.view.renderer.vr.enabled = false;
+		(this.view.renderer as any).setAnimationLoop(null);
 	}
 	
 	private setError(message: string) {
@@ -172,7 +141,51 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 
 	private setDevice(device: Device) {
 		this.device = device;
-		this.renderer.vr.setDevice(this.device);
+		this.view.renderer.vr.setDevice(this.device);
 		this.trigger('connection:state:changed');
+	}
+
+	private handleButtons() {
+		if (this._isCanceled) { return; }
+
+		let gp: any;
+		if(isWebkitNavigator(navigator)) {
+			gp = navigator.webkitGetGamepads()[0];
+			// if(gp.buttons[0] == 1) {
+			// 	b--;
+			//   } else if(gp.buttons[1] == 1) {
+			// 	a++;
+			//   } else if(gp.buttons[2] == 1) {
+			// 	b++;
+			//   } else if(gp.buttons[3] == 1) {
+			// 	a--;
+			//   }
+		} else {
+			gp = navigator.getGamepads()[0];
+			// if(gp.buttons[0].value > 0 || gp.buttons[0].pressed == true) {
+			// 	b--;
+			//   } else if(gp.buttons[1].value > 0 || gp.buttons[1].pressed == true) {
+			// 	a++;
+			//   } else if(gp.buttons[2].value > 0 || gp.buttons[2].pressed == true) {
+			// 	b++;
+			//   } else if(gp.buttons[3].value > 0 || gp.buttons[3].pressed == true) {
+			// 	a--;
+			//   }
+		}
+		if (gp && gp.buttons) {
+			let index = 0;
+			for(const b of gp.buttons) {
+				// if (b === 1 || b.value && b.value > 0) {
+					// this._isCanceled = true;
+					// this.trigger('exit:vr:mode');
+					// return;
+				// }
+				if (b.pressed) {
+					console.log(`button-${index++} is pressed`);
+					// this.trigger('exit:vr:mode');
+					// return;
+				}
+			}
+		}
 	}
 }

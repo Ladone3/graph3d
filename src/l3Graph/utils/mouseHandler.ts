@@ -4,8 +4,8 @@ import { Subscribable } from './subscribeable';
 import { handleDragging, length } from './geometry';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
-import { Vector2D } from '../models/primitives';
-import { Element } from '../models/graphModel';
+import { Vector2D } from '../models/structures';
+import { Element } from '../models/graph/graphModel';
 export const MIN_DRAG_OFFSET = 5;
 
 export interface HandlerElementClickEvent {

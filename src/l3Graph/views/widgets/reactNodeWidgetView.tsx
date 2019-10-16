@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 
-import { DiagramWidgetView } from '.';
-import { FocusNodeWidget } from '../models/widgets/focusNodeWidget';
-import { OverlayAnchor, MockOverlayAnchor, OverlayPosition } from './overlayAnchor';
-import { Node } from '../models/node';
-import { GraphView } from './graphView';
-import { ReactOverlay } from '../customisation';
+import { FocusNodeWidget } from '../../models/widgets/focusNodeWidget';
+import { OverlayAnchor, MockOverlayAnchor, OverlayPosition } from '../graph/overlayAnchor';
+import { Node } from '../../models/graph/node';
+import { GraphView } from '../graph/graphView';
+import { ReactOverlay } from '../../customisation';
+import { DiagramWidgetView } from '../viewInterface';
 
 export interface ReactNodeWidgetViewParameters {
     graphView: GraphView;

@@ -1,14 +1,15 @@
 import * as React from 'react';
 import * as THREE from 'three';
-import { Vector3D, Vector2D } from '../models/primitives';
+import { Vector3D, Vector2D } from '../models/structures';
 import { NodeTemplateProvider, LinkTemplateProvider } from '../customisation';
-import { GraphView } from './graphView';
+import { GraphView } from './graph/graphView';
 import { DiagramModel } from '../models/diagramModel';
-import { Element, GraphModelEvents } from '../models/graphModel';
-import { WidgetsView } from './widgetsView';
-import { Widget } from '../models/widgets';
+import { Element, GraphModelEvents } from '../models/graph/graphModel';
+import { WidgetsView } from './widgets/widgetsView';
+import { Widget } from '../models/widgets/widget';
 import { vector3DToTreeVector3, EventObject } from '../utils';
 import { WidgetsModelEvents } from '../models/widgets/widgetsModel';
+import { WebGLRenderer } from '../vrUtils/webVr';
 
 export interface ViewOptions {
     nodeTemplateProvider?: NodeTemplateProvider;
@@ -29,10 +30,9 @@ export interface CameraState {
 export const DEFAULT_CAMERA_DIST = 100;
 
 export class DiagramView extends React.Component<DiagramViewProps> {
-    renderer: THREE.WebGLRenderer;
+    renderer: WebGLRenderer;
     overlayRenderer: THREE.CSS3DRenderer;
 
-    vrButton: HTMLDivElement;
     graphView: GraphView;
     widgetsView: WidgetsView;
 
@@ -49,6 +49,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         NEAR: number;
         FAR: number;
     };
+
 
     constructor(props: DiagramViewProps) {
         super(props);
@@ -143,7 +144,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
             HEIGHT: this.meshHtmlContainer.clientHeight,
             VIEW_ANGLE: 45,
             ASPECT: this.meshHtmlContainer.clientWidth / this.meshHtmlContainer.clientHeight,
-            NEAR: 1,
+            NEAR: 0.1,
             FAR: 10000,
         };
 
@@ -165,7 +166,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.camera.add(dirLight.target);
 
         // Prepare webgl renderer
-        this.renderer = new THREE.WebGLRenderer({antialias: true});
+        this.renderer = new THREE.WebGLRenderer({antialias: true}) as any;
         this.renderer.setSize(
             this.screenParameters.WIDTH,
             this.screenParameters.HEIGHT,
@@ -208,6 +209,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
             graphView: this.graphView,
             widgetsModel: this.props.model.widgetRegistry,
             scene: this.scene,
+            renderer: this.renderer,
         });
     }
 
@@ -275,7 +277,6 @@ export class DiagramView extends React.Component<DiagramViewProps> {
                 ref={(div) => this.overlayHtmlContainer = div}
             >
             </div>
-            <div ref={div => this.vrButton = div}></div>
         </div>;
     }
 }

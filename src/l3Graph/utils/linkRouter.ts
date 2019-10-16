@@ -1,5 +1,5 @@
-import { Link, LinkModel } from '../models/link';
-import { Vector3D } from '../models/primitives';
+import { Link, LinkModel } from '../models/graph/link';
+import { Vector3D } from '../models/structures';
 import { sum, multiply, normalize, sub, inverse, normalRight, normalUp, vectorLength } from './geometry';
 
 export interface LinkRouter {

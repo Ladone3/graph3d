@@ -1,10 +1,9 @@
-import { Element } from '../graphModel';
+import { Element } from '../graph/graphModel';
 import { DiagramModel } from '../diagramModel';
 import { Widget } from './widget';
-import { Node } from '../node';
+import { Node } from '../graph/node';
 
 export interface SelectionParameters {
-    widgetId: string;
     diagramModel: DiagramModel;
 }
 
@@ -14,6 +13,7 @@ export class SelectionWidget extends Widget {
 
     constructor(parameters: SelectionParameters) {
         super();
+        this.widgetId = 'l3graph-selection-widget';
         this.diagramModel = parameters.diagramModel;
 
         this.diagramModel.selection.on('change', e => {

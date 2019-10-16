@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { Link } from '../models/link';
-import { Node } from '../models/node';
-import { OverlayAnchor } from './overlayAnchor';
-import { Widget } from '../models/widgets';
+import { Link } from '../models/graph/link';
+import { Node } from '../models/graph/node';
+import { OverlayAnchor } from './graph/overlayAnchor';
+import { Widget } from '../models/widgets/widget';
 
 export interface View<Model = any> {
     readonly mesh: THREE.Object3D | null;

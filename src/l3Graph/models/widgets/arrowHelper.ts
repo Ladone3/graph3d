@@ -1,9 +1,8 @@
 import { NodeWidget, NodeWidgetParameters } from './nodeWidget';
 import { MouseHandler } from '../../utils/mouseHandler';
-import { Node } from '../node';
+import { Node } from '../graph/node';
 
-export interface ArrowHelperParameters extends NodeWidgetParameters {
-    widgetId: string;
+export interface ArrowHelperParameters {
     mouseHandler: MouseHandler;
 }
 
@@ -11,7 +10,7 @@ export class ArrowHelper extends NodeWidget {
     private mouseHandler: MouseHandler;
 
     constructor(parameters: ArrowHelperParameters) {
-        super(parameters);
+        super({...parameters, widgetId: 'l3graph-arrow-helper-widget'});
         this.mouseHandler = parameters.mouseHandler;
 
         this.mouseHandler.on('elementStartDrag', () => {
