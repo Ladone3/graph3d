@@ -5,6 +5,7 @@ import {
     CAMERA_STEP_SPEED,
     ZERO_POSITION,
     BORDER_OPACITY,
+    ViewControllerEvents,
 } from './viewController';
 import {
     normalize,
@@ -19,12 +20,13 @@ import {
     normalDown,
     KeyHandler,
     EventObject,
+    Subscribable,
 } from '../utils';
 
 import { DiagramView } from '../views/diagramView';
 import { MouseHandler, HandlerDragEvent } from '../utils/mouseHandler';
 
-export class OpenSpaceViewController implements ViewController {
+export class OpenSpaceViewController extends Subscribable<ViewControllerEvents> implements ViewController {
     readonly id: string;
     public label: string;
     protected cameraAngle: Vector2D = { x: 0, y: 0 };
@@ -36,6 +38,7 @@ export class OpenSpaceViewController implements ViewController {
         protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
     ) {
+        super();
         this.id = 'open-space-view-controller';
         this.label = 'Open Space View Controller';
         this.updateCameraPosition();
@@ -47,6 +50,7 @@ export class OpenSpaceViewController implements ViewController {
         this.mouseHandler.on('paperDrag', this.onMouseDrag);
         this.mouseHandler.on('paperScroll',  this.onMouseWheel);
         this.refreshCamera();
+        this.trigger('switched:on');
     }
 
     switchOff() {
@@ -54,6 +58,7 @@ export class OpenSpaceViewController implements ViewController {
         this.mouseHandler.unsubscribe(this.onMouseDragStart);
         this.mouseHandler.unsubscribe(this.onMouseDrag);
         this.mouseHandler.unsubscribe(this.onMouseWheel);
+        this.trigger('switched:off');
     }
 
     focusOn(element: Element) {

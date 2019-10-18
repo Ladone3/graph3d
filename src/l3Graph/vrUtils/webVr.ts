@@ -10,11 +10,16 @@ export interface WebGLRenderer extends THREE.WebGLRenderer {
 
 export interface ThreejsVrManager extends THREE.WebVRManager {
 	setSession: (session: Session) => void;
-	getController: (index: number) => VrGamepad;
+	getController: (index: number) => THREE.Group;
 }
 
-export type GamepadEvents = 'select'
-export type VrGamepad = THREE.Group;
+export type GamepadEvents = /*click - */ 'select' | 'selectstart' | 'selectend';
+export interface VrGamepad {
+	id: number;
+	group: THREE.Group;
+	color: string;
+	selectPressed: boolean;
+}
 
 export type Device = VRDisplay & {
 	isPresenting: boolean;

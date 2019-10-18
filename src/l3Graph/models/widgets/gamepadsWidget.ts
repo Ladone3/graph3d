@@ -7,11 +7,13 @@ export interface GamepadsWidgetParameters {
 }
 
 export const GAMEPADS_NUMBER = 2;
+const BASIC_COLOR_ORDER = ['green', 'blue'];
 
 export class GamepadsWidget extends Widget {
     public readonly widgetId: string;
     private mouseHandler: MouseHandler;
     private vrManager: ThreejsVrManager;
+    private _gamepads: Map<number, VrGamepad>;
 
     constructor(parameters: GamepadsWidgetParameters) {
         super();
@@ -21,13 +23,31 @@ export class GamepadsWidget extends Widget {
 
     setVrManager(vrManager: ThreejsVrManager) {
         this.vrManager = vrManager;
+        const gamepads = new Map<number, VrGamepad>();
+        for (let gamepadId = 0; gamepadId < GAMEPADS_NUMBER; ++gamepadId) {
+            const controller = this.vrManager.getController(gamepadId);
+            if (controller) {
+                const gamepad: VrGamepad = {
+                    id: gamepadId,
+                    group: controller,
+                    selectPressed: false,
+                    color: BASIC_COLOR_ORDER[gamepadId % BASIC_COLOR_ORDER.length],
+                };
+                controller.addEventListener('selectstart', () => {
+                    gamepad.selectPressed = true;
+                    this.forceUpdate();
+                });
+                controller.addEventListener('selectend', () => {
+                    gamepad.selectPressed = false;
+                    this.forceUpdate();
+                });
+                gamepads.set(gamepad.id, gamepad);
+            }
+        }
+        this._gamepads = gamepads;
     }
 
     get gamepads() {
-        const gamepads: VrGamepad[] = [];
-        for (let gamepadID = 0; gamepadID < GAMEPADS_NUMBER; ++gamepadID) {
-            gamepads.push(this.vrManager.getController(gamepadID));
-        }
-        return gamepads;
+        return this._gamepads;
     }
 }

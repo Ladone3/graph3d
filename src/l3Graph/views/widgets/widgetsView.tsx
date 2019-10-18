@@ -81,7 +81,7 @@ export class WidgetsView {
     }
 
     // Think about improved update of the components to support react continueus render
-    update(specificIds: string[]) {
+    update(specificIds?: string[]) {
         const updateView = (widgetId: string) => {
             const view = this.views.get(widgetId);
             if (view) { view.update(); }

@@ -62,9 +62,9 @@ export class DefaultEditor {
     onElementDrag(event: MouseEvent | MouseWheelEvent, target: Element) {
         if (target instanceof Link) { return; }
 
-        const nodeTreePos = vector3DToTreeVector3(target.position);
+        const nodeThreePos = vector3DToTreeVector3(target.position);
         const cameraPos = this.diagramView.camera.position;
-        let distanceToNode = nodeTreePos.distanceTo(cameraPos);
+        let distanceToNode = nodeThreePos.distanceTo(cameraPos);
         if (isMouseWheelEvent(event)) {
             const delata = -(event.deltaX || event.deltaY || event.deltaZ);
             distanceToNode += (delata > 0 ? 1 : -1) * WHEEL_STEP;

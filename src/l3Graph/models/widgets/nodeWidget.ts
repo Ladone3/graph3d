@@ -25,14 +25,14 @@ export abstract class NodeWidget extends Widget {
 
         if (this.isFocusNodeChanged) {
             if (this._prevFocusNode) {
-                this._prevFocusNode.unsubscribe(this.updateView);
+                this._prevFocusNode.unsubscribe(this.forceUpdate);
             }
             if (this._focusNode) {
-                this._focusNode.on('change:position', this.updateView);
+                this._focusNode.on('change:position', this.forceUpdate);
             }
         }
 
-        this.updateView();
+        this.forceUpdate();
     }
 
     get isFocusNodeChanged(): boolean {
@@ -47,11 +47,7 @@ export abstract class NodeWidget extends Widget {
         return this._prevFocusNode;
     }
 
-    private updateView = () => {
-        this.trigger('update:widget', this);
-    }
-
     onRemove() {
-        if (this._focusNode) { this._focusNode.unsubscribe(this.updateView); }
+        if (this._focusNode) { this._focusNode.unsubscribe(this.forceUpdate); }
     }
 }

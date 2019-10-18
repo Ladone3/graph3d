@@ -2,10 +2,10 @@ import * as THREE from 'three';
 import { DiagramWidgetView } from '../viewInterface';
 import { OverlayAnchor, MockOverlayAnchor } from '../graph/overlayAnchor';
 import { GamepadsWidget } from '../../models/widgets/gamepadsWidget';
-import { ThreejsVrManager } from '../../vrUtils/webVr';
+import { ThreejsVrManager, VrGamepad } from '../../vrUtils/webVr';
 
 // const LINES_LENGTH = 100;
-const BASIC_COLOR_ORDER = ['red', 'blue'];
+const SELECTION_COLOR = 'red';
 
 export interface GamepadsWidgetViewParameters {
     model: GamepadsWidget;
@@ -13,7 +13,9 @@ export interface GamepadsWidgetViewParameters {
 }
 
 interface RenderedGamepad {
+    id: number;
     group: THREE.Group;
+    cylinder: THREE.Mesh;
     line: THREE.Line;
 }
 
@@ -22,19 +24,23 @@ export class GamepadsWidgetView implements DiagramWidgetView {
     public readonly mesh: THREE.Group;
     public readonly overlayAnchor: OverlayAnchor;
 
+    private vrManager: ThreejsVrManager;
     private boundingBox: THREE.Box3 = new THREE.Box3();;
-    private gamepads: RenderedGamepad[] = [];
+    private gamepads = new Map<number, RenderedGamepad>();
 
     constructor(parameters: GamepadsWidgetViewParameters) {
         // todo: do we really need MockAnchors? Probably undefined would be OK.
         this.overlayAnchor = new MockOverlayAnchor();
+        this.vrManager = parameters.vrManager;
         this.model = parameters.model;
-        this.model.setVrManager(parameters.vrManager);
-        const gamepads = this.model.gamepads.map(gp => renderGamepad(gp));
+        this.model.setVrManager(this.vrManager);
+        
+        const gamepads = new Map<number, RenderedGamepad>();
+        this.model.gamepads.forEach(gp => gamepads.set(gp.id, renderGamepad(gp)));
+        
         const mesh = new THREE.Group();
-        for (const gp of gamepads) {
-            mesh.add(gp.group);
-        }
+        gamepads.forEach(gp => mesh.add(gp.group));
+
         this.gamepads = gamepads;
         this.mesh = mesh;
         this.update();
@@ -45,31 +51,42 @@ export class GamepadsWidgetView implements DiagramWidgetView {
     }
 
     public update() {
-        this.gamepads; // for now do nothing let's see what is going to happen
+        if (this.vrManager.enabled) {
+            this.mesh.visible = true;
+            const gpModels = this.model.gamepads;
+            this.gamepads.forEach(gp => {
+                const gpModel = gpModels.get(gp.id);
+                const color = gpModel.selectPressed ? SELECTION_COLOR : gpModel.color;
+                gp.line.material = new THREE.LineBasicMaterial({color});
+                gp.cylinder.material = new THREE.MeshBasicMaterial({color});
+            })
+        } else {
+            this.mesh.visible = false;
+        }
     }
 }
 
-let colorIndex = 0;
-function renderGamepad(gamepad: THREE.Group): RenderedGamepad {
-    const color = BASIC_COLOR_ORDER[colorIndex++ % BASIC_COLOR_ORDER.length];
+function renderGamepad(gamepad: VrGamepad): RenderedGamepad {
+    const group = gamepad.group;
     const pointerGeometry = new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, -50),
     ]);
-    const lineMaterial = new THREE.LineBasicMaterial({color});
+    const lineMaterial = new THREE.LineBasicMaterial({color: gamepad.color});
     const line = new THREE.Line(pointerGeometry, lineMaterial);
-    gamepad.add(line);
+    group.add(line);
 
-    const material = new THREE.MeshBasicMaterial({color});
+    const material = new THREE.MeshBasicMaterial({color: gamepad.color});
     const geometry = new THREE.CylinderBufferGeometry(0.01, 0.01, 0.3, 10);
     const cylinder = new THREE.Mesh(geometry, material);
     cylinder.position.set(0, 0, -0.05);
     cylinder.rotateX(Math.PI / 2);
-    gamepad.add(cylinder);
+    group.add(cylinder);
     
     return {
-        line: cylinder,
-        // line,
-        group: gamepad,
+        id: gamepad.id,
+        line,
+        cylinder,
+        group,
     };
 }

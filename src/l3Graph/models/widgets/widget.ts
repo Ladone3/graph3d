@@ -9,12 +9,15 @@ import { ThreejsVrManager } from '../../vrUtils/webVr';
 export const DEFAULT_SELECTION_TYPE_ID = 'l3graph-selection';
 
 export interface WidgetEvents {
-    'update:widget': any;
+    'update:widget': void;
 }
 
 export abstract class Widget<Events extends WidgetEvents = WidgetEvents> extends Subscribable<Events> {
     readonly widgetId: string;
     onRemove?(): void;
+    forceUpdate = () => {
+        this.trigger('update:widget');
+    }
 }
 
 export interface WidgetModelContext {

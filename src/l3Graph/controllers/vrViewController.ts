@@ -1,10 +1,10 @@
 import { DiagramView } from '../views/diagramView';
 import { MouseHandler } from '../utils/mouseHandler';
-import { KeyHandler, KEY_CODES, EventObject } from '../utils';
-import { ViewController } from './viewController';
+import { KeyHandler, KEY_CODES, EventObject, Subscribable } from '../utils';
+import { ViewController, ViewControllerEvents } from './viewController';
 import { VrManager } from '../vrUtils/vrManager';
 
-export class VrViewController implements ViewController {
+export class VrViewController extends Subscribable<ViewControllerEvents> implements ViewController {
     public readonly id = 'vr-view-controller';
     public readonly label = 'VR View Controller';
 
@@ -16,7 +16,8 @@ export class VrViewController implements ViewController {
         protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
     ) {
-        this.vrManager = new VrManager(this.view);
+        super();
+        this.vrManager = this.view.vrManager;
         this.connectionPromise = this.vrManager.connect();
     }
 
@@ -33,7 +34,9 @@ export class VrViewController implements ViewController {
             this.view.renderGraph();
         }
         
-        this.subscribe();
+        this.keyHandler.on('keyPressed', this.onKeyPressed);
+        this.vrManager.on('presenting:state:changed', this.onPresentingChanged);
+        this.trigger('switched:on');
     }
 
     switchOff() {
@@ -41,17 +44,9 @@ export class VrViewController implements ViewController {
             this.vrManager.stop();
             this.view.renderGraph();
         }
-        this.unsubscribe();
-    }
-
-    private subscribe() {
-        this.keyHandler.on('keyPressed', this.onKeyPressed);
-        this.vrManager.on('exit:vr:mode', this.onAutoExit);
-    }
-
-    private unsubscribe() {
         this.keyHandler.unsubscribe(this.onKeyPressed);
-        this.vrManager.unsubscribe(this.onAutoExit);
+        this.vrManager.unsubscribe(this.onPresentingChanged);
+        this.trigger('switched:off');
     }
 
     private onKeyPressed = (e: EventObject<'keyPressed', Set<number>>) =>  {
@@ -60,7 +55,9 @@ export class VrViewController implements ViewController {
         }
     }
 
-    private onAutoExit = () =>  {
-        this.switchOff();
+    private onPresentingChanged = () =>  {
+        if (!this.vrManager.isStarted) {
+            this.switchOff();
+        }
     }
 }

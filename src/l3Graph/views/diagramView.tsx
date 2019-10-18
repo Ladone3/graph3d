@@ -10,6 +10,7 @@ import { Widget } from '../models/widgets/widget';
 import { vector3DToTreeVector3, EventObject } from '../utils';
 import { WidgetsModelEvents } from '../models/widgets/widgetsModel';
 import { WebGLRenderer } from '../vrUtils/webVr';
+import { VrManager } from '../vrUtils/vrManager';
 
 export interface ViewOptions {
     nodeTemplateProvider?: NodeTemplateProvider;
@@ -40,6 +41,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
     scene: THREE.Scene;
     meshHtmlContainer: HTMLElement;
     overlayHtmlContainer: HTMLElement;
+    vrManager: VrManager;
 
     screenParameters: {
         WIDTH: number;
@@ -60,6 +62,10 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.initSubViews();
         this.subscribeOnModel();
         this.renderGraph();
+        this.vrManager = new VrManager(this);
+        this.vrManager.on('presenting:state:changed', () => {
+            this.widgetsView.update();
+        })
         if (this.props.onViewMount) {
             this.props.onViewMount(this);
         }

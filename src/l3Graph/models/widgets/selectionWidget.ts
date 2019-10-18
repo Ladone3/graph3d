@@ -31,22 +31,18 @@ export class SelectionWidget extends Widget {
     private updateSubscription(previousSelection: ReadonlySet<Element> | undefined) {
         if (previousSelection) {
             previousSelection.forEach(el => {
-                el.unsubscribe(this.updateView);
+                el.unsubscribe(this.forceUpdate);
             });
         }
         const newSelection = this.diagramModel.selection.elements;
         if (newSelection.size > 0) {
             newSelection.forEach(el => {
                 if (el instanceof Node) {
-                    el.on('change:position', this.updateView);
-                    el.on('change:size', this.updateView);
+                    el.on('change:position', this.forceUpdate);
+                    el.on('change:size', this.forceUpdate);
                 }
             });
         }
-        this.updateView();
-    }
-
-    private updateView = () => {
-        this.trigger('update:widget', this);
+        this.forceUpdate();
     }
 }

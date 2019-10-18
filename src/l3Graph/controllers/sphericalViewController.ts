@@ -6,15 +6,16 @@ import {
     ZOOM_STEP_MULTIPLAYER,
     BORDER_OPACITY,
     ZERO_POSITION,
+    ViewControllerEvents,
 } from './viewController';
-import { vector3DToTreeVector3, KEY_CODES, KeyHandler, EventObject } from '../utils';
+import { vector3DToTreeVector3, KEY_CODES, KeyHandler, EventObject, Subscribable } from '../utils';
 
 import { DiagramView } from '../views/diagramView';
 import { MouseHandler, HandlerDragEvent } from '../utils/mouseHandler';
 
 const WHEEL_SPEED = 100;
 
-export class SphericalViewController implements ViewController {
+export class SphericalViewController extends Subscribable<ViewControllerEvents> implements ViewController {
     readonly id: string;
     public label: string;
     protected cameraAngle: Vector2D = { x: 0, y: Math.PI / 4 };
@@ -26,6 +27,7 @@ export class SphericalViewController implements ViewController {
         protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
     ) {
+        super();
         this.id = 'spherical-view-controller';
         this.label = 'Spherical View Controller';
         this.updateCameraPosition();
@@ -37,6 +39,7 @@ export class SphericalViewController implements ViewController {
         this.mouseHandler.on('paperDrag', this.onMouseDrag);
         this.mouseHandler.on('paperScroll', this.onMouseWheel);
         this.refreshCamera();
+        this.trigger('switched:on');
     }
 
     switchOff() {
@@ -44,6 +47,7 @@ export class SphericalViewController implements ViewController {
         this.mouseHandler.unsubscribe(this.onMouseDragStart);
         this.mouseHandler.unsubscribe(this.onMouseDrag);
         this.mouseHandler.unsubscribe(this.onMouseWheel);
+        this.trigger('switched:off');
     }
 
     private refreshCamera() {

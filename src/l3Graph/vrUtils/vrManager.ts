@@ -5,7 +5,6 @@ import { Device, Session, isXrNavigator, VrEvent, isWebkitNavigator } from './we
 export interface VrManagerEvents {
 	'presenting:state:changed': void;
 	'connection:state:changed': void;
-	'exit:vr:mode': void;
 }
 
 export class VrManager extends Subscribable<VrManagerEvents> {
@@ -59,7 +58,6 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 		}
 
 		this._isStarted = true;
-		this.trigger('presenting:state:changed');
 	}
 
 	stop() {
@@ -71,9 +69,6 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 		} else {
 			this.device.exitPresent();
 		}
-
-		this._isStarted = false;
-		this.trigger('presenting:state:changed');
 	}
 
 	connect() {
@@ -116,6 +111,12 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 		window.addEventListener('vrdisplayactivate', event => {
 			this.start()
 		}, false);
+
+		window.addEventListener('vrdisplaypresentchange', event => {
+			const vrEvent = event as VrEvent;
+			this._isStarted = vrEvent.display.isPresenting;
+			this.trigger('presenting:state:changed');
+		}, false );
 
 		return promise;
 	}

@@ -21,16 +21,13 @@ export interface L3GraphProps {
     onComponentUnmount?: (graph: L3Graph) => void;
 }
 
-export interface State {
-    viewController?: ViewController;
-}
-
-export class L3Graph extends React.Component<L3GraphProps, State> {
+export class L3Graph extends React.Component<L3GraphProps> {
     private diagramModel: DiagramModel;
     private view: DiagramView;
     private keyHandler: KeyHandler;
     private mouseHandler: MouseHandler;
     private viewControllers: ViewController[] = [];
+    private viewController: ViewController;
     private defaultEditor: DefaultEditor;
 
     constructor(props: L3GraphProps) {
@@ -43,16 +40,14 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         return this.diagramModel;
     }
 
-    get viewController() {
-        return this.state.viewController;
-    }
-
-    set viewController(viewController: ViewController) {
-        if (this.state.viewController) {
-            this.state.viewController.switchOff();
+    setViewController(viewController: ViewController) {
+        const oldViewController = this.viewController;
+        this.viewController = viewController;
+        if (oldViewController) {
+            oldViewController.switchOff();
         }
-        viewController.switchOn();
-        this.setState({viewController});
+        this.viewController.switchOn();
+        this.forceUpdate();
     }
 
     attachOverlayToNode(node: Node, overlay: ReactOverlay, position: OverlayPosition) {
@@ -96,11 +91,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
             ({data: {event, target}}) => this.mouseHandler.onMouseDown(event, target));
         this.mouseHandler = new MouseHandler(this.diagramModel, this.view);
         this.keyHandler = new KeyHandler();
-
-        this.viewControllers =
-            (this.props.viewControllers || DEFAULT_VIEW_CONTROLLERS_SET)
-                .map(controller => controller(this.view, this.mouseHandler, this.keyHandler));
-        this.viewController = this.viewControllers[0];
+        this.configureViewControllers();
         this.defaultEditor = new DefaultEditor(
             this.diagramModel,
             this.view,
@@ -112,6 +103,22 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
         }
         this.forceUpdate();
     }
+
+    private configureViewControllers() {
+        this.viewControllers =
+        (this.props.viewControllers || DEFAULT_VIEW_CONTROLLERS_SET)
+            .map(makeController => makeController(this.view, this.mouseHandler, this.keyHandler));
+        this.setViewController(this.viewControllers[0]);
+        for (const vc of this.viewControllers) {
+            vc.on('switched:off', () => {
+                const currentViewControllerWasSwitchedOff = this.viewController === vc;
+                if (currentViewControllerWasSwitchedOff) {
+                    this.setViewController(this.viewControllers[0]);
+                }
+            })
+        }
+
+    } 
 
     private onFocus = () => {
         this.keyHandler.switchOn();
@@ -168,7 +175,7 @@ export class L3Graph extends React.Component<L3GraphProps, State> {
                         title={viewController.label}
                         key={`controller-button-${index}`}
                         className={this.viewController === viewController ? 'l3graph-selected' : ''}
-                        onClick={() => { this.viewController = viewController; }}>
+                        onClick={() => { this.setViewController(viewController); }}>
                         {viewController.label[0]}
                     </button>;
                 })}
