@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 import { Subscribable } from './subscribeable';
-import { handleDragging, length } from './geometry';
+import { handleDragging, length, eventToPosition } from './geometry';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
 import { Vector2D } from '../models/structures';
@@ -9,17 +9,17 @@ import { Element } from '../models/graph/graphModel';
 export const MIN_DRAG_OFFSET = 5;
 
 export interface HandlerElementClickEvent {
-    nativeEvent: MouseEvent | MouseWheelEvent;
+    nativeEvent: MouseEvent | MouseWheelEvent | TouchEvent;
     element: Element;
 }
 
 export interface HandlerDragElementEvent  {
-    nativeEvent: MouseEvent | MouseWheelEvent;
+    nativeEvent: MouseEvent | MouseWheelEvent | TouchEvent;
     element: Element;
 }
 
 export interface HandlerDragEvent  {
-    nativeEvent: MouseEvent | MouseWheelEvent;
+    nativeEvent: MouseEvent | MouseWheelEvent | TouchEvent;
     offset: Vector2D;
 }
 
@@ -28,7 +28,7 @@ export interface MouseHandlerEvents {
     'paperScroll': MouseWheelEvent;
 
     'elementClick': HandlerElementClickEvent;
-    'paperClick': MouseEvent;
+    'paperClick': MouseEvent | TouchEvent;
 
     'elementStartDrag': HandlerDragElementEvent;
     'elementDrag': HandlerDragElementEvent;
@@ -68,7 +68,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         }
     }
 
-    onMouseDown(event: MouseEvent, element?: Element) {
+    onMouseDown(event: MouseEvent | TouchEvent, element?: Element) {
         this.mouseDownOnElement = element || this.getIntersectedObject(event);
         this.dragging = false;
 
@@ -123,13 +123,10 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         }
     }
 
-    private getIntersectedObject(event: MouseEvent): Element | undefined {
+    private getIntersectedObject(event: MouseEvent | TouchEvent): Element | undefined {
         const view = this.diagramView;
         const bbox = view.meshHtmlContainer.getBoundingClientRect();
-        const position: Vector2D = {
-            x: event.clientX - bbox.left,
-            y: event.clientY - bbox.top,
-        };
+        const position = eventToPosition(event, bbox);
         const screenParameters = view.screenParameters;
         const vector = new THREE.Vector3(
             (position.x / screenParameters.WIDTH) * 2 - 1,

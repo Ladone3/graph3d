@@ -91,13 +91,13 @@ const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
 document.addEventListener('DOMContentLoaded', () => {
     ReactDOM.render(React.createElement(L3Graph, {
         viewOptions: {
-            nodeTemplateProvider: (data: {label: string; types: string[]}) => {
-                if (data.types.indexOf('l3graph-node-custome') !== -1) {
-                    return CUSTOM_NODE_TEMPLATE_2;
-                } else {
-                    return CUSTOM_NODE_TEMPLATE_1;
-                }
-            },
+            // nodeTemplateProvider: (data: {label: string; types: string[]}) => {
+            //     if (data.types.indexOf('l3graph-node-custome') !== -1) {
+            //         return CUSTOM_NODE_TEMPLATE_2;
+            //     } else {
+            //         return CUSTOM_NODE_TEMPLATE_1;
+            //     }
+            // },
             linkTemplateProvider: () => ({
                 color: 'green',
                 thickness: 2,

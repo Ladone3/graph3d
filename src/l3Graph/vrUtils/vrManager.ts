@@ -62,8 +62,7 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 
 	stop() {
 		if (!this.isStarted) return;
-		this._cancelVr();
-
+		
 		if (this.isXr) {
 			this.session.end();
 		} else {
@@ -115,6 +114,9 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 		window.addEventListener('vrdisplaypresentchange', event => {
 			const vrEvent = event as VrEvent;
 			this._isStarted = vrEvent.display.isPresenting;
+			if (!this._isStarted) {
+				this._cancelVr();
+			}
 			this.trigger('presenting:state:changed');
 		}, false );
 

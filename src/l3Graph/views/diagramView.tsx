@@ -7,7 +7,7 @@ import { DiagramModel } from '../models/diagramModel';
 import { Element, GraphModelEvents } from '../models/graph/graphModel';
 import { WidgetsView } from './widgets/widgetsView';
 import { Widget } from '../models/widgets/widget';
-import { vector3DToTreeVector3, EventObject } from '../utils';
+import { vector3DToTreeVector3, EventObject, eventToPosition } from '../utils';
 import { WidgetsModelEvents } from '../models/widgets/widgetsModel';
 import { WebGLRenderer } from '../vrUtils/webVr';
 import { VrManager } from '../vrUtils/vrManager';
@@ -71,12 +71,9 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         }
     }
 
-    mouseTo3dPos(event: MouseEvent, distanceFromScreen: number = 600): Vector3D {
+    mouseTo3dPos(event: MouseEvent | TouchEvent, distanceFromScreen: number = 600): Vector3D {
         const bbox = this.meshHtmlContainer.getBoundingClientRect();
-        return this.clientPosTo3dPos({
-            x: event.clientX - bbox.left,
-            y: event.clientY - bbox.top,
-        }, distanceFromScreen);
+        return this.clientPosTo3dPos(eventToPosition(event, bbox), distanceFromScreen);
     }
 
     clientPosTo3dPos(position: Vector2D, distanceFromScreen: number = 600): Vector3D {

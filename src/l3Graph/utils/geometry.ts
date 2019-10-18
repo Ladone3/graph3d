@@ -12,23 +12,15 @@ export function treeVector3ToVector3D(v: THREE.Vector3): Vector3D {
 }
 
 export function handleDragging(
-    downEvent: MouseEvent,
-    onChange: (event: MouseEvent, change: Vector2D) => void,
-    onEnd?: (event: MouseEvent, change: Vector2D) => void,
+    downEvent: MouseEvent | TouchEvent,
+    onChange: (event: MouseEvent | TouchEvent, change: Vector2D) => void,
+    onEnd?: (event: MouseEvent | TouchEvent, change: Vector2D) => void,
 ) {
-    const startPoint = {
-        x: downEvent.screenX,
-        y: downEvent.screenY,
-    };
-
+    const startPoint = eventToPosition(downEvent);
     window.getSelection().removeAllRanges();
 
-    const getOffset = (e: MouseEvent) => {
-        const pp: any = e;
-        const curPoint = {
-            x: pp.screenX,
-            y: pp.screenY,
-        };
+    const getOffset = (e: MouseEvent | TouchEvent) => {
+        const curPoint = eventToPosition(e);
 
         return {
             x: curPoint.x - startPoint.x,
@@ -36,19 +28,23 @@ export function handleDragging(
         };
     };
 
-    const _onchange = (e: MouseEvent) => {
+    const _onchange = (e: MouseEvent | TouchEvent) => {
         onChange(e, getOffset(e));
     };
 
-    const _onend = (e: MouseEvent) => {
+    const _onend = (e: MouseEvent | TouchEvent) => {
         document.body.onmousemove = document.body.onmouseup = null;
         document.body.removeEventListener('mousemove', _onchange);
+        document.body.removeEventListener('touchmove', _onchange);
         document.body.removeEventListener('mouseup', _onend);
+        document.body.removeEventListener('touchend', _onend);
         if (onEnd) { onEnd(e, getOffset(e)); }
     };
 
     document.body.addEventListener('mousemove', _onchange);
+    document.body.addEventListener('touchmove', _onchange);
     document.body.addEventListener('mouseup', _onend);
+    document.body.addEventListener('touchend', _onend);
 }
 
 export function calcBounds(points: Vector3D[]) {
@@ -168,4 +164,23 @@ export function normalDown(vector: Vector3D) {
 
 export function normalRight(vector: Vector3D) {
     return inverse(normalLeft(vector));
+}
+
+export function eventToPosition(event: MouseEvent | TouchEvent, viewBox?: ClientRect | DOMRect): Vector2D {
+    const offset = viewBox || {left: 0, top: 0};
+    if (event instanceof MouseEvent) {
+        return {
+            x: event.clientX - offset.left,
+            y: event.clientY - offset.top,
+        };
+    } else if (event instanceof TouchEvent) {
+        const touches = event.touches;
+        const firstTouch = touches.item(0);
+        return {
+            x: firstTouch.clientX - offset.left,
+            y: firstTouch.clientY - offset.top,
+        };
+    } else {
+        return {x: 0, y: 0};
+    }
 }

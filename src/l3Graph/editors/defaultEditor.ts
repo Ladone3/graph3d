@@ -59,7 +59,7 @@ export class DefaultEditor {
         }
     }
 
-    onElementDrag(event: MouseEvent | MouseWheelEvent, target: Element) {
+    onElementDrag(event: MouseEvent | TouchEvent | MouseWheelEvent, target: Element) {
         if (target instanceof Link) { return; }
 
         const nodeThreePos = vector3DToTreeVector3(target.position);
@@ -76,7 +76,7 @@ export class DefaultEditor {
         target.setPosition(newNodePosition);
     }
 
-    onElementDragEnd(event: MouseEvent | MouseWheelEvent, target: Element) {
+    onElementDragEnd(event: MouseEvent | TouchEvent | MouseWheelEvent, target: Element) {
         this.onElementDrag(event, target);
     }
 }
