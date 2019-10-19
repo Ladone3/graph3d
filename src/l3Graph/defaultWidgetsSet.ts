@@ -26,9 +26,7 @@ export const arrowHelperWidgetFactory: WidgetFactory<ArrowHelper> = {
 
 export const gamepadWidgetFactory: WidgetFactory<GamepadsWidget> = {
     getModel: context => {
-        return new GamepadsWidget({
-            mouseHandler: context.mouseHandler,
-        });
+        return new GamepadsWidget({gamepadHandler: context.gamepadHandler});
     },
     getView: context => new GamepadsWidgetView({
         model: context.widget,

@@ -11,42 +11,6 @@ export function treeVector3ToVector3D(v: THREE.Vector3): Vector3D {
     return {x, y, z};
 }
 
-export function handleDragging(
-    downEvent: MouseEvent | TouchEvent,
-    onChange: (event: MouseEvent | TouchEvent, change: Vector2D) => void,
-    onEnd?: (event: MouseEvent | TouchEvent, change: Vector2D) => void,
-) {
-    const startPoint = eventToPosition(downEvent);
-    window.getSelection().removeAllRanges();
-
-    const getOffset = (e: MouseEvent | TouchEvent) => {
-        const curPoint = eventToPosition(e);
-
-        return {
-            x: curPoint.x - startPoint.x,
-            y: curPoint.y - startPoint.y,
-        };
-    };
-
-    const _onchange = (e: MouseEvent | TouchEvent) => {
-        onChange(e, getOffset(e));
-    };
-
-    const _onend = (e: MouseEvent | TouchEvent) => {
-        document.body.onmousemove = document.body.onmouseup = null;
-        document.body.removeEventListener('mousemove', _onchange);
-        document.body.removeEventListener('touchmove', _onchange);
-        document.body.removeEventListener('mouseup', _onend);
-        document.body.removeEventListener('touchend', _onend);
-        if (onEnd) { onEnd(e, getOffset(e)); }
-    };
-
-    document.body.addEventListener('mousemove', _onchange);
-    document.body.addEventListener('touchmove', _onchange);
-    document.body.addEventListener('mouseup', _onend);
-    document.body.addEventListener('touchend', _onend);
-}
-
 export function calcBounds(points: Vector3D[]) {
     const averagePos: Vector3D = {x: 0, y: 0, z: 0};
     const minPos: Vector3D = {x: Infinity, y: Infinity, z: Infinity};
@@ -166,7 +130,7 @@ export function normalRight(vector: Vector3D) {
     return inverse(normalLeft(vector));
 }
 
-export function eventToPosition(event: MouseEvent | TouchEvent, viewBox?: ClientRect | DOMRect): Vector2D {
+export function eventToPosition(event: MouseEvent | TouchEvent, viewBox?: ClientRect | DOMRect): Vector2D | undefined {
     const offset = viewBox || {left: 0, top: 0};
     if (event instanceof MouseEvent) {
         return {
@@ -176,11 +140,15 @@ export function eventToPosition(event: MouseEvent | TouchEvent, viewBox?: Client
     } else if (event instanceof TouchEvent) {
         const touches = event.touches;
         const firstTouch = touches.item(0);
-        return {
-            x: firstTouch.clientX - offset.left,
-            y: firstTouch.clientY - offset.top,
-        };
+        if (firstTouch) {
+            return {
+                x: firstTouch.clientX - offset.left,
+                y: firstTouch.clientY - offset.top,
+            };
+        } else {
+            return undefined;
+        }
     } else {
-        return {x: 0, y: 0};
+        return undefined;
     }
 }

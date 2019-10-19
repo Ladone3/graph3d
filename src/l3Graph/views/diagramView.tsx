@@ -73,7 +73,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
 
     mouseTo3dPos(event: MouseEvent | TouchEvent, distanceFromScreen: number = 600): Vector3D {
         const bbox = this.meshHtmlContainer.getBoundingClientRect();
-        return this.clientPosTo3dPos(eventToPosition(event, bbox), distanceFromScreen);
+        return this.clientPosTo3dPos(eventToPosition(event, bbox) || {x: 0, y: 0}, distanceFromScreen);
     }
 
     clientPosTo3dPos(position: Vector2D, distanceFromScreen: number = 600): Vector3D {

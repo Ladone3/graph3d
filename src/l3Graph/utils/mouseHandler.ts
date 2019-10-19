@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 import { Subscribable } from './subscribeable';
-import { handleDragging, length, eventToPosition } from './geometry';
+import { length, eventToPosition } from './geometry';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
 import { Vector2D } from '../models/structures';
@@ -127,6 +127,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         const view = this.diagramView;
         const bbox = view.meshHtmlContainer.getBoundingClientRect();
         const position = eventToPosition(event, bbox);
+        if (!position) { return undefined; }
         const screenParameters = view.screenParameters;
         const vector = new THREE.Vector3(
             (position.x / screenParameters.WIDTH) * 2 - 1,
@@ -168,4 +169,41 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
             return undefined;
         }
     }
+}
+
+export function handleDragging(
+    downEvent: MouseEvent | TouchEvent,
+    onChange: (event: MouseEvent | TouchEvent, change: Vector2D) => void,
+    onEnd?: (event: MouseEvent | TouchEvent, change?: Vector2D) => void,
+) {
+    const startPoint = eventToPosition(downEvent);
+    if (!startPoint) return;
+
+    window.getSelection().removeAllRanges();
+
+    const getOffset = (e: MouseEvent | TouchEvent) => {
+        const curPoint = eventToPosition(e);
+        if (!curPoint) return undefined;
+        return {
+            x: curPoint.x - startPoint.x,
+            y: curPoint.y - startPoint.y,
+        };
+    };
+
+    const _onchange = (e: MouseEvent | TouchEvent) => {
+        onChange(e, getOffset(e));
+    };
+
+    const _onend = (e: MouseEvent | TouchEvent) => {
+        document.body.removeEventListener('mousemove', _onchange);
+        document.body.removeEventListener('touchmove', _onchange);
+        document.body.removeEventListener('mouseup', _onend);
+        document.body.removeEventListener('touchend', _onend);
+        if (onEnd) { onEnd(e, getOffset(e)); }
+    };
+
+    document.body.addEventListener('mousemove', _onchange);
+    document.body.addEventListener('touchmove', _onchange);
+    document.body.addEventListener('mouseup', _onend);
+    document.body.addEventListener('touchend', _onend);
 }

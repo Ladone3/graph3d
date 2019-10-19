@@ -13,6 +13,7 @@ import { WidgetFactory } from './models/widgets/widget';
 import { Node } from './models/graph/node';
 import { OverlayPosition } from './views/graph/overlayAnchor';
 import { ReactOverlay } from './customisation';
+import { GamepadHandler } from './vrUtils/gamepadHandler';
 
 export interface L3GraphProps {
     viewOptions?: ViewOptions;
@@ -25,6 +26,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
     private diagramModel: DiagramModel;
     private view: DiagramView;
     private keyHandler: KeyHandler;
+    private gamepadHandler: GamepadHandler;
     private mouseHandler: MouseHandler;
     private viewControllers: ViewController[] = [];
     private viewController: ViewController;
@@ -91,6 +93,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
             ({data: {event, target}}) => this.mouseHandler.onMouseDown(event, target));
         this.mouseHandler = new MouseHandler(this.diagramModel, this.view);
         this.keyHandler = new KeyHandler();
+        this.gamepadHandler = new GamepadHandler();
         this.configureViewControllers();
         this.defaultEditor = new DefaultEditor(
             this.diagramModel,
@@ -107,7 +110,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
     private configureViewControllers() {
         this.viewControllers =
         (this.props.viewControllers || DEFAULT_VIEW_CONTROLLERS_SET)
-            .map(makeController => makeController(this.view, this.mouseHandler, this.keyHandler));
+            .map(makeController => makeController(this.view, this.mouseHandler, this.keyHandler, this.gamepadHandler));
         this.setViewController(this.viewControllers[0]);
         for (const vc of this.viewControllers) {
             vc.on('switched:off', () => {
@@ -133,6 +136,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
             diagramModel: this.diagramModel,
             keyHandler: this.keyHandler,
             mouseHandler: this.mouseHandler,
+            gamepadHandler: this.gamepadHandler,
         });
         this.view.widgetsView.registerViewResolver(widgetModel.widgetId, widgetResolver.getView);
         this.diagramModel.widgetRegistry.registerWidget(widgetModel);
@@ -159,7 +163,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
                     this.mouseHandler.onMouseDown(event.nativeEvent);
                 }}
                 onTouchStart={event => {
-                    event.nativeEvent.preventDefault();
+                    // event.nativeEvent.preventDefault();
                     this.mouseHandler.onMouseDown(event.nativeEvent);
                 }}
                 onWheel={event => this.mouseHandler.onScroll(event.nativeEvent)}>

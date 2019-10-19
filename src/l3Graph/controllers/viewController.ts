@@ -3,6 +3,7 @@ import { Vector3 } from 'three';
 import { MouseHandler } from '../utils/mouseHandler';
 import { KeyHandler, Subscribable } from '../utils';
 import { VrManager } from '../vrUtils/vrManager';
+import { GamepadHandler } from '../vrUtils/gamepadHandler';
 
 export const ROTATION_DECREASE_SPEED = 300;
 export const CAMERA_STEP_SPEED = 20;
@@ -25,4 +26,4 @@ export interface ViewController extends Subscribable<ViewControllerEvents> {
 }
 
 export type ViewControllersSet =
-    ((view: DiagramView, mouseHandler: MouseHandler, keyHandler: KeyHandler) => ViewController)[];
+    ((view: DiagramView, mouseHandler: MouseHandler, keyHandler: KeyHandler, gamepadHandler: GamepadHandler) => ViewController)[];

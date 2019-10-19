@@ -61,6 +61,7 @@ export class DefaultEditor {
 
     onElementDrag(event: MouseEvent | TouchEvent | MouseWheelEvent, target: Element) {
         if (target instanceof Link) { return; }
+        if (event instanceof TouchEvent && event.touches.length === 0) { return; }
 
         const nodeThreePos = vector3DToTreeVector3(target.position);
         const cameraPos = this.diagramView.camera.position;

@@ -11,6 +11,6 @@ export const DEFAULT_VIEW_CONTROLLERS_SET: ViewControllersSet = [
         new CylindricalViewController(view, mouseHandler, keyHandler),
     (view, mouseHandler, keyHandler) =>
         new OpenSpaceViewController(view, mouseHandler, keyHandler),
-    (view, mouseHandler, keyHandler) =>
-        new VrViewController(view, mouseHandler, keyHandler),
+    (view, mouseHandler, keyHandler, gamepadHandler) =>
+        new VrViewController(view, mouseHandler, keyHandler, gamepadHandler),
 ];

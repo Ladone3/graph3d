@@ -1,53 +1,51 @@
-import { MouseHandler } from '../../utils/mouseHandler';
 import { Widget } from './widget';
-import { ThreejsVrManager, VrGamepad } from '../../vrUtils/webVr';
+import { GamepadHandler, GAMEPAD_BUTTONS, OCULUS_CONTROLLERS } from '../../vrUtils/gamepadHandler';
 
 export interface GamepadsWidgetParameters {
-    mouseHandler: MouseHandler;
+    gamepadHandler: GamepadHandler;
 }
 
-export const GAMEPADS_NUMBER = 2;
-const BASIC_COLOR_ORDER = ['green', 'blue'];
+export interface GamepadsState {
+	leftGamepad: {
+        id: number;
+        triggerPressed: boolean;
+    },
+    rightGamepad: {
+        id: number;
+        triggerPressed: boolean
+    },
+    gpNumber: number;
+}
 
 export class GamepadsWidget extends Widget {
     public readonly widgetId: string;
-    private mouseHandler: MouseHandler;
-    private vrManager: ThreejsVrManager;
-    private _gamepads: Map<number, VrGamepad>;
+    private gamepadHandler: GamepadHandler;
 
     constructor(parameters: GamepadsWidgetParameters) {
         super();
         this.widgetId = 'l3graph-gamepad-widget';
-        this.mouseHandler = parameters.mouseHandler;
+        this.gamepadHandler = parameters.gamepadHandler;
+        this.gamepadHandler.on('keyDown', this.forceUpdate);
+        this.gamepadHandler.on('keyUp', this.forceUpdate);
     }
 
-    setVrManager(vrManager: ThreejsVrManager) {
-        this.vrManager = vrManager;
-        const gamepads = new Map<number, VrGamepad>();
-        for (let gamepadId = 0; gamepadId < GAMEPADS_NUMBER; ++gamepadId) {
-            const controller = this.vrManager.getController(gamepadId);
-            if (controller) {
-                const gamepad: VrGamepad = {
-                    id: gamepadId,
-                    group: controller,
-                    selectPressed: false,
-                    color: BASIC_COLOR_ORDER[gamepadId % BASIC_COLOR_ORDER.length],
-                };
-                controller.addEventListener('selectstart', () => {
-                    gamepad.selectPressed = true;
-                    this.forceUpdate();
-                });
-                controller.addEventListener('selectend', () => {
-                    gamepad.selectPressed = false;
-                    this.forceUpdate();
-                });
-                gamepads.set(gamepad.id, gamepad);
-            }
-        }
-        this._gamepads = gamepads;
+    onRemove() {
+        this.gamepadHandler.unsubscribe(this.forceUpdate);
+        this.gamepadHandler.unsubscribe(this.forceUpdate);
     }
 
-    get gamepads() {
-        return this._gamepads;
+    get state(): GamepadsState {
+        const gpNumber = this.gamepadHandler.activeGamepadNumber;
+        return {
+            gpNumber,
+            leftGamepad: gpNumber > 0 ? {
+                id: OCULUS_CONTROLLERS.LEFT_CONTROLLER,
+                triggerPressed: this.gamepadHandler.keyPressed.has(GAMEPAD_BUTTONS.LEFT_TRIGGER)
+            } : undefined,
+            rightGamepad: gpNumber > 1 ? {
+                id: OCULUS_CONTROLLERS.RIGHT_CONTROLLER,
+                triggerPressed: this.gamepadHandler.keyPressed.has(GAMEPAD_BUTTONS.RIGHT_TRIGGER)
+            } : undefined,
+        };
     }
 }

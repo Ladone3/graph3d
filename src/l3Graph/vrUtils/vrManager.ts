@@ -15,7 +15,6 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 	private errorMessages: string[] = [];
 
 	private isXr: boolean;
-	private _isCanceled: boolean = false;
 
 	constructor(
 		private view: DiagramView,
@@ -38,7 +37,6 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 	start() {
 		if (this.isStarted) return;
 		this._initVr();
-		this._isCanceled = false;
 
 		const vr = this.view.renderer.vr;
 		if (this.isXr) {
@@ -130,7 +128,6 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 
 	private animationLoop = () => {
 		this.view.renderer.render(this.view.scene, this.view.camera);
-		// this.handleButtons();
 	}
 
 	private _cancelVr() {
@@ -146,49 +143,5 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 		this.device = device;
 		this.view.renderer.vr.setDevice(this.device);
 		this.trigger('connection:state:changed');
-	}
-
-	private handleButtons() {
-		if (this._isCanceled) { return; }
-
-		let gp: any;
-		if(isWebkitNavigator(navigator)) {
-			gp = navigator.webkitGetGamepads()[0];
-			// if(gp.buttons[0] == 1) {
-			// 	b--;
-			//   } else if(gp.buttons[1] == 1) {
-			// 	a++;
-			//   } else if(gp.buttons[2] == 1) {
-			// 	b++;
-			//   } else if(gp.buttons[3] == 1) {
-			// 	a--;
-			//   }
-		} else {
-			gp = navigator.getGamepads()[0];
-			// if(gp.buttons[0].value > 0 || gp.buttons[0].pressed == true) {
-			// 	b--;
-			//   } else if(gp.buttons[1].value > 0 || gp.buttons[1].pressed == true) {
-			// 	a++;
-			//   } else if(gp.buttons[2].value > 0 || gp.buttons[2].pressed == true) {
-			// 	b++;
-			//   } else if(gp.buttons[3].value > 0 || gp.buttons[3].pressed == true) {
-			// 	a--;
-			//   }
-		}
-		if (gp && gp.buttons) {
-			let index = 0;
-			for(const b of gp.buttons) {
-				// if (b === 1 || b.value && b.value > 0) {
-					// this._isCanceled = true;
-					// this.trigger('exit:vr:mode');
-					// return;
-				// }
-				if (b.pressed) {
-					console.log(`button-${index++} is pressed`);
-					// this.trigger('exit:vr:mode');
-					// return;
-				}
-			}
-		}
 	}
 }

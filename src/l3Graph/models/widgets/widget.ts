@@ -5,6 +5,7 @@ import { DiagramModel } from '../diagramModel';
 import { GraphView } from '../../views/graph/graphView';
 import { DiagramWidgetView } from '../../views/viewInterface';
 import { ThreejsVrManager } from '../../vrUtils/webVr';
+import { GamepadHandler } from '../../vrUtils/gamepadHandler';
 
 export const DEFAULT_SELECTION_TYPE_ID = 'l3graph-selection';
 
@@ -24,6 +25,7 @@ export interface WidgetModelContext {
     diagramModel: DiagramModel;
     keyHandler: KeyHandler;
     mouseHandler: MouseHandler;
+    gamepadHandler: GamepadHandler;
 }
 
 export interface WidgetViewContext<WidgetModel extends Widget = Widget> {

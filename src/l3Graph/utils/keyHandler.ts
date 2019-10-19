@@ -75,7 +75,7 @@ export class Cancellation extends Subscribable<CancellationEvents> {
     }
 }
 
-function animationFrameInterval(
+export function animationFrameInterval(
     intervalCallback: () => void,
 ): Cancellation {
     const cancellation = new Cancellation();

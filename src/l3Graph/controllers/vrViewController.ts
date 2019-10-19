@@ -3,6 +3,7 @@ import { MouseHandler } from '../utils/mouseHandler';
 import { KeyHandler, KEY_CODES, EventObject, Subscribable } from '../utils';
 import { ViewController, ViewControllerEvents } from './viewController';
 import { VrManager } from '../vrUtils/vrManager';
+import { GamepadHandler } from '../vrUtils/gamepadHandler';
 
 export class VrViewController extends Subscribable<ViewControllerEvents> implements ViewController {
     public readonly id = 'vr-view-controller';
@@ -15,6 +16,7 @@ export class VrViewController extends Subscribable<ViewControllerEvents> impleme
         protected view: DiagramView,
         protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
+        protected gamepadHandler: GamepadHandler,
     ) {
         super();
         this.vrManager = this.view.vrManager;
@@ -33,7 +35,6 @@ export class VrViewController extends Subscribable<ViewControllerEvents> impleme
             this.vrManager.start();
             this.view.renderGraph();
         }
-        
         this.keyHandler.on('keyPressed', this.onKeyPressed);
         this.vrManager.on('presenting:state:changed', this.onPresentingChanged);
         this.trigger('switched:on');

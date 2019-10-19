@@ -13,14 +13,6 @@ export interface ThreejsVrManager extends THREE.WebVRManager {
 	getController: (index: number) => THREE.Group;
 }
 
-export type GamepadEvents = /*click - */ 'select' | 'selectstart' | 'selectend';
-export interface VrGamepad {
-	id: number;
-	group: THREE.Group;
-	color: string;
-	selectPressed: boolean;
-}
-
 export type Device = VRDisplay & {
 	isPresenting: boolean;
 	exitPresent: () => void;
@@ -43,10 +35,6 @@ export interface XrNavigator extends Navigator {
 	xr: {
 		requestDevice: () => Promise<Device>;
 	}
-}
-
-export interface Gamepad {
-	buttons: number[];
 }
 
 export interface CompleteNavigator extends Navigator {

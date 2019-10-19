@@ -48,6 +48,7 @@
 
 @mixin l3g-position {
     position: absolute;
+    pointer-events: none;
 }
 
 $anchor-offset: 5px;
