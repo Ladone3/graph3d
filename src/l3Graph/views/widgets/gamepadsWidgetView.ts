@@ -84,7 +84,7 @@ export class GamepadsWidgetView implements DiagramWidgetView {
             const state = this.model.state;
 
             const lgp = this.leftGamepad;
-            if (lgp) {
+            if (lgp && state.leftGamepad) {
                 lgp.group.visible = true;
                 const color = state.leftGamepad.triggerPressed ? SELECTION_COLOR : lgp.color;
                 lgp.line.material = new THREE.LineBasicMaterial({color});
@@ -93,7 +93,7 @@ export class GamepadsWidgetView implements DiagramWidgetView {
                 this.leftGamepad.group.visible = false;
             }
             const rgp = this.rightGamepad;
-            if (rgp) {
+            if (rgp && state.rightGamepad) {
                 rgp.group.visible = true;
                 const color = state.rightGamepad.triggerPressed ? SELECTION_COLOR : rgp.color;
                 rgp.line.material = new THREE.LineBasicMaterial({color});

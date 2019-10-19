@@ -1,11 +1,16 @@
+import * as THREE from 'three';
 import { Subscribable } from '../utils/subscribeable';
 import { Cancellation, animationFrameInterval } from '../utils';
 import { VrEvent } from './webVr';
+import { Element } from '../models/graph/graphModel';
+import { DiagramModel } from '../models/diagramModel';
+import { DiagramView } from '../views/diagramView';
+import { mapMeshes } from '../utils/mouseHandler';
 
 export interface GamepadHandlerEvents {
-    'keyDown': Set<GAMEPAD_BUTTONS>;
-    'keyUp': Set<GAMEPAD_BUTTONS>;
-    'keyPressed': Set<GAMEPAD_BUTTONS>;
+    'keyDown': Map<GAMEPAD_BUTTONS, Element | undefined>;
+    'keyUp': Map<GAMEPAD_BUTTONS, Element | undefined>;
+    'keyPressed': Map<GAMEPAD_BUTTONS, Element | undefined>;
 }
 
 const OCULUS_BUTTON_CODES = {
@@ -40,12 +45,22 @@ export const CONTROLLERS_NUMBER = Object.keys(OCULUS_CONTROLLERS).length;
 
 // Now it's currently support only OCULUS gamepads
 export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
-    public readonly keyPressed = new Set<GAMEPAD_BUTTONS>();
+    public readonly keyPressed = new Map<GAMEPAD_BUTTONS, Element | undefined>();
     private cancellation: Cancellation | undefined;
     private existingControllersNumber = 0;
+    private raycaster: THREE.Raycaster;
+    private tempMatrix: THREE.Matrix4;
 
-    constructor() {
+    private targetMap = new Map<number, THREE.Object3D>();
+    private materialMap = new Map<THREE.Object3D, THREE.Material>();
+
+    constructor(
+        private diagramhModel: DiagramModel,
+        private diagramView: DiagramView,
+    ) {
         super();
+        this.raycaster = new THREE.Raycaster();
+        this.tempMatrix = new THREE.Matrix4();
         window.addEventListener('vrdisplaypresentchange', event => {
 			const vrEvent = event as VrEvent;
 			if (vrEvent.display.isPresenting) {
@@ -71,13 +86,14 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
     }
 
     private refreshBtnMap() {
-        const keyDown = new Set<GAMEPAD_BUTTONS>();
-        const keyUp = new Set<GAMEPAD_BUTTONS>();
+        const keyDown = new Map<GAMEPAD_BUTTONS, Element | undefined>();
+        const keyUp = new Map<GAMEPAD_BUTTONS, Element | undefined>();
         let gamepadNumber = 0;
         for (let gamepadId = 0; gamepadId < CONTROLLERS_NUMBER; gamepadId++) {
             const gamepad = getGamepad(gamepadId);
             const gamepadExists = gamepad !== undefined && gamepad.pose;
             if (gamepadExists) {
+                const target = this.getTarget(gamepadId);
                 gamepadNumber++;
                 for(let buttonId = 0; buttonId < gamepad.buttons.length; buttonId++) {
                     if (buttonId === OCULUS_BUTTON_CODES.OCULUS_MENU) { // ignore these buttons
@@ -87,10 +103,10 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
                     const wasPressed = this.keyPressed.has(button);
                     const isPressed = gamepad.buttons[buttonId].pressed;
                     if (isPressed && !wasPressed) {
-                        keyDown.add(button);
-                        this.keyPressed.add(button);
+                        keyDown.set(button, target);
+                        this.keyPressed.set(button, target);
                     } else if (wasPressed && !isPressed) {
-                        keyUp.add(button);
+                        keyUp.set(button, this.keyPressed.get(button));
                         this.keyPressed.delete(button);
                     }
                 }
@@ -100,6 +116,50 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         if (keyDown.size > 0) { this.trigger('keyDown', keyDown) }
         if (this.keyPressed.size > 0) { this.trigger('keyPressed', this.keyPressed) }
         if (gamepadNumber !== this.existingControllersNumber) { this.existingControllersNumber = gamepadNumber; }
+    }
+
+    private getTarget(gamepadId: number): Element | undefined {
+        // We can calculate It by ourself, but it's already implemented in three.js
+        const controller = this.diagramView.renderer.vr.getController(gamepadId);
+
+        this.tempMatrix.identity().extractRotation(controller.matrixWorld);
+        this.raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+        this.raycaster.ray.direction.set(0, 0, -1).applyMatrix4(this.tempMatrix);
+        const {meshes, nodeMeshMap} = mapMeshes(this.diagramhModel, this.diagramView);
+
+        const intersections = this.raycaster.intersectObjects(meshes);
+
+        // Highlighting
+        // =============================
+        const previousSelection = this.targetMap.get(gamepadId);
+        if (intersections.length > 0) {
+            const intersectedMesh = intersections[0].object;
+            const meshIsChanged = previousSelection !== intersectedMesh;
+            if (meshIsChanged) {
+                if (previousSelection) {
+                    (previousSelection as THREE.Mesh).material = this.materialMap.get(previousSelection);
+                }
+                this.targetMap.set(gamepadId, intersectedMesh);
+                if (!this.materialMap.has(intersectedMesh)) this.materialMap.set(intersectedMesh, (intersectedMesh as THREE.Mesh).material);
+                (intersectedMesh as THREE.Mesh).material = new THREE.MeshBasicMaterial({color: 'red'});
+            }
+        } else {
+            if (previousSelection) {
+                this.targetMap.delete(gamepadId);
+                if (Array.from(this.targetMap.values()).indexOf(previousSelection) === -1) {
+                    (previousSelection as THREE.Mesh).material = this.materialMap.get(previousSelection);
+                }
+            }
+        }
+        // =============================
+
+        if (intersections.length > 0) {
+            const intersectedMesh = intersections[0].object;
+            const index = meshes.indexOf(intersectedMesh);
+            return nodeMeshMap[index];
+        } else {
+            return undefined;
+        }
     }
 
     private start(): Cancellation {
@@ -153,7 +213,7 @@ function getOculusButton(gamepadId: number, buttonCode: number) {
     }
 }
 
-function getGamepad(id: string | number): Gamepad | undefined {
+function getGamepad(id: number): Gamepad | undefined {
     const gamepads = navigator.getGamepads && navigator.getGamepads();
 
     for (let i = 0, j = 0; i < gamepads.length; i++) {

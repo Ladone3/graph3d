@@ -136,8 +136,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         );
         const viewDirection = vector.unproject(view.camera);
 
-        const meshes: THREE.Object3D[] = [];
-        const nodeMeshMap: Element[] = [];
+        const {meshes, nodeMeshMap} = mapMeshes(this.diagramhModel, this.diagramView);
 
         this.diagramhModel.nodes.forEach(node => {
             const nodeView = this.diagramView.graphView.views.get(node.id);
@@ -159,16 +158,37 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
             this.diagramView.camera.position,
             viewDirection.sub(this.diagramView.camera.position).normalize()
         );
-        const intersects = this.raycaster.intersectObjects(meshes);
+        const intersections = this.raycaster.intersectObjects(meshes);
 
-        if (intersects.length > 0) {
-            const selectedMesh = intersects[0].object;
+        if (intersections.length > 0) {
+            const selectedMesh = intersections[0].object;
             const index = meshes.indexOf(selectedMesh);
             return nodeMeshMap[index];
         } else {
             return undefined;
         }
     }
+}
+
+export function mapMeshes(diagramhModel: DiagramModel, diagramView: DiagramView)  {
+    const meshes: THREE.Object3D[] = [];
+    const nodeMeshMap: Element[] = [];
+    diagramhModel.nodes.forEach(node => {
+        const nodeView = diagramView.graphView.views.get(node.id);
+
+        if (nodeView.mesh) {
+            if (nodeView.mesh instanceof THREE.Group) {
+                for (const obj of nodeView.mesh.children) {
+                    meshes.push(obj);
+                    nodeMeshMap.push(node);
+                }
+            } else {
+                meshes.push(nodeView.mesh);
+                nodeMeshMap.push(node);
+            }
+        }
+    });
+    return {meshes, nodeMeshMap};
 }
 
 export function handleDragging(
