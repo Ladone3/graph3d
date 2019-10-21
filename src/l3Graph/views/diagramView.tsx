@@ -29,6 +29,11 @@ export interface CameraState {
 }
 
 export const DEFAULT_CAMERA_DIST = 100;
+export const DEFAULT_SCREEN_PARAMETERS = {
+    VIEW_ANGLE: 45,
+    NEAR: 0.1,
+    FAR: 10000,
+}
 
 export class DiagramView extends React.Component<DiagramViewProps> {
     renderer: WebGLRenderer;
@@ -143,12 +148,10 @@ export class DiagramView extends React.Component<DiagramViewProps> {
 
         // Prepare perspective camera
         this.screenParameters = {
+            ...DEFAULT_SCREEN_PARAMETERS,
             WIDTH: this.meshHtmlContainer.clientWidth,
             HEIGHT: this.meshHtmlContainer.clientHeight,
-            VIEW_ANGLE: 45,
             ASPECT: this.meshHtmlContainer.clientWidth / this.meshHtmlContainer.clientHeight,
-            NEAR: 0.1,
-            FAR: 10000,
         };
 
         this.camera = new THREE.PerspectiveCamera(

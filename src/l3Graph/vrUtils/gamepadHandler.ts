@@ -129,7 +129,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
 
         const intersections = this.raycaster.intersectObjects(meshes);
 
-        // Highlighting
+        // Highlighting todo: move this code out
         // =============================
         const previousSelection = this.targetMap.get(gamepadId);
         if (intersections.length > 0) {

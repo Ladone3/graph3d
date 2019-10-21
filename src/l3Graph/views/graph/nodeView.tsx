@@ -8,7 +8,7 @@ import {
 } from '../../customisation';
 import { preparePrimitive, prepareMesh } from '../../utils/shapeUtils';
 import { Vector3D } from '../../models/structures';
-import { treeVector3ToVector3D } from '../../utils';
+import { treeVector3ToVector3D, getModelFittingBox } from '../../utils';
 import { AbstractOverlayAnchor } from './overlayAnchor';
 import { DiagramElementView } from '../viewInterface';
 
@@ -107,14 +107,9 @@ export class NodeView implements DiagramElementView {
 
 export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node, NodeView> {
     getModelFittingBox() {
-        const {x, y, z} = this.meshModel.size;
-        const maxSide = Math.max(x, y, z);
-
         return {
             ...this.meshModel.position,
-            width: maxSide,
-            height: maxSide,
-            deep: maxSide,
+            ...getModelFittingBox(this.meshModel.size),
         };
     }
 
