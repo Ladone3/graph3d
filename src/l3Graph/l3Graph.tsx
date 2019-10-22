@@ -93,6 +93,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
             ({data: {event, target}}) => this.mouseHandler.onMouseDown(event, target));
         this.mouseHandler = new MouseHandler(this.diagramModel, this.view);
         this.keyHandler = new KeyHandler();
+        this.keyHandler.switchOn();
         this.gamepadHandler = new GamepadHandler(this.diagramModel, this.view);
         this.configureViewControllers();
         this.defaultEditor = new DefaultEditor(

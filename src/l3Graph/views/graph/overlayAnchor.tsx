@@ -1,64 +1,29 @@
 import * as THREE from 'three';
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
-import { Size } from '../../models/graph/node';
 import { ReactOverlay, createContextProvider, enrichOverlay } from '../../customisation';
-import { Vector3D, Box } from '../../models/structures';
+import { Box } from '../../models/structures';
+import { Subscribable } from '../../utils';
 
 export type OverlayPosition = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'c';
 
-export interface OverlayAnchor {
-    html: HTMLElement;
-    isVisible(): boolean;
-    getSprite(): THREE.CSS3DSprite | undefined;
-    hasOverlay(owelrayId: string): boolean;
-    setOverlay(overlay: ReactOverlay, position: OverlayPosition): void;
-    removeOverlay(owelrayId: string): void;
-    update(): void;
-    render(): void;
+export interface OverlayAnchorEvents {
+    'anchor:changed': void;
 }
 
-export class MockOverlayAnchor implements OverlayAnchor {
-    public html = document.createElement('div');
-    isVisible() {
-        return false;
-    }
-
-    hasOverlay(owelrayId: string): boolean {
-        return false;
-    }
-
-    getSprite(): undefined {
-        return undefined;
-    }
-
-    setOverlay() {
-        throw new Error('Method is not allowed for this element!');
-    }
-
-    removeOverlay() {
-        throw new Error('Method is not allowed for this element!');
-    }
-
-    update() {
-        // do nothing
-    }
-
-    render() {
-        // do nothing
-    }
-}
-
-export abstract class AbstractOverlayAnchor<Model, View> implements OverlayAnchor {
-    public html: HTMLElement;
+// todo: verify again the functions list - not everything is clear here
+export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<OverlayAnchorEvents> {
+    readonly html: HTMLElement;
+    readonly renderedOverlays = new Map<string, HTMLElement>();
+    readonly overlayPositions: Map<string, OverlayPosition>;
     protected sprite: THREE.CSS3DSprite;
     protected overlaysByPosition: Map<OverlayPosition, Map<string, ReactOverlay>>;
-    protected overlayPositions: Map<string, OverlayPosition>;
 
     constructor(
         protected meshModel: Model,
         protected meshView: View,
     ) {
+        super();
         this.html = document.createElement('DIV');
         this.sprite = new THREE.CSS3DSprite(this.html);
         this.overlaysByPosition = new Map();
@@ -80,14 +45,20 @@ export abstract class AbstractOverlayAnchor<Model, View> implements OverlayAncho
         return this.overlaysByPosition.size > 0;
     }
 
+    hide() {
+        this.overlayPositions.forEach((p, id) => {
+            this.removeOverlay(id);
+        });
+    }
+
     setOverlay(overlay: ReactOverlay, position: OverlayPosition) {
         if (!this.overlaysByPosition.has(position)) {
             this.overlaysByPosition.set(position, new Map());
         }
         this.overlaysByPosition.get(position).set(overlay.id, overlay);
         this.overlayPositions.set(overlay.id, position);
-        this.render();
-        
+        this.redraw();
+        this.trigger('anchor:changed');
     }
 
     removeOverlay(id: string) {
@@ -99,7 +70,16 @@ export abstract class AbstractOverlayAnchor<Model, View> implements OverlayAncho
             this.overlaysByPosition.delete(position);
         }
         this.overlayPositions.delete(id);
-        this.render();
+        this.renderedOverlays.delete(id);
+        this.redraw();
+        this.trigger('anchor:changed');
+    }
+
+    update() {
+        if (this.overlaysByPosition.size > 0) {
+            const {x, y, z} = this.getModelFittingBox();
+            this.sprite.position.set(x, y, z);
+        }
     }
 
     protected enrichOverlay(pooreOverlay: ReactOverlay): ReactOverlay {
@@ -118,14 +98,7 @@ export abstract class AbstractOverlayAnchor<Model, View> implements OverlayAncho
         </div>;
     }
 
-    update() {
-        if (this.overlaysByPosition.size > 0) {
-            const {x, y, z} = this.getModelFittingBox();
-            this.sprite.position.set(x, y, z);
-        }
-    }
-
-    render() {
+    private redraw() {
         const OverlayedGroup = this.overlayedGroup;
         if (this.overlaysByPosition.size === 0) {
             ReactDOM.unmountComponentAtNode(this.html);
@@ -134,16 +107,9 @@ export abstract class AbstractOverlayAnchor<Model, View> implements OverlayAncho
             this.overlaysByPosition.forEach((overlays, position) => {
                 const overlayViews: JSX.Element[] = [];
                 overlays.forEach(poorOverlay => {
-                    const overlay = this.enrichOverlay(poorOverlay);
-                    const key = `position-${position}-${poorOverlay.id}`;
-                    if (overlay.context) {
-                        const Context = createContextProvider(overlay.context);
-                        overlayViews.push(<Context key={key}>
-                            {overlay.value}
-                        </Context>);
-                    } else {
-                        overlayViews.push(overlay.value);
-                    }
+                    overlayViews.push(<div ref={(ref => this.renderedOverlays.set(poorOverlay.id, ref))}>
+                        {this.renderOverlay(poorOverlay, position)}
+                    </div>);
                 });
                 overlayGroups.push(<OverlayedGroup position={position}>{overlayViews}</OverlayedGroup>);
             });
@@ -159,6 +125,19 @@ export abstract class AbstractOverlayAnchor<Model, View> implements OverlayAncho
                 </div>,
                 this.html,
             );
+        }
+    }
+
+    private renderOverlay(poorOverlay: ReactOverlay, position: OverlayPosition) {
+        const overlay = this.enrichOverlay(poorOverlay);
+        const key = `position-${position}-${poorOverlay.id}`;
+        if (overlay.context) {
+            const Context = createContextProvider(overlay.context);
+            return (<Context key={key}>
+                {overlay.value}
+            </Context>);
+        } else {
+            return overlay.value;
         }
     }
 

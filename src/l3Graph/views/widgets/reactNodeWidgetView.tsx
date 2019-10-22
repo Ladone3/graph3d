@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 import { FocusNodeWidget } from '../../models/widgets/focusNodeWidget';
-import { OverlayAnchor, MockOverlayAnchor, OverlayPosition } from '../graph/overlayAnchor';
+import { OverlayPosition } from '../graph/overlayAnchor';
 import { Node } from '../../models/graph/node';
 import { GraphView } from '../graph/graphView';
 import { ReactOverlay } from '../../customisation';
@@ -17,7 +17,6 @@ export interface ReactNodeWidgetViewParameters {
 export class ReactNodeWidgetView implements DiagramWidgetView {
     public readonly model: FocusNodeWidget;
     public readonly mesh: THREE.Group;
-    public readonly overlayAnchor: OverlayAnchor;
 
     private htmlOverlay: HTMLElement;
     private overlay: ReactOverlay;
@@ -32,7 +31,6 @@ export class ReactNodeWidgetView implements DiagramWidgetView {
         this.overlay = parameters.overlay;
 
         this.htmlOverlay = document.createElement('DIV');
-        this.overlayAnchor = new MockOverlayAnchor();
 
         this.update();
     }

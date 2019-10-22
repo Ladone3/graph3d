@@ -7,7 +7,7 @@ export function vector3DToTreeVector3(v: Vector3D): THREE.Vector3 {
     return new THREE.Vector3(x, y, z);
 }
 
-export function treeVector3ToVector3D(v: THREE.Vector3): Vector3D {
+export function threeVector3ToVector3D(v: THREE.Vector3): Vector3D {
     const {x, y, z} = v;
     return {x, y, z};
 }
@@ -120,7 +120,7 @@ export function normalUp(vector: Vector3D) {
     quaternion.setFromAxisAngle(normalL, -Math.PI / 2);
 
     const treeVector = vector3DToTreeVector3(vector).applyQuaternion(quaternion);
-    return treeVector3ToVector3D(treeVector);
+    return threeVector3ToVector3D(treeVector);
 }
 
 export function normalDown(vector: Vector3D) {

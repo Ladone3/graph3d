@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { DiagramWidgetView } from '../viewInterface';
 import { ArrowHelper } from '../../models/widgets/arrowHelper';
-import { OverlayAnchor, MockOverlayAnchor } from '../graph/overlayAnchor';
 
 const LINES_LENGTH = 100;
 
@@ -12,7 +11,6 @@ export interface ArrowHelperViewParameters {
 export class ArrowHelperView implements DiagramWidgetView {
     public readonly model: ArrowHelper;
     public readonly mesh: THREE.Group;
-    public readonly overlayAnchor: OverlayAnchor;
 
     private boundingBox: THREE.Box3;
 
@@ -74,7 +72,6 @@ export class ArrowHelperView implements DiagramWidgetView {
         this.boundingBox = new THREE.Box3();
         this.boundingBox.setFromObject(this.mesh);
 
-        this.overlayAnchor = new MockOverlayAnchor();
         this.update();
     }
 

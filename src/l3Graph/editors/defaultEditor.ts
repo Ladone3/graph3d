@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { vector3DToTreeVector3, KeyHandler, KEY_CODES, EventObject, treeVector3ToVector3D, sum, getModelFittingBox } from '../utils';
+import { vector3DToTreeVector3, KeyHandler, KEY_CODES, EventObject, threeVector3ToVector3D, sum, getModelFittingBox } from '../utils';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView, DEFAULT_SCREEN_PARAMETERS } from '../views/diagramView';
 import { Element } from '../models/graph/graphModel';
@@ -48,7 +48,7 @@ export class DefaultEditor {
         });
 
         this.keyHandler.on('keyPressed', e => this.onKeyPressed(e.data));
-        this.gamepadHandler.on('keyDown', event => this.onKeyDown(event.data))
+        this.gamepadHandler.on('keyDown', event => this.onGamepadDown(event.data))
     }
 
     private onKeyPressed(keyMap: Set<number>) {
@@ -69,7 +69,7 @@ export class DefaultEditor {
 
     private helperMap = new Map<number, GamepadDraggingHelper>();
 
-    private onKeyDown = (keyMap: Map<GAMEPAD_BUTTONS, Element>) => {
+    private onGamepadDown = (keyMap: Map<GAMEPAD_BUTTONS, Element>) => {
         const leftTrigerTarget = keyMap.get(GAMEPAD_BUTTONS.LEFT_TRIGGER);
         const leftDraggingHelper = registerHelper(
             this.diagramView, OCULUS_CONTROLLERS.LEFT_CONTROLLER, leftTrigerTarget, this.helperMap,
@@ -81,12 +81,12 @@ export class DefaultEditor {
         );
 
         if (leftDraggingHelper || rightDraggingHelper) {
-            this.gamepadHandler.on('keyUp', this.onKeyUp);
-            this.gamepadHandler.on('keyPressed', this.onKeyMove);
+            this.gamepadHandler.on('keyUp', this.onGamepadUp);
+            this.gamepadHandler.on('keyPressed', this.onGamepadMove);
         }
     }
 
-    private onKeyUp = (event: EventObject<'keyUp', Map<GAMEPAD_BUTTONS, Element>>) => {
+    private onGamepadUp = (event: EventObject<'keyUp', Map<GAMEPAD_BUTTONS, Element>>) => {
         const keyMap = event.data;
         if (keyMap.has(GAMEPAD_BUTTONS.LEFT_TRIGGER)) {
             deleteHelper(this.diagramView, OCULUS_CONTROLLERS.LEFT_CONTROLLER, this.helperMap);
@@ -96,12 +96,12 @@ export class DefaultEditor {
         }
 
         if (this.helperMap.size === 0) {
-            this.gamepadHandler.unsubscribe(this.onKeyUp)
-            this.gamepadHandler.unsubscribe(this.onKeyMove)
+            this.gamepadHandler.unsubscribe(this.onGamepadUp)
+            this.gamepadHandler.unsubscribe(this.onGamepadMove)
         }
     }
 
-    private onKeyMove = (event: EventObject<'keyPressed', Map<GAMEPAD_BUTTONS, Element>>) => {
+    private onGamepadMove = (event: EventObject<'keyPressed', Map<GAMEPAD_BUTTONS, Element>>) => {
         const keyMap = event.data;
 
         if (this.helperMap.has(OCULUS_CONTROLLERS.LEFT_CONTROLLER)) {
@@ -194,7 +194,7 @@ function deleteHelper(
         const controller = diagramView.renderer.vr.getController(controllerId);
         if (controller) {
             attach(helper.mockObject, helper.targetParent, diagramView.scene);
-            trigerTarget.setPosition(treeVector3ToVector3D(helper.mockObject.position));
+            trigerTarget.setPosition(threeVector3ToVector3D(helper.mockObject.position));
             detach(helper.mockObject, helper.mockObject.parent, diagramView.scene);
             helperMap.delete(controllerId);
 
@@ -214,7 +214,7 @@ function onKeyMove(
         const controller = diagramView.renderer.vr.getController(controllerId);
         if (controller) {
             attach(helper.mockObject, diagramView.scene, diagramView.scene);
-            helper.node.setPosition(treeVector3ToVector3D(helper.mockObject.position));
+            helper.node.setPosition(threeVector3ToVector3D(helper.mockObject.position));
             attach(helper.mockObject, controller, diagramView.scene);
 
             if (zOffset !== 0) {

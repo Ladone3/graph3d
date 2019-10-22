@@ -9,7 +9,7 @@ import {
     distance,
 } from '../../utils';
 import { Vector3D } from '../../models/structures';
-import { OverlayAnchor, AbstractOverlayAnchor } from './overlayAnchor';
+import { AbstractOverlayAnchor } from './overlayAnchor';
 import { LinkRouter, getPointAlongPolylineByRatio } from '../../utils/linkRouter';
 import { DiagramElementView } from '../viewInterface';
 
@@ -17,7 +17,7 @@ const ARROW_LENGTH = 10;
 
 export class LinkView implements DiagramElementView {
     public readonly mesh: THREE.Group;
-    public readonly overlayAnchor: OverlayAnchor;
+    public readonly overlayAnchor: LinkOverlayAnchor;
     public polyline: Vector3D[] = [];
 
     private lines: THREE.Group[];

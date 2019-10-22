@@ -176,7 +176,7 @@ export function mapMeshes(diagramhModel: DiagramModel, diagramView: DiagramView)
     diagramhModel.nodes.forEach(node => {
         const nodeView = diagramView.graphView.views.get(node.id);
 
-        if (nodeView.mesh) {
+        if (nodeView && nodeView.mesh) {
             if (nodeView.mesh instanceof THREE.Group) {
                 for (const obj of nodeView.mesh.children) {
                     meshes.push(obj);

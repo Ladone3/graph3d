@@ -8,14 +8,18 @@ import {
 } from '../../customisation';
 import { preparePrimitive, prepareMesh } from '../../utils/shapeUtils';
 import { Vector3D } from '../../models/structures';
-import { treeVector3ToVector3D, getModelFittingBox } from '../../utils';
-import { AbstractOverlayAnchor } from './overlayAnchor';
+import { threeVector3ToVector3D, getModelFittingBox, vector3DToTreeVector3 as vector3DToThreeVector3, sum } from '../../utils';
+import { AbstractOverlayAnchor, OverlayPosition } from './overlayAnchor';
 import { DiagramElementView } from '../viewInterface';
+import { AbstracrOverlayAnchor3d } from './overlay3DAnchor';
+import { SELECTION_PADDING } from '../widgets/selectionView';
+import { Rendered3dSprite } from '../../utils/htmlToSprite';
 
 export class NodeView implements DiagramElementView {
     public readonly model: Node;
     public readonly mesh: THREE.Object3D;
     public readonly overlayAnchor: NodeOverlayAnchor;
+    public readonly overlayAnchor3d: NodeOverlayAnchor3d;
 
     private boundingBox: THREE.Box3;
     private meshOriginalSize: THREE.Vector3;
@@ -41,7 +45,7 @@ export class NodeView implements DiagramElementView {
             this.boundingBox.setFromObject(this.mesh)
                 .getCenter(this.mesh.position)
                 .multiplyScalar(-1);
-            this.meshOffset = treeVector3ToVector3D(this.mesh.position);
+            this.meshOffset = threeVector3ToVector3D(this.mesh.position);
             this.meshOriginalSize = this.boundingBox.getSize(this.mesh.position).clone();
 
             if (meshDescriptor.size && this.model.size.placeholder) {
@@ -55,6 +59,8 @@ export class NodeView implements DiagramElementView {
         if (template.overlay) {
             this.overlayAnchor.setOverlay(template.overlay, 'e');
         }
+
+        this.overlayAnchor3d = new NodeOverlayAnchor3d(this.model, this, this.overlayAnchor);
 
         this.update();
     }
@@ -82,6 +88,7 @@ export class NodeView implements DiagramElementView {
             );
         }
         this.overlayAnchor.update();
+        this.overlayAnchor3d.update();
     }
 
     private calcScale(): Vector3D {
@@ -116,4 +123,66 @@ export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node, NodeView> {
     protected enrichOverlay(pooreOverlay: ReactOverlay): ReactOverlay {
         return enrichOverlay(pooreOverlay, this.meshModel.data);
     }
+}
+
+export class NodeOverlayAnchor3d extends AbstracrOverlayAnchor3d<Node, NodeView> {
+    forceUpdate() {
+        this.meshModel.forceUpdate();
+    }
+
+    updatePosition() {
+        this.mesh.position.copy(vector3DToThreeVector3(this.meshView.model.position));
+    }
+
+    placeSprites(renderedSprites: Rendered3dSprite[]) {
+        const spritesByPositions = new Map<OverlayPosition, Rendered3dSprite[]>();
+        for (const renderedSprite of renderedSprites) {
+            if (!spritesByPositions.has(renderedSprite.position)) {
+                spritesByPositions.set(renderedSprite.position, []);
+            }
+            spritesByPositions.get(renderedSprite.position).push(renderedSprite);
+        }
+
+        const initialOffset = {
+            x: this.meshModel.size.x / 2 + SELECTION_PADDING,
+            y: this.meshModel.size.y / 2 + SELECTION_PADDING,
+            z: 0,
+        };
+        spritesByPositions.forEach((sprites, position) => {
+            let offset = applyOffset({x: 0, y: 0, z: 0}, initialOffset, position);
+            for (const renderedSprite of sprites) {
+                renderedSprite.sprite.position.set(
+                    offset.x, 
+                    offset.y, 
+                    offset.z, 
+                )
+                offset = applyOffset(offset, {
+                    x: SELECTION_PADDING + renderedSprite.size.x,
+                    y: SELECTION_PADDING + renderedSprite.size.y,
+                    z: 0,
+                }, position);
+            }
+        });
+    }
+}
+
+function applyOffset(
+    basicVector: Vector3D,
+    offset: Vector3D,
+    position: OverlayPosition,
+): Vector3D {
+    const {x: xOffset, y: yOffset} = offset;
+    let offsetByPossition: Vector3D;
+    switch(position) {
+        case 'e': offsetByPossition = {x: xOffset,  y: 0, z: 0}; break;
+        case 'w': offsetByPossition = {x: -xOffset, y: 0, z: 0}; break;
+        case 'n': offsetByPossition = {x: 0, y: -yOffset, z: 0}; break;
+        case 's': offsetByPossition = {x: 0, y: yOffset, z: 0}; break;
+        case 'ne': offsetByPossition = {x: xOffset,  y: -yOffset, z: 0}; break;
+        case 'se': offsetByPossition = {x: xOffset,  y: yOffset, z: 0}; break;
+        case 'nw': offsetByPossition = {x: -xOffset,  y: -yOffset, z: 0}; break;
+        case 'sw': offsetByPossition = {x: -xOffset,  y: yOffset, z: 0}; break;
+        default: offsetByPossition = {x: 0, y: 0, z: 0};
+    }
+    return sum(basicVector, offsetByPossition);
 }

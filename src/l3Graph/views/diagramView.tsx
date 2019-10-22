@@ -64,13 +64,14 @@ export class DiagramView extends React.Component<DiagramViewProps> {
 
     componentDidMount() {
         this.initScene();
-        this.initSubViews();
-        this.subscribeOnModel();
-        this.renderGraph();
         this.vrManager = new VrManager(this);
         this.vrManager.on('presenting:state:changed', () => {
             this.widgetsView.update();
         })
+        this.initSubViews();
+        this.subscribeOnModel();
+        this.renderGraph();
+
         if (this.props.onViewMount) {
             this.props.onViewMount(this);
         }
@@ -206,6 +207,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
     private initSubViews() {
         const viewOptions = this.props.viewOptions || {};
         this.graphView = new GraphView({
+            vrManager: this.vrManager,
             graphModel: this.props.model.graph,
             scene: this.scene,
             nodeTemplateProvider: viewOptions.nodeTemplateProvider,

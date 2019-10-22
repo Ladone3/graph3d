@@ -49,7 +49,7 @@ export class WidgetsView {
                 this.scene.add(view.mesh);
             }
 
-            if (view.overlayAnchor.isVisible()) {
+            if (view.overlayAnchor && view.overlayAnchor.isVisible()) {
                 this.scene.add(view.overlayAnchor.getSprite());
             }
             this.views.set(widget.widgetId, view);
@@ -64,7 +64,7 @@ export class WidgetsView {
                 this.scene.remove(view.mesh);
             }
 
-            if (view.overlayAnchor.isVisible()) {
+            if (view.overlayAnchor && view.overlayAnchor.isVisible()) {
                 this.scene.remove(view.overlayAnchor.getSprite());
             }
             if (view.onRemove) { view.onRemove(); }

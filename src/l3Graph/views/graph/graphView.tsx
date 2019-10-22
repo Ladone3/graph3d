@@ -15,9 +15,12 @@ import { Link } from '../../models/graph/link';
 import { Node } from '../../models/graph/node';
 import { LinkRouter, DefaultLinkRouter } from '../../utils/linkRouter';
 import { DiagramElementView } from '../viewInterface';
+import { VrManager } from '../../vrUtils/vrManager';
+import { AbstracrOverlayAnchor3d } from './overlay3DAnchor';
 
 export interface GraphViewProps {
     graphModel: GraphModel;
+    vrManager: VrManager;
     scene: THREE.Scene;
     nodeTemplateProvider?: NodeTemplateProvider;
     linkTemplateProvider?: LinkTemplateProvider;
@@ -32,6 +35,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
     camera: THREE.PerspectiveCamera;
     scene: THREE.Scene;
     views: Map<string, DiagramElementView>;
+    anchors3d: AbstracrOverlayAnchor3d<any, any>[];
 
     renderer: THREE.WebGLRenderer;
     overlayRenderer: THREE.CSS3DRenderer;
@@ -39,6 +43,8 @@ export class GraphView extends Subscribable<GraphViewEvents> {
     meshHtmlContainer: HTMLElement;
     overlayHtmlContainer: HTMLElement;
     linkRouter: LinkRouter;
+
+    vrManager: VrManager;
 
     constructor(private props: GraphViewProps) {
         super();
@@ -48,6 +54,15 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         this.linkRouter = new DefaultLinkRouter();
         this.graphModel.nodes.forEach(node => this.registerElement(node));
         this.graphModel.links.forEach(link => this.registerElement(link));
+        this.anchors3d = [];
+        this.vrManager = props.vrManager;
+        this.vrManager.on('presenting:state:changed', () => {
+            if (this.vrManager.isStarted) {
+                this.anchors3d.forEach((sprite) => this.scene.add(sprite.mesh));
+            } else {
+                this.anchors3d.forEach((sprite) => this.scene.remove(sprite.mesh));
+            }
+        })
     }
 
     public registerElement(element: Element) {
@@ -65,7 +80,11 @@ export class GraphView extends Subscribable<GraphViewEvents> {
             if (view.mesh) {
                 this.scene.add(view.mesh);
             }
-            if (view.overlayAnchor.isVisible()) {
+            if (view.overlayAnchor3d) {
+                // this.scene.add(view.overlayAnchor3d.mesh);
+                this.anchors3d.push(view.overlayAnchor3d);
+            }
+            if (view.overlayAnchor && view.overlayAnchor.isVisible()) {
                 view.overlayAnchor.html.onmousedown = e => {
                     e.stopPropagation();
                     this.trigger('overlay:down', {event: e, target: element});
@@ -82,7 +101,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
             if (view.mesh) {
                 this.scene.remove(view.mesh);
             }
-            if (view.overlayAnchor.isVisible()) {
+            if ( view.overlayAnchor && view.overlayAnchor.isVisible()) {
                 this.scene.remove(view.overlayAnchor.getSprite());
             }
         }

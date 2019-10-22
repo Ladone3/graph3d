@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { DiagramWidgetView } from '../viewInterface';
-import { OverlayAnchor, MockOverlayAnchor } from '../graph/overlayAnchor';
 import { GamepadsWidget } from '../../models/widgets/gamepadsWidget';
 import { ThreejsVrManager } from '../../vrUtils/webVr';
 import { OCULUS_CONTROLLERS } from '../../vrUtils/gamepadHandler';
@@ -25,7 +24,6 @@ interface RenderedGamepad {
 export class GamepadsWidgetView implements DiagramWidgetView {
     public readonly model: GamepadsWidget;
     public readonly mesh: THREE.Group;
-    public readonly overlayAnchor: OverlayAnchor;
 
     private vrManager: ThreejsVrManager;
     private boundingBox: THREE.Box3 = new THREE.Box3();;
@@ -34,7 +32,6 @@ export class GamepadsWidgetView implements DiagramWidgetView {
 
     constructor(parameters: GamepadsWidgetViewParameters) {
         // todo: do we really need MockAnchors? Probably undefined would be OK.
-        this.overlayAnchor = new MockOverlayAnchor();
         this.vrManager = parameters.vrManager;
         this.model = parameters.model;
         
