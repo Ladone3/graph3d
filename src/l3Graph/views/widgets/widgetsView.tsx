@@ -49,8 +49,11 @@ export class WidgetsView {
                 this.scene.add(view.mesh);
             }
 
-            if (view.overlayAnchor && view.overlayAnchor.isVisible()) {
-                this.scene.add(view.overlayAnchor.getSprite());
+            if (view.overlayAnchor) {
+                this.scene.add(view.overlayAnchor.sprite);
+            }
+            if (view.overlayAnchor3d) {
+                this.scene.add(view.overlayAnchor3d.mesh);
             }
             this.views.set(widget.widgetId, view);
         }
@@ -64,8 +67,11 @@ export class WidgetsView {
                 this.scene.remove(view.mesh);
             }
 
-            if (view.overlayAnchor && view.overlayAnchor.isVisible()) {
-                this.scene.remove(view.overlayAnchor.getSprite());
+            if (view.overlayAnchor) {
+                this.scene.remove(view.overlayAnchor.sprite);
+            }
+            if (view.overlayAnchor) {
+                this.scene.remove(view.overlayAnchor3d.mesh);
             }
             if (view.onRemove) { view.onRemove(); }
         }

@@ -45,10 +45,6 @@ export class DefaultLinkRouter implements LinkRouter {
     }
 }
 
-function getGroupId(link: LinkModel): string {
-    return `${[link.sourceId, link.targetId].sort().join('<==>')}`;
-}
-
 /**
  * @param polyline
  * @param offset from 0 to 1

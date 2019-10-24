@@ -16,7 +16,7 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
     readonly html: HTMLElement;
     readonly renderedOverlays = new Map<string, HTMLElement>();
     readonly overlayPositions: Map<string, OverlayPosition>;
-    protected sprite: THREE.CSS3DSprite;
+    readonly sprite: THREE.CSS3DSprite;
     protected overlaysByPosition: Map<OverlayPosition, Map<string, ReactOverlay>>;
 
     constructor(
@@ -28,13 +28,6 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
         this.sprite = new THREE.CSS3DSprite(this.html);
         this.overlaysByPosition = new Map();
         this.overlayPositions = new Map();
-    }
-
-    getSprite() {
-        if (!this.isVisible()) {
-            return undefined;
-        }
-        return this.sprite;
     }
 
     hasOverlay(owelrayId: string): boolean {

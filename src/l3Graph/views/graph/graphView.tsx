@@ -35,7 +35,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
     camera: THREE.PerspectiveCamera;
     scene: THREE.Scene;
     views: Map<string, DiagramElementView>;
-    anchors3d: AbstracrOverlayAnchor3d<any, any>[];
+    anchors3d: Set<AbstracrOverlayAnchor3d<any, any>>;
 
     renderer: THREE.WebGLRenderer;
     overlayRenderer: THREE.CSS3DRenderer;
@@ -54,7 +54,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         this.linkRouter = new DefaultLinkRouter();
         this.graphModel.nodes.forEach(node => this.registerElement(node));
         this.graphModel.links.forEach(link => this.registerElement(link));
-        this.anchors3d = [];
+        this.anchors3d = new Set();
         this.vrManager = props.vrManager;
         this.vrManager.on('presenting:state:changed', () => {
             if (this.vrManager.isStarted) {
@@ -80,15 +80,15 @@ export class GraphView extends Subscribable<GraphViewEvents> {
             if (view.mesh) {
                 this.scene.add(view.mesh);
             }
-            if (view.overlayAnchor3d) {
-                this.anchors3d.push(view.overlayAnchor3d);
-            }
-            if (view.overlayAnchor && view.overlayAnchor.isVisible()) {
+            if (view.overlayAnchor) {
                 view.overlayAnchor.html.onmousedown = e => {
                     e.stopPropagation();
                     this.trigger('overlay:down', {event: e, target: element});
                 };
-                this.scene.add(view.overlayAnchor.getSprite());
+                this.scene.add(view.overlayAnchor.sprite);
+            }
+            if (view.overlayAnchor3d) {
+                this.anchors3d.add(view.overlayAnchor3d);
             }
             this.views.set(element.id, view);
         }
@@ -100,8 +100,12 @@ export class GraphView extends Subscribable<GraphViewEvents> {
             if (view.mesh) {
                 this.scene.remove(view.mesh);
             }
-            if ( view.overlayAnchor && view.overlayAnchor.isVisible()) {
-                this.scene.remove(view.overlayAnchor.getSprite());
+            if (view.overlayAnchor) {
+                this.scene.remove(view.overlayAnchor.sprite);
+            }
+            if (view.overlayAnchor3d) {
+                this.scene.remove(view.overlayAnchor3d.mesh);
+                this.anchors3d.delete(view.overlayAnchor3d);
             }
         }
         this.views.delete(element.id);

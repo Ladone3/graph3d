@@ -71,12 +71,12 @@ export class DefaultEditor {
 
     private onGamepadDown = (keyMap: Map<GAMEPAD_BUTTONS, Element>) => {
         const leftTrigerTarget = keyMap.get(GAMEPAD_BUTTONS.LEFT_TRIGGER);
-        const leftDraggingHelper = registerHelper(
+        const leftDraggingHelper = registerDnDHelper(
             this.diagramView, OCULUS_CONTROLLERS.LEFT_CONTROLLER, leftTrigerTarget, this.helperMap,
         );
 
         const rightTrigerTarget = keyMap.get(GAMEPAD_BUTTONS.RIGHT_TRIGGER);
-        const rightDraggingHelper = registerHelper(
+        const rightDraggingHelper = registerDnDHelper(
             this.diagramView, OCULUS_CONTROLLERS.RIGHT_CONTROLLER, rightTrigerTarget, this.helperMap,
         );
 
@@ -88,16 +88,20 @@ export class DefaultEditor {
 
     private onGamepadUp = (event: EventObject<'keyUp', Map<GAMEPAD_BUTTONS, Element>>) => {
         const keyMap = event.data;
+        // todo: implement selection
+        // let selectedElement: Element;
         if (keyMap.has(GAMEPAD_BUTTONS.LEFT_TRIGGER)) {
-            deleteHelper(this.diagramView, OCULUS_CONTROLLERS.LEFT_CONTROLLER, this.helperMap);
+            switchOffDnDHelper(this.diagramView, OCULUS_CONTROLLERS.LEFT_CONTROLLER, this.helperMap);
         }
         if (keyMap.has(GAMEPAD_BUTTONS.RIGHT_TRIGGER)) {
-            deleteHelper(this.diagramView, OCULUS_CONTROLLERS.RIGHT_CONTROLLER, this.helperMap);
+            switchOffDnDHelper(this.diagramView, OCULUS_CONTROLLERS.RIGHT_CONTROLLER, this.helperMap);
         }
+        // selectedElement = keyMap.get(GAMEPAD_BUTTONS.RIGHT_TRIGGER) || keyMap.get(GAMEPAD_BUTTONS.LEFT_TRIGGER);
 
         if (this.helperMap.size === 0) {
             this.gamepadHandler.unsubscribe(this.onGamepadUp)
             this.gamepadHandler.unsubscribe(this.onGamepadMove)
+            // this.diagramModel.selection.setSelection(selectedElement ? new Set([selectedElement]) : new Set());
         }
     }
 
@@ -152,7 +156,7 @@ export class DefaultEditor {
     }
 }
 
-function registerHelper(
+function registerDnDHelper(
     diagramView: DiagramView,
     controllerId: number,
     trigerTarget: Element,
@@ -183,7 +187,7 @@ function registerHelper(
     return undefined;
 }
 
-function deleteHelper(
+function switchOffDnDHelper(
     diagramView: DiagramView,
     controllerId: number,
     helperMap: Map<number, GamepadDraggingHelper>,
@@ -197,7 +201,6 @@ function deleteHelper(
             trigerTarget.setPosition(threeVector3ToVector3d(helper.mockObject.position));
             detach(helper.mockObject, helper.mockObject.parent, diagramView.scene);
             helperMap.delete(controllerId);
-
         }
     }
 }
