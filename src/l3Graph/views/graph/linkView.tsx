@@ -3,22 +3,22 @@ import * as React from 'react';
 
 import { Link } from '../../models/graph/link';
 import { LinkViewTemplate, DEFAULT_LINK_OVERLAY, enrichOverlay } from '../../customisation';
-import {
-    multiply,
-    sum,
-    distance,
-} from '../../utils';
-import { Vector3D } from '../../models/structures';
-import { AbstractOverlayAnchor } from './overlayAnchor';
+import { multiply, sum, distance, vector3dToTreeVector3 } from '../../utils';
+import { Vector3d } from '../../models/structures';
+import { AbstractOverlayAnchor, OverlayPosition } from './overlayAnchor';
 import { LinkRouter, getPointAlongPolylineByRatio } from '../../utils/linkRouter';
 import { DiagramElementView } from '../viewInterface';
+import { AbstracrOverlayAnchor3d, applyOffset } from './overlay3DAnchor';
+import { Rendered3dSprite } from '../../utils/htmlToSprite';
+import { SELECTION_PADDING } from '../widgets/selectionView';
 
 const ARROW_LENGTH = 10;
 
 export class LinkView implements DiagramElementView {
     public readonly mesh: THREE.Group;
     public readonly overlayAnchor: LinkOverlayAnchor;
-    public polyline: Vector3D[] = [];
+    public readonly overlayAnchor3d: LinkOverlayAnchor3d;
+    public polyline: Vector3d[] = [];
 
     private lines: THREE.Group[];
 
@@ -52,6 +52,8 @@ export class LinkView implements DiagramElementView {
         if (this.model.data) {
             this.overlayAnchor.setOverlay(enrichOverlay(DEFAULT_LINK_OVERLAY, this.model.data), 'c');
         }
+
+        this.overlayAnchor3d = new LinkOverlayAnchor3d(this.model, this, this.overlayAnchor);
 
         this.update();
     }
@@ -90,12 +92,12 @@ export class LinkView implements DiagramElementView {
         this.polyline = polyline;
 
         // Update overlay
-        if (this.overlayAnchor) {
-            this.overlayAnchor.update();
-        }
-    }
+        this.overlayAnchor.update();
+        this.overlayAnchor3d.update();
+}
 }
 
+// It is not completed, but for now it's enough
 export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link, LinkView> {
     getModelFittingBox() {
         const polyline = this.meshView.polyline;
@@ -121,6 +123,50 @@ export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link, LinkView> {
     }
 }
 
+// The same here
+export class LinkOverlayAnchor3d extends AbstracrOverlayAnchor3d<Link, LinkView> {
+    forceUpdate() {
+        this.meshModel.forceUpdate();
+    }
+
+    updatePosition() {
+        const fittingBox = this.overlayAnchor.getModelFittingBox();
+        this.mesh.position.copy(vector3dToTreeVector3(fittingBox));
+    }
+
+    placeSprites(renderedSprites: Rendered3dSprite[]) {
+        const spritesByPositions = new Map<OverlayPosition, Rendered3dSprite[]>();
+        for (const renderedSprite of renderedSprites) {
+            if (!spritesByPositions.has(renderedSprite.position)) {
+                spritesByPositions.set(renderedSprite.position, []);
+            }
+            spritesByPositions.get(renderedSprite.position).push(renderedSprite);
+        }
+
+        const fittingBox = this.overlayAnchor.getModelFittingBox();
+        const initialOffset = {
+            x: fittingBox.x / 2 + SELECTION_PADDING,
+            y: fittingBox.y / 2 + SELECTION_PADDING,
+            z: 0,
+        };
+        spritesByPositions.forEach((sprites, position) => {
+            let offset = applyOffset({x: 0, y: 0, z: 0}, initialOffset, position);
+            for (const renderedSprite of sprites) {
+                renderedSprite.sprite.position.set(
+                    offset.x, 
+                    offset.y, 
+                    offset.z, 
+                )
+                offset = applyOffset(offset, {
+                    x: SELECTION_PADDING + renderedSprite.size.x,
+                    y: SELECTION_PADDING + renderedSprite.size.y,
+                    z: 0,
+                }, position);
+            }
+        });
+    }
+}
+
 // It's implemented this way because:
 // 1 - lines can't have thikness on Windows OS,
 // 2 - There is bug with lines when they are too close to the camera
@@ -139,7 +185,7 @@ function createLine(template: LinkViewTemplate): THREE.Group {
     return lineMesh;
 }
 
-function stretchLineBetween(line: THREE.Group, from: Vector3D, to: Vector3D) {
+function stretchLineBetween(line: THREE.Group, from: Vector3d, to: Vector3d) {
     const mediana = multiply(sum(from, to), 0.5);
     const dist = distance(from, to);
 

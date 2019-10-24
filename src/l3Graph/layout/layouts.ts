@@ -4,7 +4,7 @@ import { Link } from '../models/graph/link';
 import { Node } from '../models/graph/node';
 import { GraphModel } from '../models/graph/graphModel';
 import { calcBounds } from '../utils';
-import { Vector3D } from '../models/structures';
+import { Vector3d } from '../models/structures';
 
 export const PREFFERED_LINK_LENGTH = 75;
 
@@ -160,7 +160,7 @@ export function applyForceLayout(graph: GraphModel) {
 
 export function applyRandomLayout(graph: GraphModel, maxDist: number = 500) {
     const { nodes } = graph;
-    const positions: Vector3D[] = [];
+    const positions: Vector3d[] = [];
     for (let i = 0; i < nodes.size; i++) {
         positions.push({
             x: Math.round(Math.random() * maxDist),

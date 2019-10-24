@@ -4,7 +4,7 @@ import { Subscribable } from './subscribeable';
 import { length, eventToPosition } from './geometry';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
-import { Vector2D } from '../models/structures';
+import { Vector2d } from '../models/structures';
 import { Element } from '../models/graph/graphModel';
 export const MIN_DRAG_OFFSET = 5;
 
@@ -20,7 +20,7 @@ export interface HandlerDragElementEvent  {
 
 export interface HandlerDragEvent  {
     nativeEvent: MouseEvent | MouseWheelEvent | TouchEvent;
-    offset: Vector2D;
+    offset: Vector2d;
 }
 
 export interface MouseHandlerEvents {
@@ -193,8 +193,8 @@ export function mapMeshes(diagramhModel: DiagramModel, diagramView: DiagramView)
 
 export function handleDragging(
     downEvent: MouseEvent | TouchEvent,
-    onChange: (event: MouseEvent | TouchEvent, change: Vector2D) => void,
-    onEnd?: (event: MouseEvent | TouchEvent, change?: Vector2D) => void,
+    onChange: (event: MouseEvent | TouchEvent, change: Vector2d) => void,
+    onEnd?: (event: MouseEvent | TouchEvent, change?: Vector2d) => void,
 ) {
     const startPoint = eventToPosition(downEvent);
     if (!startPoint) return;

@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { createSprite, Rendered3dSprite } from '../../utils/htmlToSprite';
-import { AbstractOverlayAnchor } from './overlayAnchor';
+import { AbstractOverlayAnchor, OverlayPosition } from './overlayAnchor';
+import { Vector3d } from '../../models/structures';
+import { sum } from '../../utils';
 
 export abstract class AbstracrOverlayAnchor3d<Model, View> {
     readonly mesh: THREE.Group;
@@ -61,3 +63,24 @@ export abstract class AbstracrOverlayAnchor3d<Model, View> {
     abstract placeSprites(sprites: Rendered3dSprite[]): void;
 }
 
+
+export function applyOffset(
+    basicVector: Vector3d,
+    offset: Vector3d,
+    position: OverlayPosition,
+): Vector3d {
+    const {x: xOffset, y: yOffset} = offset;
+    let offsetByPossition: Vector3d;
+    switch(position) {
+        case 'e': offsetByPossition = {x: xOffset,  y: 0, z: 0}; break;
+        case 'w': offsetByPossition = {x: -xOffset, y: 0, z: 0}; break;
+        case 'n': offsetByPossition = {x: 0, y: -yOffset, z: 0}; break;
+        case 's': offsetByPossition = {x: 0, y: yOffset, z: 0}; break;
+        case 'ne': offsetByPossition = {x: xOffset,  y: -yOffset, z: 0}; break;
+        case 'se': offsetByPossition = {x: xOffset,  y: yOffset, z: 0}; break;
+        case 'nw': offsetByPossition = {x: -xOffset,  y: -yOffset, z: 0}; break;
+        case 'sw': offsetByPossition = {x: -xOffset,  y: yOffset, z: 0}; break;
+        default: offsetByPossition = {x: 0, y: 0, z: 0};
+    }
+    return sum(basicVector, offsetByPossition);
+}

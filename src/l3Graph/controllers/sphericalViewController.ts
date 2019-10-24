@@ -1,4 +1,4 @@
-import { Vector2D } from '../models/structures';
+import { Vector2d } from '../models/structures';
 import {
     ViewController,
     ROTATION_DECREASE_SPEED,
@@ -8,7 +8,7 @@ import {
     ZERO_POSITION,
     ViewControllerEvents,
 } from './viewController';
-import { vector3DToTreeVector3, KEY_CODES, KeyHandler, EventObject, Subscribable } from '../utils';
+import { vector3dToTreeVector3, KEY_CODES, KeyHandler, EventObject, Subscribable } from '../utils';
 
 import { DiagramView } from '../views/diagramView';
 import { MouseHandler, HandlerDragEvent } from '../utils/mouseHandler';
@@ -18,9 +18,9 @@ const WHEEL_SPEED = 100;
 export class SphericalViewController extends Subscribable<ViewControllerEvents> implements ViewController {
     readonly id: string;
     public label: string;
-    protected cameraAngle: Vector2D = { x: 0, y: Math.PI / 4 };
+    protected cameraAngle: Vector2d = { x: 0, y: Math.PI / 4 };
     protected cameraDistance: number = 1000;
-    protected startAngle: Vector2D;
+    protected startAngle: Vector2d;
 
     constructor(
         protected view: DiagramView,
@@ -52,7 +52,7 @@ export class SphericalViewController extends Subscribable<ViewControllerEvents> 
 
     private refreshCamera() {
         const {position} = this.view.cameraState;
-        const curTreePos = vector3DToTreeVector3(position);
+        const curTreePos = vector3dToTreeVector3(position);
         const distance = curTreePos.distanceTo(ZERO_POSITION);
         this.cameraDistance = this.limitDistance(distance);
 
@@ -82,7 +82,7 @@ export class SphericalViewController extends Subscribable<ViewControllerEvents> 
         // not implemented
     }
 
-    protected setCameraAngle(anglePoint: Vector2D) {
+    protected setCameraAngle(anglePoint: Vector2d) {
         this.cameraAngle = {
             x: anglePoint.x % (Math.PI * 2),
             y: Math.max(-Math.PI / 2 + 0.001, Math.min(anglePoint.y, Math.PI / 2 - 0.001)),

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { vector3DToTreeVector3, KeyHandler, KEY_CODES, EventObject, threeVector3ToVector3D, sum, getModelFittingBox } from '../utils';
+import { vector3dToTreeVector3, KeyHandler, KEY_CODES, EventObject, threeVector3ToVector3d, sum, getModelFittingBox } from '../utils';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView, DEFAULT_SCREEN_PARAMETERS } from '../views/diagramView';
 import { Element } from '../models/graph/graphModel';
@@ -133,7 +133,7 @@ export class DefaultEditor {
         if (target instanceof Link) { return; }
         if (event instanceof TouchEvent && event.touches.length === 0) { return; }
 
-        const nodeThreePos = vector3DToTreeVector3(target.position);
+        const nodeThreePos = vector3dToTreeVector3(target.position);
         const cameraPos = this.diagramView.camera.position;
         let distanceToNode = nodeThreePos.distanceTo(cameraPos);
         if (isMouseWheelEvent(event)) {
@@ -194,7 +194,7 @@ function deleteHelper(
         const controller = diagramView.renderer.vr.getController(controllerId);
         if (controller) {
             attach(helper.mockObject, helper.targetParent, diagramView.scene);
-            trigerTarget.setPosition(threeVector3ToVector3D(helper.mockObject.position));
+            trigerTarget.setPosition(threeVector3ToVector3d(helper.mockObject.position));
             detach(helper.mockObject, helper.mockObject.parent, diagramView.scene);
             helperMap.delete(controllerId);
 
@@ -214,7 +214,7 @@ function onKeyMove(
         const controller = diagramView.renderer.vr.getController(controllerId);
         if (controller) {
             attach(helper.mockObject, diagramView.scene, diagramView.scene);
-            helper.node.setPosition(threeVector3ToVector3D(helper.mockObject.position));
+            helper.node.setPosition(threeVector3ToVector3d(helper.mockObject.position));
             attach(helper.mockObject, controller, diagramView.scene);
 
             if (zOffset !== 0) {

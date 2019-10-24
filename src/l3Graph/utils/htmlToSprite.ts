@@ -1,13 +1,12 @@
 import * as THREE from 'three';
+import * as domtoimage from 'dom-to-image';
 import { OverlayPosition } from '../views/graph/overlayAnchor';
-import { Vector2D } from '../models/structures';
-
-const domtoimage = require<any>('dom-to-image');
+import { Vector2d } from '../models/structures';
 
 export interface Rendered3dSprite {
     sprite: THREE.Sprite;
     position: OverlayPosition;
-    size: Vector2D;
+    size: Vector2d;
 }
 
 export function createSprite(
@@ -43,7 +42,7 @@ function htmlToImage(htmlElement: HTMLElement): HTMLImageElement {
     domtoimage.toPng(htmlElement).then(function (dataUrl: string) {
         img.src = dataUrl;
     }).catch(function (error: string) {
-        console.error('oops, something went wrong!', error);
+        console.error('Html is not converted to the image!', error);
         img.src = ERROR_BASE_64;
     });
     return img;

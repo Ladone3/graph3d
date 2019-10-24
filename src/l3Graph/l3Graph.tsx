@@ -5,7 +5,7 @@ import { KeyHandler } from './utils/keyHandler';
 import { DefaultEditor } from './editors/defaultEditor';
 import { DiagramModel } from './models/diagramModel';
 import { DiagramView, ViewOptions } from './views/diagramView';
-import { Vector2D, Vector3D } from './models/structures';
+import { Vector2d, Vector3d } from './models/structures';
 import { applyForceLayout3d, applyRandomLayout } from './layout/layouts';
 import { MouseHandler } from './utils/mouseHandler';
 import { DEFAULT_MESH_WIDGET_SET } from './defaultWidgetsSet';
@@ -79,11 +79,11 @@ export class L3Graph extends React.Component<L3GraphProps> {
         this.onBlur();
     }
 
-    clientPosTo3dPos(position: Vector2D, distanceFromScreen: number = 600): Vector3D {
+    clientPosTo3dPos(position: Vector2d, distanceFromScreen: number = 600): Vector3d {
         return this.view.clientPosTo3dPos(position, distanceFromScreen);
     }
 
-    pos3dToClientPos(position: Vector3D): Vector2D {
+    pos3dToClientPos(position: Vector3d): Vector2d {
         return this.view.pos3dToClientPos(position);
     }
 

@@ -1,9 +1,9 @@
 import { Link, LinkModel } from '../models/graph/link';
-import { Vector3D } from '../models/structures';
+import { Vector3d } from '../models/structures';
 import { sum, multiply, normalize, sub, inverse, normalRight, normalUp, vectorLength } from './geometry';
 
 export interface LinkRouter {
-    getRout(link: Link): Vector3D[];
+    getRout(link: Link): Vector3d[];
 }
 
 const LINK_OFFSET = 30;
@@ -15,7 +15,7 @@ export class DefaultLinkRouter implements LinkRouter {
         );
     }
 
-    getRout(link: Link): Vector3D[] {
+    getRout(link: Link): Vector3d[] {
         const group = this.getLinkNeighbours(link);
 
         const sourcePos = link.source.position;
@@ -53,7 +53,7 @@ function getGroupId(link: LinkModel): string {
  * @param polyline
  * @param offset from 0 to 1
  */
-export function getPointAlongPolylineByRatio(polyline: ReadonlyArray<Vector3D>, ratio: number): Vector3D {
+export function getPointAlongPolylineByRatio(polyline: ReadonlyArray<Vector3d>, ratio: number): Vector3d {
     const length = computePolylineLength(polyline);
     return getPointAlongPolyline(polyline, length * ratio);
 }
@@ -62,7 +62,7 @@ export function getPointAlongPolylineByRatio(polyline: ReadonlyArray<Vector3D>, 
  * @param polyline
  * @param offset from 0 to length of polyline
  */
-export function getPointAlongPolyline(polyline: ReadonlyArray<Vector3D>, offset: number): Vector3D {
+export function getPointAlongPolyline(polyline: ReadonlyArray<Vector3d>, offset: number): Vector3d {
     if (polyline.length === 0) {
         throw new Error('Cannot compute a point for empty polyline');
     }
@@ -90,8 +90,8 @@ export function getPointAlongPolyline(polyline: ReadonlyArray<Vector3D>, offset:
     return polyline[polyline.length - 1];
 }
 
-export function computePolylineLength(polyline: ReadonlyArray<Vector3D>): number {
-    let previous: Vector3D;
+export function computePolylineLength(polyline: ReadonlyArray<Vector3d>): number {
+    let previous: Vector3d;
     return polyline.reduce((acc, point) => {
         const segmentLength = previous ? vectorLength({
             x: point.x - previous.x,

@@ -1,13 +1,13 @@
 import * as React from 'react';
 import * as THREE from 'three';
-import { Vector3D, Vector2D } from '../models/structures';
+import { Vector3d, Vector2d } from '../models/structures';
 import { NodeTemplateProvider, LinkTemplateProvider } from '../customisation';
 import { GraphView } from './graph/graphView';
 import { DiagramModel } from '../models/diagramModel';
 import { Element, GraphModelEvents } from '../models/graph/graphModel';
 import { WidgetsView } from './widgets/widgetsView';
 import { Widget } from '../models/widgets/widget';
-import { vector3DToTreeVector3, EventObject, eventToPosition } from '../utils';
+import { vector3dToTreeVector3, EventObject, eventToPosition } from '../utils';
 import { WidgetsModelEvents } from '../models/widgets/widgetsModel';
 import { WebGLRenderer } from '../vrUtils/webVr';
 import { VrManager } from '../vrUtils/vrManager';
@@ -24,8 +24,8 @@ export interface DiagramViewProps {
 }
 
 export interface CameraState {
-    position: Vector3D;
-    focusDirection?: Vector3D;
+    position: Vector3d;
+    focusDirection?: Vector3d;
 }
 
 export const DEFAULT_CAMERA_DIST = 100;
@@ -77,12 +77,12 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         }
     }
 
-    mouseTo3dPos(event: MouseEvent | TouchEvent, distanceFromScreen: number = 600): Vector3D {
+    mouseTo3dPos(event: MouseEvent | TouchEvent, distanceFromScreen: number = 600): Vector3d {
         const bbox = this.meshHtmlContainer.getBoundingClientRect();
         return this.clientPosTo3dPos(eventToPosition(event, bbox) || {x: 0, y: 0}, distanceFromScreen);
     }
 
-    clientPosTo3dPos(position: Vector2D, distanceFromScreen: number = 600): Vector3D {
+    clientPosTo3dPos(position: Vector2d, distanceFromScreen: number = 600): Vector3d {
         const cameraPos = this.camera.position;
         const screenParameters = this.screenParameters;
         const vector = new THREE.Vector3(
@@ -94,7 +94,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         const distance = point.distanceTo(cameraPos);
         const k = distanceFromScreen / distance;
 
-        const relativePoint: Vector3D = {
+        const relativePoint: Vector3d = {
             x: point.x - cameraPos.x,
             y: point.y - cameraPos.y,
             z: point.z - cameraPos.z,
@@ -106,8 +106,8 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         };
     }
 
-    pos3dToClientPos(position: Vector3D): Vector2D {
-        const treePos = vector3DToTreeVector3(position);
+    pos3dToClientPos(position: Vector3d): Vector2d {
+        const treePos = vector3dToTreeVector3(position);
         const screenParameters = this.screenParameters;
         const vector = treePos.project(this.camera);
         return {

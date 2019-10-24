@@ -1,5 +1,5 @@
 import * as _THREE from 'three';
-import { Vector3D } from '../models/structures';
+import { Vector3d } from '../models/structures';
 
 export enum MeshKind {
     Obj = 'obj',
@@ -15,7 +15,7 @@ export interface Mesh {
     color?: string | number;
     texture?: string;
     preserveRatio?: boolean;
-    size?: Vector3D;
+    size?: Vector3d;
 }
 
 export interface MeshNative extends Mesh {

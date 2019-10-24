@@ -1,4 +1,4 @@
-import { Vector2D, Vector3D } from '../models/structures';
+import { Vector2d, Vector3d } from '../models/structures';
 import {
     ViewController,
     ROTATION_DECREASE_SPEED,
@@ -9,7 +9,7 @@ import {
 } from './viewController';
 import {
     normalize,
-    vector3DToTreeVector3,
+    vector3dToTreeVector3,
     inverse,
     multiply,
     sum,
@@ -29,9 +29,9 @@ import { MouseHandler, HandlerDragEvent } from '../utils/mouseHandler';
 export class OpenSpaceViewController extends Subscribable<ViewControllerEvents> implements ViewController {
     readonly id: string;
     public label: string;
-    protected cameraAngle: Vector2D = { x: 0, y: 0 };
-    protected position: Vector3D = { x: 1000, y: 0, z: 0 };
-    protected startAngle: Vector2D;
+    protected cameraAngle: Vector2d = { x: 0, y: 0 };
+    protected position: Vector3d = { x: 1000, y: 0, z: 0 };
+    protected startAngle: Vector2d;
 
     constructor(
         protected view: DiagramView,
@@ -69,7 +69,7 @@ export class OpenSpaceViewController extends Subscribable<ViewControllerEvents> 
         const {position} = this.view.cameraState;
         this.position = position;
 
-        const curTreePos = vector3DToTreeVector3(position);
+        const curTreePos = vector3dToTreeVector3(position);
         const distance = curTreePos.distanceTo(ZERO_POSITION);
 
         const y = -Math.asin(position.y / distance);
@@ -81,7 +81,7 @@ export class OpenSpaceViewController extends Subscribable<ViewControllerEvents> 
         this.updateCameraPosition();
     }
 
-    protected setCameraDirection(anglePoint: Vector2D) {
+    protected setCameraDirection(anglePoint: Vector2d) {
         this.cameraAngle = {
             x: anglePoint.x % (Math.PI * 2),
             y: Math.max(-Math.PI / 2 + 0.001, Math.min(anglePoint.y, Math.PI / 2 - 0.001)),
@@ -102,9 +102,9 @@ export class OpenSpaceViewController extends Subscribable<ViewControllerEvents> 
         };
     }
 
-    protected limitPosition(targetPosition: Vector3D): Vector3D {
+    protected limitPosition(targetPosition: Vector3d): Vector3d {
         const maxRadius = this.view.screenParameters.FAR / 2 - BORDER_OPACITY;
-        const curTreePos = vector3DToTreeVector3(targetPosition);
+        const curTreePos = vector3dToTreeVector3(targetPosition);
         const distanceToTheCenter = curTreePos.distanceTo(ZERO_POSITION);
         if (distanceToTheCenter > maxRadius) {
             const directionFromTheCenter = normalize(targetPosition);
@@ -212,7 +212,7 @@ export class OpenSpaceViewController extends Subscribable<ViewControllerEvents> 
         this.updateCameraPosition();
     }
 
-    private getCameraDirection(): Vector3D {
+    private getCameraDirection(): Vector3d {
         return normalize({
             x: Math.cos(this.cameraAngle.x) * Math.cos(this.cameraAngle.y),
             y: Math.sin(this.cameraAngle.y),

@@ -141,5 +141,5 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
         }
     }
 
-    protected abstract getModelFittingBox(): Box;
+    public abstract getModelFittingBox(): Box;
 }

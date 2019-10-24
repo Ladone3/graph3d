@@ -18,8 +18,8 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
     public selection: Selection;
 
     private animationFrame: number;
-    private graphEvents: Set<EventObject> = new Set();
-    private widgetEvents: Set<EventObject> = new Set();
+    private graphEvents = new Set<EventObject>();
+    private widgetEvents = new Set<EventObject>();
 
     constructor() {
         super();

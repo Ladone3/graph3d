@@ -11,8 +11,10 @@
 
 .l3graph-link-html-view {
     pointer-events: auto;
-    margin-top: 10px;
-    font-size: 6px;
+    position: relative;
+    top: 10px;
+    // margin-top: 10px;
+    font-size: 12px;
     background-color: white;
     user-select: none;
     border: 1px solid gray;
@@ -20,10 +22,10 @@
     border-radius: 4px;
     transition: transform 0.5s;
 
-    opacity: 0.4;
+    opacity: 0.3;
     &:hover {
         opacity: 1;
-        transform: scale(2);
+        // transform: scale(2);
     }
 }
 
