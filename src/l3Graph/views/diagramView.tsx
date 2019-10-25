@@ -141,6 +141,26 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.renderGraph();
     }
 
+    resize() {
+        this.screenParameters = {
+            ...this.screenParameters,
+            WIDTH: this.meshHtmlContainer.clientWidth,
+            HEIGHT: this.meshHtmlContainer.clientHeight,
+            ASPECT: this.meshHtmlContainer.clientWidth / this.meshHtmlContainer.clientHeight,
+        };
+        this.renderer.setSize(
+            this.screenParameters.WIDTH,
+            this.screenParameters.HEIGHT,
+        );
+        this.overlayRenderer.setSize(
+            this.screenParameters.WIDTH,
+            this.screenParameters.HEIGHT,
+        );
+        this.camera.aspect = this.screenParameters.ASPECT;
+        this.camera.updateProjectionMatrix();
+        this.renderGraph();
+    }
+
     private initScene() {
         // Create main scene
         this.scene = new THREE.Scene();

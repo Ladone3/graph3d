@@ -42,6 +42,10 @@ export class L3Graph extends React.Component<L3GraphProps> {
         return this.diagramModel;
     }
 
+    resize() {
+        if (this.view) { this.view.resize(); }
+    }
+
     setViewController(viewController: ViewController) {
         const oldViewController = this.viewController;
         this.viewController = viewController;
