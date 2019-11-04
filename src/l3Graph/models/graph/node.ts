@@ -1,6 +1,6 @@
 import { Vector3d } from '../structures';
 import { Link } from './link';
-import { Subscribable } from '../../utils';
+import { PointEvents, Point, PointParameters } from '../point';
 
 const SIZE_VALUE = 40;
 const DEFAULT_NODE_PARAMETERS: NodeParameters = {
@@ -15,19 +15,16 @@ export interface NodeModel<NodeContent = any> {
     data?: NodeContent;
 }
 
-export interface NodeParameters {
-    position: Vector3d;
-    size?: Vector3d & { placeholder?: boolean };
+export interface NodeParameters extends PointParameters {
+    size?: Size;
 }
 
-export interface NodeEvents {
+export interface NodeEvents extends PointEvents {
     'change:size': Vector3d;
-    'change:position': Vector3d;
     'force-update': void;
 }
 
-export class Node<NodeContent = any> extends Subscribable<NodeEvents> {
-    private _position: Vector3d;
+export class Node<NodeContent = any> extends Point<NodeEvents> {
     public incomingLinks: Set<Link> = new Set();
     public outgoingLinks: Set<Link> = new Set();
     public modelIsChanged: boolean = false;
@@ -41,18 +38,8 @@ export class Node<NodeContent = any> extends Subscribable<NodeEvents> {
         private _model: NodeModel<NodeContent>,
         parameters: NodeParameters = DEFAULT_NODE_PARAMETERS,
     ) {
-        super();
+        super(parameters);
         this._size = parameters.size || DEFAULT_NODE_PARAMETERS.size;
-        this._position = parameters.position;
-    }
-
-    get position() {
-        return this._position;
-    }
-    setPosition(position: Vector3d) {
-        const previous = this._position;
-        this._position = position;
-        this.trigger('change:position', previous);
     }
     
     get data() {

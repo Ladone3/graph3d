@@ -50,10 +50,44 @@ export function prepareMesh(meshObj: MeshObj): THREE.Group {
     const loader = new THREE.OBJLoader();
     const mesh = loader.parse(meshObj.markup);
 
-    const material = new THREE.MeshPhongMaterial({color});
-    mesh.traverse(child => {
-        if (child instanceof THREE.Mesh) { child.material = material; }
-    });
-
+    // const group = new THREE.Group();
+    // group.add(mesh); 
+    // setColor(group, color);
+    // return group;
+    
+    setColor(mesh, color)
     return mesh;
+}
+
+/** Helper only for phong and line basic material */
+export function setColor(mesh: THREE.Object3D, providedColor: string | number | Map<THREE.Object3D, string | number>) {
+    const color = typeof providedColor === 'string' || typeof providedColor === 'number' ? providedColor : providedColor.get(mesh);
+    if (mesh instanceof THREE.Line) {
+        mesh.material = new THREE.LineBasicMaterial({color});
+    } else if (mesh instanceof THREE.Group) {
+        mesh.children.forEach(child => setColor(child, providedColor));
+    } else if (mesh instanceof THREE.Mesh) {
+        mesh.material = new THREE.MeshPhongMaterial({color});
+    }
+}
+
+export function backupColors(mesh: THREE.Object3D): Map<THREE.Object3D, THREE.Material> {
+    const backUp = new Map<THREE.Object3D, THREE.Material>();
+    const recursion = (curMesh: THREE.Object3D) => {
+        if (curMesh instanceof THREE.Group) {
+            curMesh.children.forEach(child => recursion(child));
+        } else if (curMesh instanceof THREE.Mesh || curMesh instanceof THREE.Line) {
+            backUp.set(curMesh, curMesh.material);
+        }
+    }
+    recursion(mesh);
+    return backUp;
+}
+
+export function restoreColors(mesh: THREE.Object3D, backUp: Map<THREE.Object3D, THREE.Material>) {
+     if (mesh instanceof THREE.Group) {
+        mesh.children.forEach(child => restoreColors(child, backUp));
+    } else if (mesh instanceof THREE.Line || mesh instanceof THREE.Mesh) {
+        mesh.material = backUp.get(mesh);
+    }
 }

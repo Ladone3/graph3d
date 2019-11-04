@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { DiagramWidgetView } from '../viewInterface';
 import { GamepadsWidget } from '../../models/widgets/gamepadsWidget';
-import { ThreejsVrManager } from '../../vrUtils/webVr';
 import { OCULUS_CONTROLLERS } from '../../vrUtils/gamepadHandler';
+import { VrManager } from '../../vrUtils/vrManager';
+import { setColor } from '../../utils';
 
 const SELECTION_COLOR = 'red';
 const LEFT_GAMEPAD_COLOR = 'green';
@@ -10,36 +11,33 @@ const RIGHT_GAMEPAD_COLOR = 'blue';
 
 export interface GamepadsWidgetViewParameters {
     model: GamepadsWidget;
-    vrManager: ThreejsVrManager;
+    vrManager: VrManager;
 }
 
 interface RenderedGamepad {
     id: number;
-    group: THREE.Group;
+    mesh: THREE.Group;
     color: string;
-    cylinder: THREE.Mesh;
-    line: THREE.Line;
 }
 
 export class GamepadsWidgetView implements DiagramWidgetView {
     public readonly model: GamepadsWidget;
     public readonly mesh: THREE.Group;
 
-    private vrManager: ThreejsVrManager;
+    private vrManager: VrManager;
     private boundingBox: THREE.Box3 = new THREE.Box3();;
     private leftGamepad: RenderedGamepad;
     private rightGamepad: RenderedGamepad;
 
     constructor(parameters: GamepadsWidgetViewParameters) {
-        // todo: do we really need MockAnchors? Probably undefined would be OK.
         this.vrManager = parameters.vrManager;
         this.model = parameters.model;
         
         this.mesh = new THREE.Group();
         this.leftGamepad = this.renderGamepad(OCULUS_CONTROLLERS.LEFT_CONTROLLER);
-        this.mesh.add(this.leftGamepad.group);
+        this.mesh.add(this.leftGamepad.mesh);
         this.rightGamepad = this.renderGamepad(OCULUS_CONTROLLERS.RIGHT_CONTROLLER);
-        this.mesh.add(this.rightGamepad.group);
+        this.mesh.add(this.rightGamepad.mesh);
         
         this.update();
     }
@@ -64,10 +62,8 @@ export class GamepadsWidgetView implements DiagramWidgetView {
         
         return {
             id: gamepadId,
-            line,
             color,
-            cylinder,
-            group,
+            mesh: group,
         };
     }
 
@@ -76,27 +72,25 @@ export class GamepadsWidgetView implements DiagramWidgetView {
     }
 
     public update() {
-        if (this.vrManager.enabled) {
+        if (this.vrManager.isStarted) {
             this.mesh.visible = true;
             const state = this.model.state;
 
             const lgp = this.leftGamepad;
             if (lgp && state.leftGamepad) {
-                lgp.group.visible = true;
+                lgp.mesh.visible = true;
                 const color = state.leftGamepad.triggerPressed ? SELECTION_COLOR : lgp.color;
-                lgp.line.material = new THREE.LineBasicMaterial({color});
-                lgp.cylinder.material = new THREE.MeshBasicMaterial({color});
+                setColor(lgp.mesh, color);
             } else {
-                this.leftGamepad.group.visible = false;
+                lgp.mesh.visible = false;
             }
             const rgp = this.rightGamepad;
             if (rgp && state.rightGamepad) {
-                rgp.group.visible = true;
+                rgp.mesh.visible = true;
                 const color = state.rightGamepad.triggerPressed ? SELECTION_COLOR : rgp.color;
-                rgp.line.material = new THREE.LineBasicMaterial({color});
-                rgp.cylinder.material = new THREE.MeshBasicMaterial({color});
+                setColor(rgp.mesh, color);
             } else {
-                this.rightGamepad.group.visible = false;
+                rgp.mesh.visible = false;
             }
         } else {
             this.mesh.visible = false;

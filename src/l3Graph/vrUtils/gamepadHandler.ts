@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Subscribable } from '../utils/subscribeable';
-import { Cancellation, animationFrameInterval } from '../utils';
+import { Cancellation, animationFrameInterval, setColor, backupColors, restoreColors } from '../utils';
 import { VrEvent } from './webVr';
 import { Element } from '../models/graph/graphModel';
 import { DiagramModel } from '../models/diagramModel';
@@ -36,7 +36,7 @@ export enum GAMEPAD_BUTTONS {
     OCULUS='OCULUS',
     MENU='MENU',
 }
-
+const SELECTION_COLOR = 'red';
 export const OCULUS_CONTROLLERS = {
     LEFT_CONTROLLER: 0,
     RIGHT_CONTROLLER: 1,
@@ -52,7 +52,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
     private tempMatrix: THREE.Matrix4;
 
     private targetMap = new Map<number, THREE.Object3D>();
-    private materialMap = new Map<THREE.Object3D, THREE.Material>();
+    private materialMap = new Map<THREE.Object3D, Map<THREE.Object3D, THREE.Material>>();
 
     constructor(
         private diagramhModel: DiagramModel,
@@ -137,17 +137,17 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
             const meshIsChanged = previousSelection !== intersectedMesh;
             if (meshIsChanged) {
                 if (previousSelection) {
-                    (previousSelection as THREE.Mesh).material = this.materialMap.get(previousSelection);
+                    restoreColors(previousSelection, this.materialMap.get(previousSelection));
                 }
                 this.targetMap.set(gamepadId, intersectedMesh);
-                if (!this.materialMap.has(intersectedMesh)) this.materialMap.set(intersectedMesh, (intersectedMesh as THREE.Mesh).material);
-                (intersectedMesh as THREE.Mesh).material = new THREE.MeshBasicMaterial({color: 'red'});
+                if (!this.materialMap.has(intersectedMesh)) this.materialMap.set(intersectedMesh, backupColors(intersectedMesh));
+                setColor(intersectedMesh, SELECTION_COLOR);
             }
         } else {
             if (previousSelection) {
                 this.targetMap.delete(gamepadId);
                 if (Array.from(this.targetMap.values()).indexOf(previousSelection) === -1) {
-                    (previousSelection as THREE.Mesh).material = this.materialMap.get(previousSelection);
+                    restoreColors(previousSelection, this.materialMap.get(previousSelection));
                 }
             }
         }

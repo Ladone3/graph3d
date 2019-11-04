@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }) as any,
             getView: (context: WidgetViewContext) => new ReactNodeWidgetView({
                 model: context.widget as any,
-                graphView: context.graphView,
+                diagramView: context.diagramView,
                 position: 'w',
                 overlay: WIDGET_OVERLAY,
             }),

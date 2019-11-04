@@ -2,10 +2,10 @@ import { Subscribable } from '../../utils/subscribeable';
 import { MouseHandler } from '../../utils/mouseHandler';
 import { KeyHandler } from '../../utils';
 import { DiagramModel } from '../diagramModel';
-import { GraphView } from '../../views/graph/graphView';
 import { DiagramWidgetView } from '../../views/viewInterface';
-import { ThreejsVrManager } from '../../vrUtils/webVr';
 import { GamepadHandler } from '../../vrUtils/gamepadHandler';
+import { VrManager } from '../../vrUtils/vrManager';
+import { DiagramView } from '../../views/diagramView';
 
 export const DEFAULT_SELECTION_TYPE_ID = 'l3graph-selection';
 
@@ -29,8 +29,8 @@ export interface WidgetModelContext {
 }
 
 export interface WidgetViewContext<WidgetModel extends Widget = Widget> {
-    graphView: GraphView;
-    vrManager: ThreejsVrManager;
+    diagramView: DiagramView;
+    vrManager: VrManager;
     widget: WidgetModel;
 }
 

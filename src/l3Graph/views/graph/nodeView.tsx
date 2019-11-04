@@ -33,6 +33,7 @@ export class NodeView implements DiagramElementView {
 
         this.preserveRatio = meshDescriptor.preserveRatio || meshDescriptor.preserveRatio === undefined;
 
+        // todo move scale logic to a shape utils as a basic thing
         if (meshDescriptor) {
             if (meshDescriptor.type === MeshKind.ThreeNative) {
                 this.mesh = meshDescriptor.mesh;

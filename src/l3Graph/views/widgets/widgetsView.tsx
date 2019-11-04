@@ -1,34 +1,32 @@
 import * as THREE from 'three';
 import { WidgetsModel } from '../../models/widgets/widgetsModel';
-import { GraphView } from '../graph/graphView';
-import { View, DiagramWidgetView } from '../viewInterface';
+import { DiagramWidgetView } from '../viewInterface';
 import { WidgetViewResolver, Widget } from '../../models/widgets/widget';
-import { ThreejsVrManager } from '../../vrUtils/webVr';
+import { VrManager } from '../../vrUtils/vrManager';
+import { DiagramView } from '../diagramView';
 
 export interface WidgetsViewProps {
-    graphView: GraphView;
+    diagramView: DiagramView;
+    vrManager: VrManager;
     widgetsModel: WidgetsModel;
-    scene: THREE.Scene;
-    renderer: THREE.WebGLRenderer;
+    onAdd3dObject: (object: THREE.Object3D) => void;
+    onRemove3dObject: (object: THREE.Object3D) => void;
 }
 
 export class WidgetsView {
     private views: Map<string, DiagramWidgetView>;
     private viewRegistry: Map<string, WidgetViewResolver>;
 
-    graphView: GraphView;
+    diagramView: DiagramView;
+    vrManager: VrManager;
     widgetsModel: WidgetsModel;
 
-    scene: THREE.Scene;
-    renderer: THREE.WebGLRenderer;
-
-    constructor(props: WidgetsViewProps) {
+    constructor(private props: WidgetsViewProps) {
         this.views = new Map();
-        this.graphView = props.graphView;
+        this.diagramView = props.diagramView;
+        this.vrManager = props.vrManager;
         this.viewRegistry = new Map();
         this.widgetsModel = props.widgetsModel;
-        this.scene = props.scene;
-        this.renderer = props.renderer;
         this.widgetsModel.widgets.forEach(widget => this.registerWidgetViewForModel(widget));
     }
 
@@ -46,14 +44,14 @@ export class WidgetsView {
 
         if (view) {
             if (view.mesh) {
-                this.scene.add(view.mesh);
+                this.onAdd3dObject(view.mesh);
             }
 
             if (view.overlayAnchor) {
-                this.scene.add(view.overlayAnchor.sprite);
+                this.onAdd3dObject(view.overlayAnchor.sprite);
             }
             if (view.overlayAnchor3d) {
-                this.scene.add(view.overlayAnchor3d.mesh);
+                this.onAdd3dObject(view.overlayAnchor3d.mesh);
             }
             this.views.set(widget.widgetId, view);
         }
@@ -64,25 +62,33 @@ export class WidgetsView {
         const view = this.views.get(widget.widgetId);
         if (view) {
             if (view.mesh) {
-                this.scene.remove(view.mesh);
+                this.onRemove3dObject(view.mesh);
             }
 
             if (view.overlayAnchor) {
-                this.scene.remove(view.overlayAnchor.sprite);
+                this.onRemove3dObject(view.overlayAnchor.sprite);
             }
             if (view.overlayAnchor) {
-                this.scene.remove(view.overlayAnchor3d.mesh);
+                this.onRemove3dObject(view.overlayAnchor3d.mesh);
             }
             if (view.onRemove) { view.onRemove(); }
         }
         this.views.delete(widget.widgetId);
     }
+    
+    private onAdd3dObject(object: THREE.Object3D) {
+        this.props.onAdd3dObject(object)
+    }
+
+    private onRemove3dObject(object: THREE.Object3D) {
+        this.props.onRemove3dObject(object)
+    }
 
     private findViewForWidget(widget: Widget): DiagramWidgetView | undefined {
         return this.viewRegistry.get(widget.widgetId)({
             widget,
-            graphView: this.graphView,
-            vrManager: this.renderer.vr as ThreejsVrManager,
+            diagramView: this.diagramView,
+            vrManager: this.vrManager,
         });
     }
 

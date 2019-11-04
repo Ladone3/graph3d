@@ -1,6 +1,6 @@
 import Subscribable from '../utils/subscribeable';
 import { DiagramView } from '../views/diagramView';
-import { Device, Session, isXrNavigator, VrEvent, isWebkitNavigator } from './webVr';
+import { Device, Session, isXrNavigator, VrEvent } from './webVr';
 
 export interface VrManagerEvents {
 	'presenting:state:changed': void;
@@ -32,6 +32,10 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 
 	get isConnected() {
 		return Boolean(this.device);
+	}
+
+	getController(id: number) {
+		return this.view.renderer.vr.getController(id);
 	}
 
 	start() {

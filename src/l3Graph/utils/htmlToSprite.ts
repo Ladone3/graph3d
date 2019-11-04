@@ -39,6 +39,10 @@ export function createSprite(
 // In future here can be a service request
 function htmlToImage(htmlElement: HTMLElement): HTMLImageElement {
     const img = new Image();
+    if (!htmlElement) {
+        img.src = ERROR_BASE_64;
+        return img;
+    }
     domtoimage.toPng(htmlElement).then(function (dataUrl: string) {
         img.src = dataUrl;
     }).catch(function (error: string) {
