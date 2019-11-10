@@ -165,11 +165,11 @@ export class L3Graph extends React.Component<L3GraphProps> {
             <div
                 className='l3graph-main__touch-panel'
                 onMouseDown={event => {
-                    event.nativeEvent.preventDefault();
+                    if (event.currentTarget !== event.target) { return; }
                     this.mouseHandler.onMouseDown(event.nativeEvent);
                 }}
                 onTouchStart={event => {
-                    // event.nativeEvent.preventDefault();
+                    if (event.currentTarget !== event.target) { return; }
                     this.mouseHandler.onMouseDown(event.nativeEvent);
                 }}
                 onWheel={event => this.mouseHandler.onScroll(event.nativeEvent)}>

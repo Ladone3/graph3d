@@ -29,7 +29,7 @@ export interface GraphViewProps {
 }
 
 export interface GraphViewEvents {
-    'overlay:down': {event: MouseEvent; target: Element};
+    'overlay:down': {event: MouseEvent | TouchEvent; target: Element};
 }
 
 export class GraphView extends Subscribable<GraphViewEvents> {
@@ -77,10 +77,12 @@ export class GraphView extends Subscribable<GraphViewEvents> {
                 this.onAdd3dObject(view.mesh);
             }
             if (view.overlayAnchor) {
-                view.overlayAnchor.html.onmousedown = e => {
-                    e.stopPropagation();
+                view.overlayAnchor.html.addEventListener('mousedown', e => {
                     this.trigger('overlay:down', {event: e, target: element});
-                };
+                }, false);
+                view.overlayAnchor.html.addEventListener('touchstart', e => {
+                    this.trigger('overlay:down', {event: e, target: element});
+                }, false);
                 this.onAdd3dObject(view.overlayAnchor.sprite);
             }
             if (view.overlayAnchor3d) {
@@ -88,6 +90,8 @@ export class GraphView extends Subscribable<GraphViewEvents> {
             }
             this.views.set(element.id, view);
         }
+
+        return view;
     }
 
     public removeElementView(element: Element) {
@@ -137,8 +141,17 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         const updateView = (elementId: string) => {
             const element = this.graphModel.getNodeById(elementId) || this.graphModel.getLinkById(elementId);
             if (element.modelIsChanged) {
+                const oldView = this.views.get(element.id);
                 this.removeElementView(element);
-                this.registerElement(element);
+                const newView = this.registerElement(element);
+
+                // Restore overlays
+                oldView.overlayAnchor.overlays.forEach((overlaysById, position) => {
+                    overlaysById.forEach(overlay =>{
+                        newView.overlayAnchor.setOverlay(overlay, position);
+                    });
+                })
+
                 element.modelIsChanged = false;
             }
             const view = this.views.get(elementId);

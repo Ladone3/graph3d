@@ -14,8 +14,8 @@ export interface OverlayAnchorEvents {
 // todo: verify again the functions list - not everything is clear here
 export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<OverlayAnchorEvents> {
     readonly html: HTMLElement;
-    readonly renderedOverlays = new Map<string, HTMLElement>();
-    readonly overlayPositions: Map<string, OverlayPosition>;
+    readonly _renderedOverlays = new Map<string, HTMLElement>();
+    readonly _overlayPositions: Map<string, OverlayPosition>;
     readonly sprite: THREE.CSS3DSprite;
     protected overlaysByPosition: Map<OverlayPosition, Map<string, ReactOverlay>>;
 
@@ -27,11 +27,15 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
         this.html = document.createElement('DIV');
         this.sprite = new THREE.CSS3DSprite(this.html);
         this.overlaysByPosition = new Map();
-        this.overlayPositions = new Map();
+        this._overlayPositions = new Map();
+    }
+
+    get overlays(): ReadonlyMap<OverlayPosition, ReadonlyMap<string, ReactOverlay>> {
+        return this.overlaysByPosition
     }
 
     hasOverlay(owelrayId: string): boolean {
-        return this.overlayPositions.has(owelrayId);
+        return this._overlayPositions.has(owelrayId);
     }
 
     isVisible() {
@@ -39,7 +43,7 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
     }
 
     hide() {
-        this.overlayPositions.forEach((p, id) => {
+        this._overlayPositions.forEach((p, id) => {
             this.removeOverlay(id);
         });
     }
@@ -49,21 +53,21 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
             this.overlaysByPosition.set(position, new Map());
         }
         this.overlaysByPosition.get(position).set(overlay.id, overlay);
-        this.overlayPositions.set(overlay.id, position);
+        this._overlayPositions.set(overlay.id, position);
         this.redraw();
         this.trigger('anchor:changed');
     }
 
     removeOverlay(id: string) {
         if (!this.hasOverlay(id)) { return; }
-        const position = this.overlayPositions.get(id);
+        const position = this._overlayPositions.get(id);
         const overlaysOnPosition = this.overlaysByPosition.get(position);
         overlaysOnPosition.delete(id);
         if (overlaysOnPosition.size === 0) {
             this.overlaysByPosition.delete(position);
         }
-        this.overlayPositions.delete(id);
-        this.renderedOverlays.delete(id);
+        this._overlayPositions.delete(id);
+        this._renderedOverlays.delete(id);
         this.redraw();
         this.trigger('anchor:changed');
     }
@@ -100,7 +104,7 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
             this.overlaysByPosition.forEach((overlays, position) => {
                 const overlayViews: JSX.Element[] = [];
                 overlays.forEach(poorOverlay => {
-                    overlayViews.push(<div ref={(ref => this.renderedOverlays.set(poorOverlay.id, ref))}>
+                    overlayViews.push(<div ref={(ref => this._renderedOverlays.set(poorOverlay.id, ref))}>
                         {this.renderOverlay(poorOverlay, position)}
                     </div>);
                 });

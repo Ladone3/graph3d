@@ -85,7 +85,7 @@ const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
         type: MeshKind.Obj,
         markup: cubePortal,
     }),
-    overlay: NODE_OVERLAY,
+    overlay: NODE_OVERLAY as any,
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             getModel: (context: WidgetModelContext) => new FocusNodeWidget({
                 ...context,
                 widgetId: 'l3graph-react-node-widget',
-            }) as any,
+            } as any) ,
             getView: (context: WidgetViewContext) => new ReactNodeWidgetView({
                 model: context.widget as any,
                 diagramView: context.diagramView,

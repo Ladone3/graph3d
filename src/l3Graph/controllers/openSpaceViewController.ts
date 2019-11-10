@@ -117,12 +117,10 @@ export class OpenSpaceViewController extends Subscribable<ViewControllerEvents> 
     }
 
     private onMouseDragStart = (event: EventObject<'paperStartDrag', HandlerDragEvent>) => {
-        event.data.nativeEvent.stopPropagation()
         this.startAngle = this.cameraAngle;
     }
 
     private onMouseDrag = (event: EventObject<'paperDrag', HandlerDragEvent>) => {
-        event.data.nativeEvent.stopPropagation();
         const offset = event.data.offset;
         this.setCameraDirection({
             x: this.startAngle.x + offset.x / ROTATION_DECREASE_SPEED,
@@ -132,7 +130,6 @@ export class OpenSpaceViewController extends Subscribable<ViewControllerEvents> 
 
     private onMouseWheel = (event: EventObject<'paperScroll', WheelEvent>) => {
         const mouseEvent = event.data;
-        mouseEvent.stopPropagation();
         const delta = mouseEvent.deltaY || mouseEvent.deltaX || mouseEvent.deltaZ;
         if (delta > 0) {
             this.stepForward();

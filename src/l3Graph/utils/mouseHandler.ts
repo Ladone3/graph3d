@@ -211,7 +211,12 @@ export function handleDragging(
     };
 
     const _onchange = (e: MouseEvent | TouchEvent) => {
-        onChange(e, getOffset(e));
+        const offset = getOffset(e);
+        if (offset) {
+            onChange(e, offset);
+        } else {
+            _onend(e);
+        }
     };
 
     const _onend = (e: MouseEvent | TouchEvent) => {

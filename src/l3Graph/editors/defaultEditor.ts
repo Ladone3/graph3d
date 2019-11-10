@@ -27,24 +27,21 @@ export class DefaultEditor {
         private gamepadHandler: GamepadHandler
     ) {
         this.mouseHandler.on('elementClick', e => {
-            this.diagramModel.selection.setSelection(new Set([e.data.element]));
-            e.data.nativeEvent.stopPropagation();
+            if (!this.diagramModel.selection.elements.has(e.data.element)) {
+                this.diagramModel.selection.setSelection(new Set([e.data.element]));
+            }
         });
         this.mouseHandler.on('paperClick', e => {
             this.diagramModel.selection.setSelection(new Set());
-            e.data.stopPropagation();
         });
         this.mouseHandler.on('elementStartDrag', e => {
             this.onElementDrag(e.data.nativeEvent, e.data.element);
-            e.data.nativeEvent.stopPropagation();
         });
         this.mouseHandler.on('elementDrag', e => {
             this.onElementDrag(e.data.nativeEvent, e.data.element);
-            e.data.nativeEvent.stopPropagation();
         });
         this.mouseHandler.on('elementEndDrag', e => {
             this.onElementDragEnd(e.data.nativeEvent, e.data.element);
-            e.data.nativeEvent.stopPropagation();
         });
 
         this.keyHandler.on('keyPressed', e => this.onKeyPressed(e.data));

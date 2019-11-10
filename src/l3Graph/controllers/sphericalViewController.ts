@@ -112,13 +112,11 @@ export class SphericalViewController extends Subscribable<ViewControllerEvents> 
     }
 
     private onMouseDragStart = (event: EventObject<"paperStartDrag", HandlerDragEvent>) => {
-        event.data.nativeEvent.stopPropagation();
         this.startAngle = this.cameraAngle;
     }
 
     private onMouseDrag = (event: EventObject<"paperDrag", HandlerDragEvent>) => {
         const offset = event.data.offset;
-        event.data.nativeEvent.stopPropagation();
         this.setCameraAngle({
             x: this.startAngle.x + offset.x / ROTATION_DECREASE_SPEED,
             y: this.startAngle.y + offset.y / (ROTATION_DECREASE_SPEED * 3),
@@ -127,7 +125,6 @@ export class SphericalViewController extends Subscribable<ViewControllerEvents> 
 
     private onMouseWheel = (event: EventObject<"paperScroll", WheelEvent>) => {
         const wheelEvent = event.data;
-        event.data.stopPropagation();
         const delta = wheelEvent.deltaY || wheelEvent.deltaX || wheelEvent.deltaZ;
         const deltaNorma = delta < 0 ? 1 : -1;
         this.zoom(deltaNorma * WHEEL_SPEED);

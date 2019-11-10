@@ -17,7 +17,7 @@ export const selectionWidgetFactory: WidgetFactory<SelectionWidget> = {
 
 export const arrowHelperWidgetFactory: WidgetFactory<ArrowHelper> = {
     getModel: context => {
-        return new ArrowHelper({ mouseHandler: context.mouseHandler});
+        return new ArrowHelper({mouseHandler: context.mouseHandler});
     },
     getView: context => new ArrowHelperView({
         model: context.widget,

@@ -38,9 +38,11 @@ export abstract class AbstracrOverlayAnchor3d<Model, View> {
 
     private renderSprites() {
         const spritePromises: Promise<Rendered3dSprite>[] = [];
-        this.overlayAnchor.renderedOverlays.forEach((html, id) => {
-            const position = this.overlayAnchor.overlayPositions.get(id);
-            spritePromises.push(createSprite(html, position));
+        this.overlayAnchor._renderedOverlays.forEach((html, id) => {
+            const position = this.overlayAnchor._overlayPositions.get(id);
+            if (html && position) {
+                spritePromises.push(createSprite(html, position));
+            }
         });
 
         Promise.all(spritePromises).then(renderedSprites => {
