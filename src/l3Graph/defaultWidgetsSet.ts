@@ -5,6 +5,8 @@ import { ArrowHelper } from './models/widgets/arrowHelper';
 import { WidgetFactory } from './models/widgets/widget';
 import { GamepadsWidget } from './models/widgets/gamepadsWidget';
 import { GamepadsWidgetView } from './views/widgets/gamepadsWidgetView';
+import { LeftGamepadTool, RightGamepadTool } from './views/widgets/gamepadTools/defaultTools';
+import { LeftGamepadEditorTool, RightGamepadEditorTool } from './views/widgets/gamepadTools/editorTools';
 
 export const selectionWidgetFactory: WidgetFactory<SelectionWidget> = {
     getModel: context => new SelectionWidget({
@@ -22,11 +24,22 @@ export const arrowHelperWidgetFactory: WidgetFactory<ArrowHelper> = {
     getView: context => new ArrowHelperView({
         model: context.widget,
     }),
-}
+};
 
 export const gamepadWidgetFactory: WidgetFactory<GamepadsWidget> = {
     getModel: context => {
-        return new GamepadsWidget({gamepadHandler: context.gamepadHandler});
+        const {gamepadHandler, diagramModel, vrManager} = context;
+        return new GamepadsWidget({
+            gamepadHandler: context.gamepadHandler,
+            leftTools: [
+                new LeftGamepadTool({gamepadHandler, vrManager}),
+                // new LeftGamepadEditorTool({gamepadHandler, diagramModel}),
+            ],
+            rightTools: [
+                new RightGamepadTool({gamepadHandler, vrManager}),
+                // new RightGamepadEditorTool({gamepadHandler, diagramModel}),
+            ],
+        });
     },
     getView: context => new GamepadsWidgetView({
         model: context.widget,

@@ -1,51 +1,42 @@
 import { Widget } from './widget';
-import { GamepadHandler, GAMEPAD_BUTTONS, OCULUS_CONTROLLERS } from '../../vrUtils/gamepadHandler';
+import { GamepadHandler } from '../../vrUtils/gamepadHandler';
+import { GamepadTool } from '../../views/widgets/gamepadTools/defaultTools';
 
-export interface GamepadsWidgetParameters {
+export interface GamepadsWidgetProps {
     gamepadHandler: GamepadHandler;
+    leftTools: GamepadTool[];
+    rightTools: GamepadTool[];
 }
 
 export interface GamepadsState {
-	leftGamepad: {
-        id: number;
-        triggerPressed: boolean;
-    },
-    rightGamepad: {
-        id: number;
-        triggerPressed: boolean
-    },
-    gpNumber: number;
+    leftTool: GamepadTool;
+    rightTool: GamepadTool;
 }
 
 export class GamepadsWidget extends Widget {
     public readonly widgetId: string;
-    private gamepadHandler: GamepadHandler;
+    private _state: GamepadsState;
 
-    constructor(parameters: GamepadsWidgetParameters) {
+    constructor(private props: GamepadsWidgetProps) {
         super();
         this.widgetId = 'l3graph-gamepad-widget';
-        this.gamepadHandler = parameters.gamepadHandler;
-        this.gamepadHandler.on('keyDown', this.forceUpdate);
-        this.gamepadHandler.on('keyUp', this.forceUpdate);
+
+        if (props.leftTools.length === 0 || props.rightTools.length === 0) {
+            throw new Error('Left or Right tool is not provided!');
+        }
+
+        this._state = {
+            leftTool: props.leftTools[0],
+            rightTool: props.rightTools[0],
+        };
     }
 
     onRemove() {
-        this.gamepadHandler.unsubscribe(this.forceUpdate);
-        this.gamepadHandler.unsubscribe(this.forceUpdate);
+        this.props.leftTools.forEach(tool => tool.onDiscard());
+        this.props.rightTools.forEach(tool => tool.onDiscard());
     }
 
     get state(): GamepadsState {
-        const gpNumber = this.gamepadHandler.activeGamepadNumber;
-        return {
-            gpNumber,
-            leftGamepad: gpNumber > 0 ? {
-                id: OCULUS_CONTROLLERS.LEFT_CONTROLLER,
-                triggerPressed: this.gamepadHandler.keyPressed.has(GAMEPAD_BUTTONS.LEFT_TRIGGER)
-            } : undefined,
-            rightGamepad: gpNumber > 1 ? {
-                id: OCULUS_CONTROLLERS.RIGHT_CONTROLLER,
-                triggerPressed: this.gamepadHandler.keyPressed.has(GAMEPAD_BUTTONS.RIGHT_TRIGGER)
-            } : undefined,
-        };
+        return this._state;
     }
 }

@@ -45,8 +45,8 @@ export class VrViewController extends Subscribable<ViewControllerEvents> impleme
             this.vrManager.stop();
             this.view.renderGraph();
         }
-        this.keyHandler.unsubscribe(this.onKeyPressed);
-        this.vrManager.unsubscribe(this.onPresentingChanged);
+        this.keyHandler.unsubscribe('keyPressed', this.onKeyPressed);
+        this.vrManager.unsubscribe('presenting:state:changed', this.onPresentingChanged);
         this.trigger('switched:off');
     }
 

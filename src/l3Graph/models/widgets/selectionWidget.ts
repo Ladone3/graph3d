@@ -31,7 +31,7 @@ export class SelectionWidget extends Widget {
     private updateSubscription(previousSelection: ReadonlySet<Element> | undefined) {
         if (previousSelection) {
             previousSelection.forEach(el => {
-                el.unsubscribe(this.forceUpdate);
+                el.unsubscribeFromAll(this.forceUpdate);
             });
         }
         const newSelection = this.diagramModel.selection.elements;

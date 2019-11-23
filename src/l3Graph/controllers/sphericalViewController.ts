@@ -43,10 +43,10 @@ export class SphericalViewController extends Subscribable<ViewControllerEvents> 
     }
 
     switchOff() {
-        this.keyHandler.unsubscribe(this.onKeyPressed);
-        this.mouseHandler.unsubscribe(this.onMouseDragStart);
-        this.mouseHandler.unsubscribe(this.onMouseDrag);
-        this.mouseHandler.unsubscribe(this.onMouseWheel);
+        this.keyHandler.unsubscribe('keyPressed', this.onKeyPressed);
+        this.mouseHandler.unsubscribe('paperStartDrag', this.onMouseDragStart);
+        this.mouseHandler.unsubscribe('paperDrag', this.onMouseDrag);
+        this.mouseHandler.unsubscribe('paperScroll', this.onMouseWheel);
         this.trigger('switched:off');
     }
 

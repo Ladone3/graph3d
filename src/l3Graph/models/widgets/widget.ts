@@ -26,6 +26,7 @@ export interface WidgetModelContext {
     keyHandler: KeyHandler;
     mouseHandler: MouseHandler;
     gamepadHandler: GamepadHandler;
+    vrManager: VrManager;
 }
 
 export interface WidgetViewContext<WidgetModel extends Widget = Widget> {

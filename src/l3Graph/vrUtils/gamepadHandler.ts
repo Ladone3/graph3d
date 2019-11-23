@@ -1,18 +1,48 @@
 import * as THREE from 'three';
 import { Subscribable } from '../utils/subscribeable';
-import { Cancellation, animationFrameInterval, setColor, backupColors, restoreColors } from '../utils';
+import {
+    Cancellation, animationFrameInterval, setColor,
+    backupColors, restoreColors, threeVector3ToVector3d,
+    getModelFittingBox
+} from '../utils';
 import { VrEvent } from './webVr';
 import { Element } from '../models/graph/graphModel';
 import { DiagramModel } from '../models/diagramModel';
-import { DiagramView } from '../views/diagramView';
+import { DiagramView, DEFAULT_SCREEN_PARAMETERS } from '../views/diagramView';
 import { mapMeshes } from '../utils/mouseHandler';
+import { Node } from '../models/graph/node';
+import { Vector3d } from '../models/structures';
 
-export interface GamepadHandlerEvents {
-    'keyDown': Map<GAMEPAD_BUTTONS, Element | undefined>;
-    'keyUp': Map<GAMEPAD_BUTTONS, Element | undefined>;
-    'keyPressed': Map<GAMEPAD_BUTTONS, Element | undefined>;
+export type Controller = THREE.Group;
+
+export interface ElementBearer {
+    dragKey: GAMEPAD_BUTTON;
+    dragToKey: GAMEPAD_BUTTON;
+    dragFromKey: GAMEPAD_BUTTON;
 }
 
+interface ActiveElementBearer extends ElementBearer {
+    targetParent?: THREE.Object3D;
+    mockObject?: THREE.Object3D;
+    position?: Vector3d;
+    target?: Node;
+}
+
+export interface GamepadDragEventData {
+    target: Element;
+    position: Vector3d;
+}
+
+export interface GamepadHandlerEvents {
+    'keyDown': Map<GAMEPAD_BUTTON, Element | undefined>;
+    'keyUp': Map<GAMEPAD_BUTTON, Element | undefined>;
+    'keyPressed': Map<GAMEPAD_BUTTON, Element | undefined>;
+    'elementDragStart': GamepadDragEventData;
+    'elementDrag': GamepadDragEventData;
+    'elementDragEnd': GamepadDragEventData;
+}
+
+const GAMEPAD_EXTRA_MOVE_STEP = 10;
 const OCULUS_BUTTON_CODES = {
     NIPPLE: 0,
     TRIGGER: 1,
@@ -20,32 +50,33 @@ const OCULUS_BUTTON_CODES = {
     A_X: 3,
     B_Y: 4,
     OCULUS_MENU: 5, // Probably '5' but it's not stable. Five also appears at nipple changing axis
-}
+};
 
-export enum GAMEPAD_BUTTONS {
-    LEFT_NIPPLE='LEFT_NIPPLE',
-    RIGHT_NIPPLE='RIGHT_NIPPLE',
-    LEFT_TRIGGER='LEFT_TRIGGER',
-    RIGHT_TRIGGER='RIGHT_TRIGGER',
-    LEFT_GRUBBER='LEFT_GRUBBER',
-    RIGHT_GRUBBER='RIGHT_GRUBBER',
-    A='A',
-    B='B',
-    X='X',
-    Y='Y', 
-    OCULUS='OCULUS',
-    MENU='MENU',
+export enum GAMEPAD_BUTTON {
+    LEFT_NIPPLE = 'LEFT_NIPPLE',
+    RIGHT_NIPPLE = 'RIGHT_NIPPLE',
+    LEFT_TRIGGER = 'LEFT_TRIGGER',
+    RIGHT_TRIGGER = 'RIGHT_TRIGGER',
+    LEFT_GRUBBER = 'LEFT_GRUBBER',
+    RIGHT_GRUBBER = 'RIGHT_GRUBBER',
+    A = 'A',
+    B = 'B',
+    X = 'X',
+    Y = 'Y',
+    OCULUS = 'OCULUS',
+    MENU = 'MENU',
 }
 const SELECTION_COLOR = 'red';
 export const OCULUS_CONTROLLERS = {
-    LEFT_CONTROLLER: 0,
-    RIGHT_CONTROLLER: 1,
+    LEFT_CONTROLLER: 1,
+    RIGHT_CONTROLLER: 0,
 };
 export const CONTROLLERS_NUMBER = Object.keys(OCULUS_CONTROLLERS).length;
 
-// Now it's currently support only OCULUS gamepads
+// It's currently support only OCULUS gamepads
 export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
-    public readonly keyPressed = new Map<GAMEPAD_BUTTONS, Element | undefined>();
+    public readonly keyPressed = new Map<GAMEPAD_BUTTON, Element | undefined>();
+    private bearerMap = new Map<Controller, ActiveElementBearer>();
     private cancellation: Cancellation | undefined;
     private existingControllersNumber = 0;
     private raycaster: THREE.Raycaster;
@@ -62,17 +93,70 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         this.raycaster = new THREE.Raycaster();
         this.tempMatrix = new THREE.Matrix4();
         window.addEventListener('vrdisplaypresentchange', event => {
-			const vrEvent = event as VrEvent;
-			if (vrEvent.display.isPresenting) {
+            const vrEvent = event as VrEvent;
+            if (vrEvent.display.isPresenting) {
                 this.switchOn();
             } else {
                 this.switchOff();
             }
-		}, false );
+        }, false );
     }
 
-    get activeGamepadNumber() {
-        return this.existingControllersNumber;
+    public registerElementBearer(controller: Controller, bearer: ElementBearer) {
+        this.bearerMap.set(controller, bearer);
+    }
+
+    private handleDraggingStart(keyDownMap: Map<GAMEPAD_BUTTON, Element>) {
+        this.bearerMap.forEach((bearer, controller) => {
+            if (keyDownMap.has(bearer.dragKey)) {
+                const target = this.keyPressed.get(bearer.dragKey);
+                startDragging(
+                    target,
+                    this.diagramView,
+                    controller,
+                    bearer,
+                );
+
+                this.trigger('elementDragStart', {
+                    target,
+                    position: bearer.position,
+                });
+            }
+        });
+    }
+
+    private handleDragging() {
+        this.bearerMap.forEach((bearer, controller) => {
+            const moveForward = this.keyPressed.has(bearer.dragFromKey);
+            const moveBackward = this.keyPressed.has(bearer.dragToKey);
+
+            if (this.keyPressed.has(bearer.dragKey) && bearer.target) {
+                draggElement(
+                    this.diagramView,
+                    moveForward ? -GAMEPAD_EXTRA_MOVE_STEP : moveBackward ? GAMEPAD_EXTRA_MOVE_STEP : 0,
+                    controller,
+                    bearer,
+                );
+
+                this.trigger('elementDrag', {
+                    target: bearer.target,
+                    position: bearer.position,
+                });
+            }
+        });
+    }
+
+    private handleDraggingEnd(keyUpMap: Map<GAMEPAD_BUTTON, Element>) {
+        this.bearerMap.forEach((bearer, controller) => {
+            if (keyUpMap.has(bearer.dragKey) && bearer.target) {
+                stopDragging(bearer, this.diagramView, controller);
+
+                this.trigger('elementDragEnd', {
+                    target: bearer.target,
+                    position: bearer.position,
+                });
+            }
+        });
     }
 
     private switchOn() {
@@ -86,8 +170,8 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
     }
 
     private refreshBtnMap() {
-        const keyDown = new Map<GAMEPAD_BUTTONS, Element | undefined>();
-        const keyUp = new Map<GAMEPAD_BUTTONS, Element | undefined>();
+        const keyDown = new Map<GAMEPAD_BUTTON, Element | undefined>();
+        const keyUp = new Map<GAMEPAD_BUTTON, Element | undefined>();
         let gamepadNumber = 0;
         for (let gamepadId = 0; gamepadId < CONTROLLERS_NUMBER; gamepadId++) {
             const gamepad = getGamepad(gamepadId);
@@ -95,7 +179,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
             if (gamepadExists) {
                 const target = this.getTarget(gamepadId);
                 gamepadNumber++;
-                for(let buttonId = 0; buttonId < gamepad.buttons.length; buttonId++) {
+                for (let buttonId = 0; buttonId < gamepad.buttons.length; buttonId++) {
                     if (buttonId === OCULUS_BUTTON_CODES.OCULUS_MENU) { // ignore these buttons
                         continue;
                     }
@@ -112,9 +196,18 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
                 }
             }
         }
-        if (keyUp.size > 0) { this.trigger('keyUp', keyUp) }
-        if (keyDown.size > 0) { this.trigger('keyDown', keyDown) }
-        if (this.keyPressed.size > 0) { this.trigger('keyPressed', this.keyPressed) }
+        if (keyUp.size > 0) {
+            this.trigger('keyUp', keyUp);
+            this.handleDraggingEnd(keyUp);
+        }
+        if (keyDown.size > 0) {
+            this.trigger('keyDown', keyDown);
+            this.handleDraggingStart(keyDown);
+        }
+        if (this.keyPressed.size > 0) {
+            this.trigger('keyPressed', this.keyPressed);
+            this.handleDragging();
+        }
         if (gamepadNumber !== this.existingControllersNumber) { this.existingControllersNumber = gamepadNumber; }
     }
 
@@ -140,7 +233,9 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
                     restoreColors(previousSelection, this.materialMap.get(previousSelection));
                 }
                 this.targetMap.set(gamepadId, intersectedMesh);
-                if (!this.materialMap.has(intersectedMesh)) this.materialMap.set(intersectedMesh, backupColors(intersectedMesh));
+                if (!this.materialMap.has(intersectedMesh)) {
+                    this.materialMap.set(intersectedMesh, backupColors(intersectedMesh));
+                }
                 setColor(intersectedMesh, SELECTION_COLOR);
             }
         } else {
@@ -171,42 +266,42 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
 }
 
 function getOculusButton(gamepadId: number, buttonCode: number) {
-    switch(buttonCode) {
+    switch (buttonCode) {
         case OCULUS_BUTTON_CODES.TRIGGER:
             if (gamepadId === OCULUS_CONTROLLERS.LEFT_CONTROLLER) {
-                return GAMEPAD_BUTTONS.LEFT_TRIGGER;
+                return GAMEPAD_BUTTON.LEFT_TRIGGER;
             } else {
-                return GAMEPAD_BUTTONS.RIGHT_TRIGGER;
+                return GAMEPAD_BUTTON.RIGHT_TRIGGER;
             }
         case OCULUS_BUTTON_CODES.GRUBBER:
             if (gamepadId === OCULUS_CONTROLLERS.LEFT_CONTROLLER) {
-                return GAMEPAD_BUTTONS.LEFT_GRUBBER;
+                return GAMEPAD_BUTTON.LEFT_GRUBBER;
             } else {
-                return GAMEPAD_BUTTONS.RIGHT_GRUBBER;
+                return GAMEPAD_BUTTON.RIGHT_GRUBBER;
             }
         case OCULUS_BUTTON_CODES.NIPPLE:
             if (gamepadId === OCULUS_CONTROLLERS.LEFT_CONTROLLER) {
-                return GAMEPAD_BUTTONS.LEFT_NIPPLE;
+                return GAMEPAD_BUTTON.LEFT_NIPPLE;
             } else {
-                return GAMEPAD_BUTTONS.RIGHT_NIPPLE;
+                return GAMEPAD_BUTTON.RIGHT_NIPPLE;
             }
         case OCULUS_BUTTON_CODES.A_X:
             if (gamepadId === OCULUS_CONTROLLERS.LEFT_CONTROLLER) {
-                return GAMEPAD_BUTTONS.X;
+                return GAMEPAD_BUTTON.X;
             } else {
-                return GAMEPAD_BUTTONS.A;
+                return GAMEPAD_BUTTON.A;
             }
         case OCULUS_BUTTON_CODES.B_Y:
             if (gamepadId === OCULUS_CONTROLLERS.LEFT_CONTROLLER) {
-                return GAMEPAD_BUTTONS.Y;
+                return GAMEPAD_BUTTON.Y;
             } else {
-                return GAMEPAD_BUTTONS.B;
+                return GAMEPAD_BUTTON.B;
             }
         case OCULUS_BUTTON_CODES.OCULUS_MENU:
             if (gamepadId === OCULUS_CONTROLLERS.LEFT_CONTROLLER) {
-                return GAMEPAD_BUTTONS.MENU;
+                return GAMEPAD_BUTTON.MENU;
             } else {
-                return GAMEPAD_BUTTONS.OCULUS;
+                return GAMEPAD_BUTTON.OCULUS;
             }
         default:
             return undefined;
@@ -217,7 +312,7 @@ function getGamepad(id: number): Gamepad | undefined {
     const gamepads = navigator.getGamepads && navigator.getGamepads();
 
     for (let i = 0, j = 0; i < gamepads.length; i++) {
-        var gamepad = gamepads[i];
+        const gamepad = gamepads[i];
         if (gamepad && (
             gamepad.id === 'Daydream Controller' ||
             gamepad.id === 'Gear VR Controller' ||
@@ -226,8 +321,90 @@ function getGamepad(id: number): Gamepad | undefined {
             gamepad.id.startsWith('Oculus Touch') ||
             gamepad.id.startsWith('Spatial Controller')
         )) {
-            if (j === id) return gamepad;
+            if (j === id) {
+                return gamepad;
+            }
             j++;
         }
     }
+}
+
+function startDragging(
+    target: Element,
+    diagramView: DiagramView,
+    controller: Controller,
+    bearer: ActiveElementBearer,
+) {
+    if (target && target instanceof Node) {
+        const elementMesh = diagramView.graphView.views.get(target.id).mesh;
+        if (controller) {
+            const mockObject = elementMesh.clone();
+            mockObject.visible = false;
+            attach(mockObject, controller, diagramView.scene);
+            bearer.mockObject = mockObject;
+            bearer.targetParent = diagramView.scene;
+            bearer.target = target;
+        }
+    }
+}
+
+function draggElement(
+    diagramView: DiagramView,
+    zOffset: number,
+    controller: Controller,
+    bearer: ActiveElementBearer,
+) {
+    if (bearer) {
+        if (controller) {
+            attach(bearer.mockObject, diagramView.scene, diagramView.scene);
+            bearer.position = threeVector3ToVector3d(bearer.mockObject.position);
+            attach(bearer.mockObject, controller, diagramView.scene);
+            if (zOffset !== 0) {
+                const dist = bearer.mockObject.position.z + zOffset;
+                const fittingBox = getModelFittingBox(bearer.target.size);
+                const limitedValue =  Math.max(
+                    Math.min(
+                        Math.abs(dist),
+                        DEFAULT_SCREEN_PARAMETERS.FAR,
+                    ),
+                    DEFAULT_SCREEN_PARAMETERS.NEAR + fittingBox.deep / 2)
+                ;
+                bearer.mockObject.position.setZ(dist > 0 ? limitedValue : -limitedValue);
+            }
+        }
+    }
+}
+
+function stopDragging(
+    bearer: ActiveElementBearer,
+    diagramView: DiagramView,
+    controller: Controller,
+) {
+    if (bearer) {
+        if (controller) {
+            attach(bearer.mockObject, bearer.targetParent, diagramView.scene);
+            bearer.position = threeVector3ToVector3d(bearer.mockObject.position);
+            detach(bearer.mockObject, bearer.mockObject.parent, diagramView.scene);
+            bearer.target = undefined;
+            bearer.mockObject = undefined;
+            bearer.targetParent = undefined;
+        }
+    }
+}
+
+function attach(child: THREE.Object3D, to: THREE.Object3D, scene: THREE.Scene) {
+    if (child.parent) { detach(child, child.parent, scene); }
+    _attach(child, scene, to);
+}
+
+function detach(child: THREE.Object3D, parent: THREE.Object3D, scene: THREE.Scene) {
+    child.applyMatrix(parent.matrixWorld);
+    parent.remove(child);
+    scene.add(child);
+}
+
+function _attach(child: THREE.Object3D, scene: THREE.Scene, parent: THREE.Object3D) {
+    child.applyMatrix(new THREE.Matrix4().getInverse(parent.matrixWorld));
+    scene.remove(child);
+    parent.add(child);
 }

@@ -68,7 +68,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         }
     }
 
-    onMouseDown(event: MouseEvent | TouchEvent, element?: Element) {
+    fireMouseDownEvent(event: MouseEvent | TouchEvent, element?: Element) {
         this.mouseDownOnElement = element || this.getIntersectedObject(event);
         this.dragging = false;
 
@@ -109,7 +109,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         });
     }
 
-    onScroll(event: MouseWheelEvent, element?: Element) {
+    fireScrollEvent(event: MouseWheelEvent, element?: Element) {
         event.stopPropagation();
         if (this.mouseDownOnElement) {
             this.dragging = true;
@@ -197,13 +197,13 @@ export function handleDragging(
     onEnd?: (event: MouseEvent | TouchEvent, change?: Vector2d) => void,
 ) {
     const startPoint = eventToPosition(downEvent);
-    if (!startPoint) return;
+    if (!startPoint) { return; }
 
     window.getSelection().removeAllRanges();
 
     const getOffset = (e: MouseEvent | TouchEvent) => {
         const curPoint = eventToPosition(e);
-        if (!curPoint) return undefined;
+        if (!curPoint) { return undefined; }
         return {
             x: curPoint.x - startPoint.x,
             y: curPoint.y - startPoint.y,

@@ -60,7 +60,7 @@ export function getPointAlongPolylineByRatio(polyline: ReadonlyArray<Vector3d>, 
  */
 export function getPointAlongPolyline(polyline: ReadonlyArray<Vector3d>, offset: number): Vector3d {
     if (polyline.length === 0) {
-        throw new Error('Cannot compute a point for empty polyline');
+        throw new Error('Cannot compute a point for empty polyline!');
     }
     if (offset < 0) {
         return polyline[0];

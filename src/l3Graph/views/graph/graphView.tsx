@@ -87,6 +87,9 @@ export class GraphView extends Subscribable<GraphViewEvents> {
             }
             if (view.overlayAnchor3d) {
                 this.anchors3d.add(view.overlayAnchor3d);
+                if (this.vrManager.isStarted) {
+                    this.onAdd3dObject(view.overlayAnchor3d.mesh);
+                }
             }
             this.views.set(element.id, view);
         }

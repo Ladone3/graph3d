@@ -48,16 +48,16 @@ export class OpenSpaceViewController extends Subscribable<ViewControllerEvents> 
         this.keyHandler.on('keyPressed', this.onKeyPressed);
         this.mouseHandler.on('paperStartDrag', this.onMouseDragStart);
         this.mouseHandler.on('paperDrag', this.onMouseDrag);
-        this.mouseHandler.on('paperScroll',  this.onMouseWheel);
+        this.mouseHandler.on('paperScroll', this.onMouseWheel);
         this.refreshCamera();
         this.trigger('switched:on');
     }
 
     switchOff() {
-        this.keyHandler.unsubscribe(this.onKeyPressed);
-        this.mouseHandler.unsubscribe(this.onMouseDragStart);
-        this.mouseHandler.unsubscribe(this.onMouseDrag);
-        this.mouseHandler.unsubscribe(this.onMouseWheel);
+        this.keyHandler.unsubscribe('keyPressed', this.onKeyPressed);
+        this.mouseHandler.unsubscribe('paperStartDrag', this.onMouseDragStart);
+        this.mouseHandler.unsubscribe('paperDrag', this.onMouseDrag);
+        this.mouseHandler.unsubscribe('paperScroll', this.onMouseWheel);
         this.trigger('switched:off');
     }
 

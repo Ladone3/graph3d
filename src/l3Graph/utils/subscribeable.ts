@@ -21,7 +21,18 @@ export class Subscribable<Events> {
         this._subscribtionsOnAny.push(callback);
     }
 
-    public unsubscribe(callback: EventCallback) {
+    public unsubscribe<Key extends keyof Events>(eventId: Key, callback: EventCallback) {
+        if (this._subscribtions[eventId]) {
+            const subscribers = this._subscribtions[eventId];
+            const index = subscribers.indexOf(callback);
+            if (index !== -1) {
+                subscribers.splice(index, 1);
+                return;
+            }
+        }
+    }
+
+    public unsubscribeFromAll(callback: EventCallback) {
         for (const subscribtionKey in this._subscribtions) {
             if (this._subscribtions[subscribtionKey]) {
                 const subscribers = this._subscribtions[subscribtionKey];
