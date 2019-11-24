@@ -31,7 +31,7 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
     }
 
     get overlays(): ReadonlyMap<OverlayPosition, ReadonlyMap<string, ReactOverlay>> {
-        return this.overlaysByPosition
+        return this.overlaysByPosition;
     }
 
     hasOverlay(owelrayId: string): boolean {
@@ -113,7 +113,7 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
 
             const {x, y, z, width, height} = this.getModelFittingBox();
             this.sprite.position.set(x, y, z);
-            
+
             ReactDOM.render(
                 <div
                     className='l3g-node-overlay-anchor'

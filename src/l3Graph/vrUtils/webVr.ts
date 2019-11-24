@@ -11,6 +11,7 @@ export interface WebGLRenderer extends THREE.WebGLRenderer {
 export interface ThreejsVrManager extends THREE.WebVRManager {
 	setSession: (session: Session) => void;
 	getController: (index: number) => THREE.Group;
+	scaleFactor: number;
 }
 
 export type Device = VRDisplay & {

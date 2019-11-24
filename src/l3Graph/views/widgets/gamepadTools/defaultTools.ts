@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GamepadHandler, GAMEPAD_BUTTON, OCULUS_CONTROLLERS } from '../../../vrUtils/gamepadHandler';
-import { Subscribable, setColor } from '../../../utils';
+import { Subscribable, setColor, backupColors, restoreColors } from '../../../utils';
 import { VrManager } from '../../../vrUtils/vrManager';
 
 export interface GamepadToolProps {
@@ -37,6 +37,7 @@ export class LeftGamepadTool extends GamepadTool {
         this.props.gamepadHandler = props.gamepadHandler;
         this.props.gamepadHandler.on('keyDown', this.updateMesh);
         this.props.gamepadHandler.on('keyUp', this.updateMesh);
+        this.registerHighlighter();
         this.registerBearer();
         this.mesh = this.renderMesh();
     }
@@ -52,6 +53,17 @@ export class LeftGamepadTool extends GamepadTool {
                 dragKey: GAMEPAD_BUTTON.LEFT_TRIGGER,
                 dragToKey: GAMEPAD_BUTTON.X,
                 dragFromKey: GAMEPAD_BUTTON.Y,
+            }
+        );
+    }
+
+    protected registerHighlighter() {
+        const controller = this.props.vrManager.getController(OCULUS_CONTROLLERS.LEFT_CONTROLLER);
+        this.props.gamepadHandler.registerHighligter(
+            controller, (mesh: THREE.Object3D) => {
+                const backUp = backupColors(mesh);
+                setColor(mesh, SELECTION_COLOR);
+                return (meshToRestore: THREE.Object3D) => restoreColors(meshToRestore, backUp);
             }
         );
     }
@@ -100,6 +112,17 @@ export class RightGamepadTool extends LeftGamepadTool {
                 dragKey: GAMEPAD_BUTTON.RIGHT_TRIGGER,
                 dragToKey: GAMEPAD_BUTTON.A,
                 dragFromKey: GAMEPAD_BUTTON.B,
+            }
+        );
+    }
+
+    protected registerHighlighter() {
+        const controller = this.props.vrManager.getController(OCULUS_CONTROLLERS.RIGHT_CONTROLLER);
+        this.props.gamepadHandler.registerHighligter(
+            controller, (mesh: THREE.Object3D) => {
+                const backUp = backupColors(mesh);
+                setColor(mesh, SELECTION_COLOR);
+                return (meshToRestore: THREE.Object3D) => restoreColors(meshToRestore, backUp);
             }
         );
     }

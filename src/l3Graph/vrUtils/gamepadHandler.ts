@@ -1,9 +1,8 @@
 import * as THREE from 'three';
 import { Subscribable } from '../utils/subscribeable';
 import {
-    Cancellation, animationFrameInterval, setColor,
-    backupColors, restoreColors, threeVector3ToVector3d,
-    getModelFittingBox
+    Cancellation, animationFrameInterval,
+    threeVector3ToVector3d, getModelFittingBox
 } from '../utils';
 import { VrEvent } from './webVr';
 import { Element } from '../models/graph/graphModel';
@@ -14,6 +13,17 @@ import { Node } from '../models/graph/node';
 import { Vector3d } from '../models/structures';
 
 export type Controller = THREE.Group;
+
+/**
+ * This function should return
+ * the function which restore the initial state of the highlighted mesh
+ */
+export type Highligter = (mesh: THREE.Object3D) => (mesh: THREE.Object3D) => void;
+
+interface HighlightingRestorer {
+    mesh: THREE.Object3D;
+    restore: (mesh: THREE.Object3D) => void;
+}
 
 export interface ElementBearer {
     dragKey: GAMEPAD_BUTTON;
@@ -66,24 +76,28 @@ export enum GAMEPAD_BUTTON {
     OCULUS = 'OCULUS',
     MENU = 'MENU',
 }
-const SELECTION_COLOR = 'red';
+
 export const OCULUS_CONTROLLERS = {
     LEFT_CONTROLLER: 1,
     RIGHT_CONTROLLER: 0,
 };
+
 export const CONTROLLERS_NUMBER = Object.keys(OCULUS_CONTROLLERS).length;
 
 // It's currently support only OCULUS gamepads
 export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
     public readonly keyPressed = new Map<GAMEPAD_BUTTON, Element | undefined>();
-    private bearerMap = new Map<Controller, ActiveElementBearer>();
+
+    private bearers = new Map<Controller, ActiveElementBearer>();
+    private highlighters = new Map<Controller, Highligter>();
+
     private cancellation: Cancellation | undefined;
     private existingControllersNumber = 0;
     private raycaster: THREE.Raycaster;
     private tempMatrix: THREE.Matrix4;
 
-    private targetMap = new Map<number, THREE.Object3D>();
-    private materialMap = new Map<THREE.Object3D, Map<THREE.Object3D, THREE.Material>>();
+    private highlightingRestorers = new Map<Controller, HighlightingRestorer>();
+    private elementToController = new Map<THREE.Object3D, Controller>();
 
     constructor(
         private diagramhModel: DiagramModel,
@@ -102,12 +116,16 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         }, false );
     }
 
+    public registerHighligter(controller: Controller, highlighter: Highligter) {
+        this.highlighters.set(controller, highlighter);
+    }
+
     public registerElementBearer(controller: Controller, bearer: ElementBearer) {
-        this.bearerMap.set(controller, bearer);
+        this.bearers.set(controller, bearer);
     }
 
     private handleDraggingStart(keyDownMap: Map<GAMEPAD_BUTTON, Element>) {
-        this.bearerMap.forEach((bearer, controller) => {
+        this.bearers.forEach((bearer, controller) => {
             if (keyDownMap.has(bearer.dragKey)) {
                 const target = this.keyPressed.get(bearer.dragKey);
                 startDragging(
@@ -126,7 +144,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
     }
 
     private handleDragging() {
-        this.bearerMap.forEach((bearer, controller) => {
+        this.bearers.forEach((bearer, controller) => {
             const moveForward = this.keyPressed.has(bearer.dragFromKey);
             const moveBackward = this.keyPressed.has(bearer.dragToKey);
 
@@ -147,7 +165,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
     }
 
     private handleDraggingEnd(keyUpMap: Map<GAMEPAD_BUTTON, Element>) {
-        this.bearerMap.forEach((bearer, controller) => {
+        this.bearers.forEach((bearer, controller) => {
             if (keyUpMap.has(bearer.dragKey) && bearer.target) {
                 stopDragging(bearer, this.diagramView, controller);
 
@@ -169,15 +187,18 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         this.cancellation = undefined;
     }
 
-    private refreshBtnMap() {
+    private updateBtnMap() {
         const keyDown = new Map<GAMEPAD_BUTTON, Element | undefined>();
         const keyUp = new Map<GAMEPAD_BUTTON, Element | undefined>();
         let gamepadNumber = 0;
         for (let gamepadId = 0; gamepadId < CONTROLLERS_NUMBER; gamepadId++) {
+            const controller = this.diagramView.vrManager.getController(gamepadId);
             const gamepad = getGamepad(gamepadId);
             const gamepadExists = gamepad !== undefined && gamepad.pose;
             if (gamepadExists) {
-                const target = this.getTarget(gamepadId);
+                const target = this.getTarget(controller);
+                this.updateHighlighting(controller, target);
+
                 gamepadNumber++;
                 for (let buttonId = 0; buttonId < gamepad.buttons.length; buttonId++) {
                     if (buttonId === OCULUS_BUTTON_CODES.OCULUS_MENU) { // ignore these buttons
@@ -211,42 +232,13 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         if (gamepadNumber !== this.existingControllersNumber) { this.existingControllersNumber = gamepadNumber; }
     }
 
-    private getTarget(gamepadId: number): Element | undefined {
-        // We can calculate It by ourself, but it's already implemented in three.js
-        const controller = this.diagramView.renderer.vr.getController(gamepadId);
-
+    private getTarget(controller: Controller): Element | undefined {
         this.tempMatrix.identity().extractRotation(controller.matrixWorld);
         this.raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
         this.raycaster.ray.direction.set(0, 0, -1).applyMatrix4(this.tempMatrix);
         const {meshes, nodeMeshMap} = mapMeshes(this.diagramhModel, this.diagramView);
 
         const intersections = this.raycaster.intersectObjects(meshes);
-
-        // Highlighting todo: move this code out
-        // =============================
-        const previousSelection = this.targetMap.get(gamepadId);
-        if (intersections.length > 0) {
-            const intersectedMesh = intersections[0].object;
-            const meshIsChanged = previousSelection !== intersectedMesh;
-            if (meshIsChanged) {
-                if (previousSelection) {
-                    restoreColors(previousSelection, this.materialMap.get(previousSelection));
-                }
-                this.targetMap.set(gamepadId, intersectedMesh);
-                if (!this.materialMap.has(intersectedMesh)) {
-                    this.materialMap.set(intersectedMesh, backupColors(intersectedMesh));
-                }
-                setColor(intersectedMesh, SELECTION_COLOR);
-            }
-        } else {
-            if (previousSelection) {
-                this.targetMap.delete(gamepadId);
-                if (Array.from(this.targetMap.values()).indexOf(previousSelection) === -1) {
-                    restoreColors(previousSelection, this.materialMap.get(previousSelection));
-                }
-            }
-        }
-        // =============================
 
         if (intersections.length > 0) {
             const intersectedMesh = intersections[0].object;
@@ -257,10 +249,41 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         }
     }
 
+    private updateHighlighting(controller: Controller, newTarget?: Element) {
+        if (!this.highlighters.has(controller)) { return; }
+
+        const restorer = this.highlightingRestorers.get(controller);
+        if (newTarget) {
+            const view = this.diagramView.graphView.views.get(newTarget.id);
+            const targetMesh = view.mesh;
+            const meshIsChanged = !restorer || restorer.mesh !== targetMesh;
+            if (meshIsChanged) {
+                if (this.elementToController.has(targetMesh)) { return; }
+                if (restorer) {
+                    restorer.restore(restorer.mesh);
+                    this.elementToController.delete(targetMesh);
+                }
+                const highlight = this.highlighters.get(controller);
+                const restoreFunction = highlight(targetMesh);
+                this.highlightingRestorers.set(controller, {
+                    mesh: targetMesh,
+                    restore: restoreFunction,
+                });
+                this.elementToController.set(targetMesh, controller);
+            }
+        } else {
+            if (restorer) {
+                this.highlightingRestorers.delete(controller);
+                this.elementToController.delete(restorer.mesh);
+                restorer.restore(restorer.mesh);
+            }
+        }
+    }
+
     private start(): Cancellation {
         if (this.cancellation) { return this.cancellation; }
         return animationFrameInterval(() => {
-            this.refreshBtnMap();
+            this.updateBtnMap();
         });
     }
 }

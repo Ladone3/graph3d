@@ -19,25 +19,29 @@ export function createSprite(
     const sprite = new THREE.Sprite(spriteMaterial);
     (sprite as any).center = CENTER_VECTOR_FOR_POSITION[position];
 
-    texture.image = htmlToImage(htmlOverlay);
     texture.wrapS = texture.wrapT = THREE.MirroredRepeatWrapping;
-
-    return new Promise(resolve => {
-        texture.image.onload = () => {
-            texture.needsUpdate = true;
-            sprite.scale.set(texture.image.width, texture.image.height, 1);
-            resolve({
-                position,
-                sprite,
-                size: {x: texture.image.width, y: texture.image.height}
-            });
+    return htmlToImage(htmlOverlay).then(img => {
+        texture.image = img;
+        texture.needsUpdate = true;
+        sprite.scale.set(img.width, img.height, 1);
+        return {
+            position,
+            sprite,
+            size: {x: img.width, y: img.height},
         };
-    })
+});
 }
 
+// In future here can be a service request
+export function htmlToImage(htmlElement: HTMLElement): Promise<HTMLImageElement> {
+    const img = _htmlToImage(htmlElement);
+    return new Promise(resolve => {
+        img.onload = () => { resolve(img); };
+    });
+}
 
 // In future here can be a service request
-function htmlToImage(htmlElement: HTMLElement): HTMLImageElement {
+function _htmlToImage(htmlElement: HTMLElement): HTMLImageElement {
     const img = new Image();
     if (!htmlElement) {
         img.src = ERROR_BASE_64;

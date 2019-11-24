@@ -7,6 +7,7 @@ import { GamepadsWidget } from './models/widgets/gamepadsWidget';
 import { GamepadsWidgetView } from './views/widgets/gamepadsWidgetView';
 import { LeftGamepadTool, RightGamepadTool } from './views/widgets/gamepadTools/defaultTools';
 import { LeftGamepadEditorTool, RightGamepadEditorTool } from './views/widgets/gamepadTools/editorTools';
+import { StateTesterModel, StateTesterView } from './views/widgets/stateControllerTester';
 
 export const selectionWidgetFactory: WidgetFactory<SelectionWidget> = {
     getModel: context => new SelectionWidget({
@@ -33,11 +34,11 @@ export const gamepadWidgetFactory: WidgetFactory<GamepadsWidget> = {
             gamepadHandler: context.gamepadHandler,
             leftTools: [
                 new LeftGamepadTool({gamepadHandler, vrManager}),
-                // new LeftGamepadEditorTool({gamepadHandler, diagramModel}),
+                // new LeftGamepadEditorTool({gamepadHandler, diagramModel, vrManager}),
             ],
             rightTools: [
                 new RightGamepadTool({gamepadHandler, vrManager}),
-                // new RightGamepadEditorTool({gamepadHandler, diagramModel}),
+                // new RightGamepadEditorTool({gamepadHandler, diagramModel, vrManager}),
             ],
         });
     },
@@ -47,8 +48,18 @@ export const gamepadWidgetFactory: WidgetFactory<GamepadsWidget> = {
     }),
 };
 
+export const testerWidgetFactory: WidgetFactory<StateTesterModel> = {
+    getModel: context => {
+        return new StateTesterModel({keyHandler: context.keyHandler});
+    },
+    getView: context => new StateTesterView({
+        model: context.widget,
+    }),
+};
+
 export const DEFAULT_MESH_WIDGET_SET: WidgetFactory[] = [
     selectionWidgetFactory,
     arrowHelperWidgetFactory,
     gamepadWidgetFactory,
+    // testerWidgetFactory,
 ];

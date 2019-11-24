@@ -58,7 +58,7 @@ export class LinkView implements DiagramElementView {
         this.update();
     }
 
-    // Not implemented yet
+    // todo: check if we need this kind of functionality in API
     public getBoundingBox(): THREE.Box3 {
         return this.boundingBox;
     }

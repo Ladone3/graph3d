@@ -33,7 +33,7 @@ export const DEFAULT_SCREEN_PARAMETERS = {
     VIEW_ANGLE: 45,
     NEAR: 0.1,
     FAR: 10000,
-}
+};
 
 export class DiagramView extends React.Component<DiagramViewProps> {
     renderer: WebGLRenderer;
@@ -57,7 +57,6 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         FAR: number;
     };
 
-
     constructor(props: DiagramViewProps) {
         super(props);
     }
@@ -67,7 +66,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.vrManager = new VrManager(this);
         this.vrManager.on('presenting:state:changed', () => {
             this.widgetsView.update();
-        })
+        });
         this.initSubViews();
         this.subscribeOnModel();
         this.renderGraph();
@@ -299,12 +298,12 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         return <div className='l3graph-main_screen'>
             <div
                 className='l3graph-main_screen__mesh-layer'
-                ref={(div) => this.meshHtmlContainer = div}
+                ref={div => this.meshHtmlContainer = div}
             >
             </div>
             <div
                 className='l3graph-main_screen__overlay-layer'
-                ref={(div) => this.overlayHtmlContainer = div}
+                ref={div => this.overlayHtmlContainer = div}
             >
             </div>
         </div>;

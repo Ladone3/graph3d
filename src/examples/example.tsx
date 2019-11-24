@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }), rootHtml);
 
     function onComponentMount(l3graph: L3Graph) {
-        const graphElements = generateData(15);
+        const graphElements = generateData(1);
         l3graph.model.graph.addNodes(graphElements.nodes);
         l3graph.model.graph.addLinks(graphElements.links);
         applyForceLayout3d(l3graph.model.graph, 30, 200);

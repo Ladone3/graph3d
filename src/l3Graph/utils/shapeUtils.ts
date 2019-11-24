@@ -51,17 +51,20 @@ export function prepareMesh(meshObj: MeshObj): THREE.Group {
     const mesh = loader.parse(meshObj.markup);
 
     // const group = new THREE.Group();
-    // group.add(mesh); 
+    // group.add(mesh);
     // setColor(group, color);
     // return group;
-    
-    setColor(mesh, color)
+
+    setColor(mesh, color);
     return mesh;
 }
 
 /** Helper only for phong and line basic material */
 export function setColor(mesh: THREE.Object3D, providedColor: string | number | Map<THREE.Object3D, string | number>) {
-    const color = typeof providedColor === 'string' || typeof providedColor === 'number' ? providedColor : providedColor.get(mesh);
+    const color = (
+        typeof providedColor === 'string' ||
+        typeof providedColor === 'number'
+    ) ? providedColor : providedColor.get(mesh);
     if (mesh instanceof THREE.Line) {
         mesh.material = new THREE.LineBasicMaterial({color});
     } else if (mesh instanceof THREE.Group) {
@@ -79,7 +82,7 @@ export function backupColors(mesh: THREE.Object3D): Map<THREE.Object3D, THREE.Ma
         } else if (curMesh instanceof THREE.Mesh || curMesh instanceof THREE.Line) {
             backUp.set(curMesh, curMesh.material);
         }
-    }
+    };
     recursion(mesh);
     return backUp;
 }

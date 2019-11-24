@@ -34,15 +34,23 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 		return Boolean(this.device);
 	}
 
+	get camera() {
+		return this.view.renderer.vr.getCamera(this.view.camera);
+	}
+
 	getController(id: number) {
 		return this.view.renderer.vr.getController(id);
 	}
 
 	start() {
-		if (this.isStarted) return;
+		if (this.isStarted) { return; }
 		this._initVr();
 
 		const vr = this.view.renderer.vr;
+		// vr.scaleFactor = 100000;
+		// this.view.camera.zoom = 0.001;
+		this.camera.position.setZ(-100);
+		// this.view.scene.scale.set(0.2, 0.2, 0.2);
 		if (this.isXr) {
 			const onSessionStarted = (session: Session) => {
 				this.session.addEventListener('end', onSessionEnded);
@@ -110,7 +118,7 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 		}, false);
 
 		window.addEventListener('vrdisplayactivate', event => {
-			this.start()
+			this.start();
 		}, false);
 
 		window.addEventListener('vrdisplaypresentchange', event => {

@@ -25,10 +25,10 @@ export abstract class AbstracrOverlayAnchor3d<Model, View> {
         ) => {
             spriteGroup.lookAt(camera.position);
             superAfterRender(renderer, scene, camera, geometry, material, group);
-        }
+        };
         this.mesh = spriteGroup;
         this.renderSprites();
-        
+
         overlayAnchor.on('anchor:changed', () => this.renderSprites());
     }
 
@@ -65,7 +65,6 @@ export abstract class AbstracrOverlayAnchor3d<Model, View> {
     abstract placeSprites(sprites: Rendered3dSprite[]): void;
 }
 
-
 export function applyOffset(
     basicVector: Vector3d,
     offset: Vector3d,
@@ -73,7 +72,7 @@ export function applyOffset(
 ): Vector3d {
     const {x: xOffset, y: yOffset} = offset;
     let offsetByPossition: Vector3d;
-    switch(position) {
+    switch (position) {
         case 'e': offsetByPossition = {x: xOffset,  y: 0, z: 0}; break;
         case 'w': offsetByPossition = {x: -xOffset, y: 0, z: 0}; break;
         case 'n': offsetByPossition = {x: 0, y: -yOffset, z: 0}; break;
