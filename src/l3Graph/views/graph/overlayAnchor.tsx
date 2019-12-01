@@ -4,6 +4,7 @@ import * as React from 'react';
 import { ReactOverlay, createContextProvider, enrichOverlay } from '../../customisation';
 import { Box } from '../../models/structures';
 import { Subscribable } from '../../utils';
+import { CSS3DSprite } from '../../utils/CSS3DRenderer';
 
 export type OverlayPosition = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'c';
 
@@ -16,7 +17,7 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
     readonly html: HTMLElement;
     readonly _renderedOverlays = new Map<string, HTMLElement>();
     readonly _overlayPositions: Map<string, OverlayPosition>;
-    readonly sprite: THREE.CSS3DSprite;
+    readonly sprite: CSS3DSprite;
     protected overlaysByPosition: Map<OverlayPosition, Map<string, ReactOverlay>>;
 
     constructor(
@@ -25,7 +26,7 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
     ) {
         super();
         this.html = document.createElement('DIV');
-        this.sprite = new THREE.CSS3DSprite(this.html);
+        this.sprite = new CSS3DSprite(this.html);
         this.overlaysByPosition = new Map();
         this._overlayPositions = new Map();
     }

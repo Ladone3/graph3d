@@ -1,8 +1,4 @@
 require('../styles/main.scss');
-require('./js/CSS3DRenderer.js');
-require('./js/LoaderSupport.js');
-require('./js/OBJLoader.js');
-require('./js/OBJLoader2.js');
 
 export { L3Graph, L3GraphProps } from './l3Graph/l3Graph';
 export { ViewOptions } from './l3Graph/views/diagramView';

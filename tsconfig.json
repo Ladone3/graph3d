@@ -17,8 +17,5 @@
         "./src/**/*.tsx",
         "./typings/typings.d.ts"
     ],
-    "files": [
-        "./node_modules/@types/webvr-api/index.d.ts"
-    ],
     "compileOnSave": false
 }

@@ -11,8 +11,8 @@ export interface SelectionViewParameters {
 
 export class SelectionView implements DiagramWidgetView {
     public readonly material: THREE.MeshLambertMaterial;
-    public readonly geometry: THREE.CubeGeometry;
-    public readonly mesh: THREE.Group;
+    public readonly geometry: THREE.BoxGeometry;
+    public readonly mesh: THREE.Mesh;
 
     readonly model: SelectionWidget;
     private boundingBox: THREE.Box3;
@@ -20,7 +20,7 @@ export class SelectionView implements DiagramWidgetView {
     constructor(parameters: SelectionViewParameters) {
         this.model = parameters.model;
         this.material = new THREE.MeshLambertMaterial({color: 'red', opacity: 0.1, transparent: true});
-        this.geometry = new THREE.CubeGeometry(1, 1, 1);
+        this.geometry = new THREE.BoxGeometry(1, 1, 1);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
 
         this.update();

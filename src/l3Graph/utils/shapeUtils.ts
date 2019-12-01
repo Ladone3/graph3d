@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { MeshKind, MeshPrimitive, MeshObj } from '../customisation';
+import { OBJLoader } from './OBJLoader';
 
 export function preparePrimitive(primitive: MeshPrimitive): THREE.Mesh {
     if (primitive.type !== MeshKind.Primitive) {
@@ -11,7 +12,7 @@ export function preparePrimitive(primitive: MeshPrimitive): THREE.Mesh {
 
     switch (primitive.shape) {
         case 'cube':
-            geometry = new THREE.CubeGeometry(10, 10, 10);
+            geometry = new THREE.BoxGeometry(10, 10, 10);
             break;
         case 'cone':
             geometry = new THREE.ConeGeometry(5, 10, 10);
@@ -45,11 +46,12 @@ export function preparePrimitive(primitive: MeshPrimitive): THREE.Mesh {
     return mesh;
 }
 
-export function prepareMesh(meshObj: MeshObj): THREE.Group {
+export function prepareMesh(meshObj: MeshObj): THREE.Object3D {
     const color = meshObj.color || Math.random() * 0xffffff;
-    const loader = new THREE.OBJLoader();
+    const loader = new OBJLoader();
     const mesh = loader.parse(meshObj.markup);
 
+    // todo: try this way
     // const group = new THREE.Group();
     // group.add(mesh);
     // setColor(group, color);
@@ -74,8 +76,8 @@ export function setColor(mesh: THREE.Object3D, providedColor: string | number | 
     }
 }
 
-export function backupColors(mesh: THREE.Object3D): Map<THREE.Object3D, THREE.Material> {
-    const backUp = new Map<THREE.Object3D, THREE.Material>();
+export function backupColors(mesh: THREE.Object3D): Map<THREE.Object3D, THREE.Material | THREE.Material[]> {
+    const backUp = new Map<THREE.Object3D, THREE.Material | THREE.Material[]>();
     const recursion = (curMesh: THREE.Object3D) => {
         if (curMesh instanceof THREE.Group) {
             curMesh.children.forEach(child => recursion(child));
@@ -87,7 +89,7 @@ export function backupColors(mesh: THREE.Object3D): Map<THREE.Object3D, THREE.Ma
     return backUp;
 }
 
-export function restoreColors(mesh: THREE.Object3D, backUp: Map<THREE.Object3D, THREE.Material>) {
+export function restoreColors(mesh: THREE.Object3D, backUp: Map<THREE.Object3D, THREE.Material | THREE.Material[]>) {
      if (mesh instanceof THREE.Group) {
         mesh.children.forEach(child => restoreColors(child, backUp));
     } else if (mesh instanceof THREE.Line || mesh instanceof THREE.Mesh) {

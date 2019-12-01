@@ -21,7 +21,7 @@ export class StateTesterModel extends Widget {
 
 export class StateTesterView implements DiagramWidgetView {
     private editorTool: LeftGamepadEditorTool;
-    mesh: THREE.Group;
+    mesh: THREE.Object3D;
     model: StateTesterModel;
 
     constructor({model}: {model: StateTesterModel}) {

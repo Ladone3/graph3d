@@ -11,6 +11,7 @@ import { vector3dToTreeVector3, EventObject, eventToPosition } from '../utils';
 import { WidgetsModelEvents } from '../models/widgets/widgetsModel';
 import { WebGLRenderer } from '../vrUtils/webVr';
 import { VrManager } from '../vrUtils/vrManager';
+import { CSS3DRenderer } from '../utils/CSS3DRenderer';
 
 export interface ViewOptions {
     nodeTemplateProvider?: NodeTemplateProvider;
@@ -37,7 +38,7 @@ export const DEFAULT_SCREEN_PARAMETERS = {
 
 export class DiagramView extends React.Component<DiagramViewProps> {
     renderer: WebGLRenderer;
-    overlayRenderer: THREE.CSS3DRenderer;
+    overlayRenderer: CSS3DRenderer;
 
     graphView: GraphView;
     widgetsView: WidgetsView;
@@ -200,7 +201,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.renderer.setClearColor('white');
 
         // Prepare sprite renderer (css3d)
-        this.overlayRenderer = new THREE.CSS3DRenderer();
+        this.overlayRenderer = new CSS3DRenderer();
         this.overlayRenderer.setSize(
             this.screenParameters.WIDTH,
             this.screenParameters.HEIGHT,

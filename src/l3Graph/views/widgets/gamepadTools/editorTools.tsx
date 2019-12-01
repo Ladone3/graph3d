@@ -126,7 +126,7 @@ const DEFAULT_CREATION_DISTANCE = 250;
 const DEFAULT_DISPLAY_MATERIAL = new THREE.MeshLambertMaterial({color: 'grey'});
 
 export class LeftGamepadEditorTool extends GamepadTool {
-    protected readonly body: THREE.Group;
+    protected readonly body: THREE.Object3D;
     protected readonly display: THREE.Mesh;
 
     protected readonly stateController: StateController;

@@ -5,7 +5,7 @@ import { Vector3d } from '../../models/structures';
 import { sum } from '../../utils';
 
 export abstract class AbstracrOverlayAnchor3d<Model, View> {
-    readonly mesh: THREE.Group;
+    readonly mesh: THREE.Object3D;
     sprites: Rendered3dSprite[];
 
     constructor(
