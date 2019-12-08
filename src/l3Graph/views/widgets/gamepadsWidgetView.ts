@@ -38,7 +38,7 @@ export class GamepadsWidgetView implements DiagramWidgetView {
     public update() {
         if (this.vrManager.isStarted) {
             this.mesh.visible = true;
-            const state = this.model.state;
+            const state = this.model.tools;
 
             // todo: add some semantic here
             const isLeftMeshChanged = this.leftGamepad.children[0] !== state.leftTool.mesh;

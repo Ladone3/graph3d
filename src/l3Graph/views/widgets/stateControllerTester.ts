@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { DiagramWidgetView } from '../viewInterface';
 import { KeyHandler } from '../../utils';
-import { LeftGamepadEditorTool } from './gamepadTools/editorTools';
+import { LeftGamepadEditorTool, DefaultEditorStateCore } from './gamepadTools/editorTools';
 import { Widget } from '../../models/widgets/widget';
 
 export const SELECTION_PADDING = 5;
@@ -29,8 +29,10 @@ export class StateTesterView implements DiagramWidgetView {
             gamepadHandler: model.parameters.keyHandler as any,
             diagramModel: undefined,
             vrManager: undefined,
+            stateCore: new DefaultEditorStateCore('test-prefix'),
         });
         this.mesh = this.editorTool.mesh;
+        this.mesh.scale.setScalar(100);
 
         this.update();
     }

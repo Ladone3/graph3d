@@ -49,11 +49,6 @@ export class VrManager extends Subscribable<VrManagerEvents> {
 		// var vrControls = new THREE.VR(this.view.camera);
 		const vr = this.view.renderer.vr;
 		vr.setFramebufferScaleFactor(0.8);
-		// vrControls.scale = 0.1;
-		// vr.scaleFactor = 100000;
-		// this.view.camera.zoom = 0.001;
-		// this.camera.position.setZ(-100);
-		this.view.scene.scale.set(0.1, 0.1, 0.1);
 		if (this.isXr) {
 			const onSessionStarted = (session: Session) => {
 				this.session.addEventListener('end', onSessionEnded);

@@ -32,6 +32,12 @@ export {
     WidgetModelContext,
     WidgetViewContext,
 } from './l3Graph/models/widgets/widget';
+
+export { GamepadsWidget } from './l3Graph/models/widgets/gamepadsWidget';
+export { GamepadsWidgetView } from './l3Graph/views/widgets/gamepadsWidgetView';
+export { LeftGamepadTool, RightGamepadTool } from './l3Graph/views/widgets/gamepadTools/defaultTools';
+export * from './l3Graph/views/widgets/gamepadTools/editorTools';
+
 export { FocusNodeWidget }  from './l3Graph/models/widgets/focusNodeWidget';
 export { ReactNodeWidgetView } from './l3Graph/views/widgets/reactNodeWidgetView';
 export { DiagramWidgetView } from './l3Graph/views/viewInterface';

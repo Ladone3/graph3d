@@ -52,7 +52,7 @@ export interface GamepadHandlerEvents {
     'elementDragEnd': GamepadDragEventData;
 }
 
-const GAMEPAD_EXTRA_MOVE_STEP = 10;
+export const GAMEPAD_EXTRA_MOVE_STEP = 10;
 const OCULUS_BUTTON_CODES = {
     NIPPLE: 0,
     TRIGGER: 1,
@@ -415,18 +415,18 @@ function stopDragging(
     }
 }
 
-function attach(child: THREE.Object3D, to: THREE.Object3D, scene: THREE.Scene) {
+export function attach(child: THREE.Object3D, to: THREE.Object3D, scene: THREE.Scene) {
     if (child.parent) { detach(child, child.parent, scene); }
     _attach(child, scene, to);
 }
 
-function detach(child: THREE.Object3D, parent: THREE.Object3D, scene: THREE.Scene) {
+export function detach(child: THREE.Object3D, parent: THREE.Object3D, scene: THREE.Scene) {
     child.applyMatrix(parent.matrixWorld);
     parent.remove(child);
     scene.add(child);
 }
 
-function _attach(child: THREE.Object3D, scene: THREE.Scene, parent: THREE.Object3D) {
+export function _attach(child: THREE.Object3D, scene: THREE.Scene, parent: THREE.Object3D) {
     child.applyMatrix(new THREE.Matrix4().getInverse(parent.matrixWorld));
     scene.remove(child);
     parent.add(child);

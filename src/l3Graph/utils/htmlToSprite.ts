@@ -22,8 +22,10 @@ export function createSprite(
     texture.wrapS = texture.wrapT = THREE.MirroredRepeatWrapping;
     return htmlToImage(htmlOverlay).then(img => {
         texture.image = img;
+        texture.image.width *= 100;
+        texture.image.height *= 100;
         texture.needsUpdate = true;
-        sprite.scale.set(img.width, img.height, 1);
+        sprite.scale.set(img.width / 100, img.height / 100, 1);
         return {
             position,
             sprite,

@@ -1,5 +1,5 @@
 import { Widget } from './widget';
-import { GamepadHandler } from '../../vrUtils/gamepadHandler';
+import { GamepadHandler, OCULUS_CONTROLLERS } from '../../vrUtils/gamepadHandler';
 import { GamepadTool } from '../../views/widgets/gamepadTools/defaultTools';
 
 export interface GamepadsWidgetProps {
@@ -8,14 +8,14 @@ export interface GamepadsWidgetProps {
     rightTools: GamepadTool[];
 }
 
-export interface GamepadsState {
+export interface GamepadsTools {
     leftTool: GamepadTool;
     rightTool: GamepadTool;
 }
 
 export class GamepadsWidget extends Widget {
     public readonly widgetId: string;
-    private _state: GamepadsState;
+    private _tools: GamepadsTools;
 
     constructor(private props: GamepadsWidgetProps) {
         super();
@@ -25,7 +25,7 @@ export class GamepadsWidget extends Widget {
             throw new Error('Left or Right tool is not provided!');
         }
 
-        this._state = {
+        this._tools = {
             leftTool: props.leftTools[0],
             rightTool: props.rightTools[0],
         };
@@ -36,7 +36,24 @@ export class GamepadsWidget extends Widget {
         this.props.rightTools.forEach(tool => tool.onDiscard());
     }
 
-    get state(): GamepadsState {
-        return this._state;
+    get tools(): GamepadsTools {
+        if (
+            this._tools.leftTool.forGamepadId === OCULUS_CONTROLLERS.LEFT_CONTROLLER &&
+            this._tools.rightTool.forGamepadId === OCULUS_CONTROLLERS.RIGHT_CONTROLLER
+        ) {
+            return this._tools;
+        } else if (
+            this._tools.leftTool.forGamepadId === OCULUS_CONTROLLERS.RIGHT_CONTROLLER &&
+            this._tools.rightTool.forGamepadId === OCULUS_CONTROLLERS.LEFT_CONTROLLER
+        ) {
+            console.warn('Please change configuration left gamepad and right one are mixed up!');
+            return {
+                leftTool: this._tools.rightTool,
+                rightTool: this._tools.leftTool,
+            }
+        } else {
+            console.warn('Wrong gamepad tool configuration!');
+            return this._tools;
+        }
     }
 }

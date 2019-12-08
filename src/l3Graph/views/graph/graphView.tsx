@@ -61,7 +61,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         })
     }
 
-    public registerElement(element: Element) {
+    public registerElement(element: Element): DiagramElementView {
         const elementViewExists = this.views.get(element.id);
         if (elementViewExists) {
             return; // We'v registered the view for this element

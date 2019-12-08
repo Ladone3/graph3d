@@ -6,7 +6,7 @@ import { WidgetFactory } from './models/widgets/widget';
 import { GamepadsWidget } from './models/widgets/gamepadsWidget';
 import { GamepadsWidgetView } from './views/widgets/gamepadsWidgetView';
 import { LeftGamepadTool, RightGamepadTool } from './views/widgets/gamepadTools/defaultTools';
-import { LeftGamepadEditorTool, RightGamepadEditorTool } from './views/widgets/gamepadTools/editorTools';
+import { LeftGamepadEditorTool, RightGamepadEditorTool, DefaultEditorStateCore } from './views/widgets/gamepadTools/editorTools';
 import { StateTesterModel, StateTesterView } from './views/widgets/stateControllerTester';
 
 export const selectionWidgetFactory: WidgetFactory<SelectionWidget> = {
@@ -33,8 +33,13 @@ export const gamepadWidgetFactory: WidgetFactory<GamepadsWidget> = {
         return new GamepadsWidget({
             gamepadHandler: context.gamepadHandler,
             leftTools: [
-                new LeftGamepadTool({gamepadHandler, vrManager}),
-                // new LeftGamepadEditorTool({gamepadHandler, diagramModel, vrManager}),
+                // new LeftGamepadTool({gamepadHandler, vrManager}),
+                new LeftGamepadEditorTool({
+                    gamepadHandler,
+                    diagramModel,
+                    vrManager,
+                    stateCore: new DefaultEditorStateCore('Node-created-by-left-controller-'),
+                }),
             ],
             rightTools: [
                 new RightGamepadTool({gamepadHandler, vrManager}),

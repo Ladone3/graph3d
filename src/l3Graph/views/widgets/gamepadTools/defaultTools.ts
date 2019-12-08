@@ -18,6 +18,7 @@ const RIGHT_GAMEPAD_COLOR = 'blue';
 
 export abstract class GamepadTool extends Subscribable<GamepadToolEvents> {
     public mesh: THREE.Object3D;
+    public forGamepadId: number;
 
     constructor() {
         super();
@@ -34,6 +35,7 @@ export class LeftGamepadTool extends GamepadTool {
     protected TARGET_BUTTON = GAMEPAD_BUTTON.LEFT_TRIGGER;
     constructor(protected props: GamepadToolProps) {
         super();
+        this.forGamepadId = OCULUS_CONTROLLERS.LEFT_CONTROLLER;
         this.props.gamepadHandler = props.gamepadHandler;
         this.props.gamepadHandler.on('keyDown', this.updateMesh);
         this.props.gamepadHandler.on('keyUp', this.updateMesh);
@@ -100,6 +102,11 @@ export class LeftGamepadTool extends GamepadTool {
 }
 
 export class RightGamepadTool extends LeftGamepadTool {
+    constructor(props: GamepadToolProps) {
+        super(props);
+        this.forGamepadId = OCULUS_CONTROLLERS.RIGHT_CONTROLLER;
+    }
+
     protected TARGET_BUTTON = GAMEPAD_BUTTON.RIGHT_TRIGGER;
     protected get COLOR() {
         return RIGHT_GAMEPAD_COLOR;

@@ -17,5 +17,6 @@
         "./src/**/*.tsx",
         "./typings/typings.d.ts"
     ],
+    "exclude": ["./node_modules/@types/node/globals.d.ts"],
     "compileOnSave": false
 }

@@ -62,7 +62,10 @@ export function prepareMesh(meshObj: MeshObj): THREE.Object3D {
 }
 
 /** Helper only for phong and line basic material */
-export function setColor(mesh: THREE.Object3D, providedColor: string | number | Map<THREE.Object3D, string | number>) {
+export function setColor(
+    mesh: THREE.Object3D,
+    providedColor: string | number | Map<THREE.Object3D, string | number>
+) {
     const color = (
         typeof providedColor === 'string' ||
         typeof providedColor === 'number'
@@ -73,6 +76,17 @@ export function setColor(mesh: THREE.Object3D, providedColor: string | number | 
         mesh.children.forEach(child => setColor(child, providedColor));
     } else if (mesh instanceof THREE.Mesh) {
         mesh.material = new THREE.MeshPhongMaterial({color});
+    }
+}
+
+export function setMaterial(
+    mesh: THREE.Object3D,
+    material: THREE.Material,
+) {
+    if (mesh instanceof THREE.Group) {
+        mesh.children.forEach(child => setMaterial(child, material));
+    } else if (mesh instanceof THREE.Mesh) {
+        mesh.material = material;
     }
 }
 
