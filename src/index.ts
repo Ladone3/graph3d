@@ -4,7 +4,7 @@ export { L3Graph, L3GraphProps } from './l3Graph/l3Graph';
 export { ViewOptions } from './l3Graph/views/diagramView';
 export { Node, NodeModel } from './l3Graph/models/graph/node';
 export { Link, LinkModel } from './l3Graph/models/graph/link';
-export { NodeDefinition } from './l3Graph/models/graph/graphModel';
+export { NodeDefinition, Element } from './l3Graph/models/graph/graphModel';
 
 export {
     NodeViewTemplate,
@@ -20,11 +20,11 @@ export {
     DEFAULT_LINK_TEMPLATE_PROVIDER,
     NodeTemplateProvider,
     LinkTemplateProvider,
-} from './l3Graph/customisation';
+} from './l3Graph/customization';
 
 export { ViewController } from './l3Graph/controllers/viewController';
 export { applyForceLayout3d } from './l3Graph/layout/layouts';
-export * from './l3Graph/utils/subscribeable';
+export * from './l3Graph/utils/subscribable';
 export * from './l3Graph/utils/colorUtils';
 
 export {
@@ -35,7 +35,7 @@ export {
 
 export { GamepadsWidget } from './l3Graph/models/widgets/gamepadsWidget';
 export { GamepadsWidgetView } from './l3Graph/views/widgets/gamepadsWidgetView';
-export { LeftGamepadTool, RightGamepadTool } from './l3Graph/views/widgets/gamepadTools/defaultTools';
+export * from './l3Graph/views/widgets/gamepadTools/defaultTools';
 export * from './l3Graph/views/widgets/gamepadTools/editorTools';
 
 export { FocusNodeWidget }  from './l3Graph/models/widgets/focusNodeWidget';
@@ -43,3 +43,6 @@ export { ReactNodeWidgetView } from './l3Graph/views/widgets/reactNodeWidgetView
 export { DiagramWidgetView } from './l3Graph/views/viewInterface';
 export { OverlayPosition } from './l3Graph/views/graph/overlayAnchor';
 export * from './l3Graph/defaultWidgetsSet';
+
+export { GAMEPAD_BUTTON } from './l3Graph/vrUtils/gamepadHandler';
+export { htmlToImage } from './l3Graph/utils/htmlToSprite';

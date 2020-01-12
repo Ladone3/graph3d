@@ -9,6 +9,8 @@ export interface Vector2d {
     y: number;
 }
 
+export type Size = Vector3d & { placeholder?: boolean };
+
 export interface Rectangle extends Vector2d {
     width: number;
     height: number;

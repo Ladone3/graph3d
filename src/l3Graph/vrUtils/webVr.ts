@@ -1,51 +1,51 @@
 import * as THREE from 'three';
 
 export interface UndocumentedOptions {
-	frameOfReferenceType: any;
+    frameOfReferenceType: any;
 }
 
 export interface WebGLRenderer extends THREE.WebGLRenderer {
-	vr: ThreejsVrManager;
+    vr: ThreejsVrManager;
 }
 
 export interface ThreejsVrManager extends THREE.WebVRManager {
-	setSession: (session: Session) => void;
-	getController: (index: number) => THREE.Group;
-	scaleFactor: number;
+    setSession: (session: Session) => void;
+    getController: (index: number) => THREE.Group;
+    scaleFactor: number;
 }
 
 export type Device = VRDisplay & {
-	isPresenting: boolean;
-	exitPresent: () => void;
-	requestPresent: (presenters: {source: HTMLCanvasElement}[]) => void;
-	requestSession: (options: {immersive: boolean, exclusive: boolean}) => Promise<Session>;
-	supportsSession: (options: {immersive: boolean, exclusive: boolean}) => Promise<void>;
-}
+    isPresenting: boolean;
+    exitPresent: () => void;
+    requestPresent: (presenters: {source: HTMLCanvasElement}[]) => void;
+    requestSession: (options: {immersive: boolean; exclusive: boolean}) => Promise<Session>;
+    supportsSession: (options: {immersive: boolean; exclusive: boolean}) => Promise<void>;
+};
 
 export interface VrEvent extends Event {
-	display: Device;
+    display: Device;
 }
 
 export interface Session {
-	addEventListener: (eventId: string, handler: (event: Event) => void) => void;
-	removeEventListener: (eventId: string, handler: (event: Event) => void) => void;
-	end: () => void;
+    addEventListener: (eventId: string, handler: (event: Event) => void) => void;
+    removeEventListener: (eventId: string, handler: (event: Event) => void) => void;
+    end: () => void;
 }
 
 export interface XrNavigator extends Navigator {
-	xr: {
-		requestDevice: () => Promise<Device>;
-	}
+    xr: {
+        requestDevice: () => Promise<Device>;
+    };
 }
 
 export interface CompleteNavigator extends Navigator {
-	webkitGetGamepads: () => Gamepad[]
+    webkitGetGamepads: () => Gamepad[];
 }
 
 export function isXrNavigator(n: Navigator): n is XrNavigator {
-	return ('xr' in n);
+    return ('xr' in n) && typeof (navigator as any).xr.requestDevice === 'function';
 }
 
 export function isWebkitNavigator(n: Navigator): n is CompleteNavigator {
-	return Boolean('webkitGetGamepads' in n);
+    return Boolean('webkitGetGamepads' in n);
 }

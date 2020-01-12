@@ -46,12 +46,14 @@ export class GamepadsWidget extends Widget {
             this._tools.leftTool.forGamepadId === OCULUS_CONTROLLERS.RIGHT_CONTROLLER &&
             this._tools.rightTool.forGamepadId === OCULUS_CONTROLLERS.LEFT_CONTROLLER
         ) {
+            // tslint:disable-next-line: no-console
             console.warn('Please change configuration left gamepad and right one are mixed up!');
             return {
                 leftTool: this._tools.rightTool,
                 rightTool: this._tools.leftTool,
-            }
+            };
         } else {
+            // tslint:disable-next-line: no-console
             console.warn('Wrong gamepad tool configuration!');
             return this._tools;
         }

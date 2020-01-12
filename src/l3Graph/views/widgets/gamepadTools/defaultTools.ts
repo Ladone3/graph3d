@@ -61,7 +61,7 @@ export class LeftGamepadTool extends GamepadTool {
 
     protected registerHighlighter() {
         const controller = this.props.vrManager.getController(OCULUS_CONTROLLERS.LEFT_CONTROLLER);
-        this.props.gamepadHandler.registerHighligter(
+        this.props.gamepadHandler.registerHighlighter(
             controller, (mesh: THREE.Object3D) => {
                 const backUp = backupColors(mesh);
                 setColor(mesh, SELECTION_COLOR);
@@ -125,7 +125,7 @@ export class RightGamepadTool extends LeftGamepadTool {
 
     protected registerHighlighter() {
         const controller = this.props.vrManager.getController(OCULUS_CONTROLLERS.RIGHT_CONTROLLER);
-        this.props.gamepadHandler.registerHighligter(
+        this.props.gamepadHandler.registerHighlighter(
             controller, (mesh: THREE.Object3D) => {
                 const backUp = backupColors(mesh);
                 setColor(mesh, SELECTION_COLOR);

@@ -9,14 +9,14 @@ import {
     DEFAULT_LINK_TEMPLATE_PROVIDER,
     DEFAULT_NODE_TEMPLATE,
     DEFAULT_LINK_TEMPLATE,
-} from '../../customisation';
+} from '../../customization';
 import { Subscribable } from '../../utils';
 import { Link } from '../../models/graph/link';
 import { Node } from '../../models/graph/node';
 import { LinkRouter, DefaultLinkRouter } from '../../utils/linkRouter';
 import { DiagramElementView } from '../viewInterface';
 import { VrManager } from '../../vrUtils/vrManager';
-import { AbstracrOverlayAnchor3d } from './overlay3DAnchor';
+import { AbstractOverlayAnchor3d } from './overlay3DAnchor';
 
 export interface GraphViewProps {
     graphModel: GraphModel;
@@ -34,7 +34,7 @@ export interface GraphViewEvents {
 
 export class GraphView extends Subscribable<GraphViewEvents> {
     views: Map<string, DiagramElementView>;
-    anchors3d: Set<AbstracrOverlayAnchor3d<any, any>>;
+    anchors3d: Set<AbstractOverlayAnchor3d<any, any>>;
 
     graphModel: GraphModel;
     meshHtmlContainer: HTMLElement;
@@ -64,7 +64,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
     public registerElement(element: Element): DiagramElementView {
         const elementViewExists = this.views.get(element.id);
         if (elementViewExists) {
-            return; // We'v registered the view for this element
+            return; // We've registered the view for this element
         }
         let view: DiagramElementView;
         if (element instanceof Node) {

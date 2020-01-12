@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { MeshKind, MeshPrimitive, MeshObj } from '../customisation';
+import { MeshKind, MeshPrimitive, MeshObj } from '../customization';
 import { OBJLoader } from './OBJLoader';
 
 export function preparePrimitive(primitive: MeshPrimitive): THREE.Mesh {

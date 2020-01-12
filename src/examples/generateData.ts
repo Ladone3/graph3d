@@ -6,7 +6,7 @@ export interface NodeData {
 
 export function generateData(
     nodeNumber: number = 50,
-    linkDublicationNumber: number = 1,
+    linkDuplicationNumber: number = 1,
 ) {
     const nodes: NodeDefinition[] = [];
     const links: LinkModel<{label: string}>[] = [];
@@ -17,7 +17,7 @@ export function generateData(
             id: `Node-${i}`,
             data: {
                 label: 'Node ' + i,
-                types: i % 10 === 0 ? ['l3graph-node-custome'] : ['l3graph-node'],
+                types: i % 10 === 0 ? ['l3graph-node-custom'] : ['l3graph-node'],
             },
             position: { x: 0, y: 0, z: 0 },
         });
@@ -29,7 +29,7 @@ export function generateData(
         const key = `${sourceIndex}~${targetIndex}`;
         if (!linkMap.has(key) && sourceIndex !== targetIndex) {
             linkMap.add(key);
-            for (let j = 0; j < linkDublicationNumber; j++) {
+            for (let j = 0; j < linkDuplicationNumber; j++) {
                 links.push({
                     id: `Link_${key}_${j}`,
                     sourceId: nodes[sourceIndex].id,

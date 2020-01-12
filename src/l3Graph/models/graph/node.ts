@@ -1,4 +1,4 @@
-import { Vector3d } from '../structures';
+import { Vector3d, Size } from '../structures';
 import { Link } from './link';
 import { PointEvents, Point, PointParameters } from '../point';
 
@@ -7,8 +7,6 @@ const DEFAULT_NODE_PARAMETERS: NodeParameters = {
     position: { x: 0, y: 0, z: 0 },
     size: { x: SIZE_VALUE, y: SIZE_VALUE, z: SIZE_VALUE, placeholder: true },
 };
-
-export type Size = Vector3d & { placeholder?: boolean };
 
 export interface NodeModel<NodeContent = any> {
     id: string;

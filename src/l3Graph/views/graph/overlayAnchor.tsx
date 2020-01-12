@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
-import { ReactOverlay, createContextProvider, enrichOverlay } from '../../customisation';
+import { ReactOverlay, createContextProvider, enrichOverlay } from '../../customization';
 import { Box } from '../../models/structures';
 import { Subscribable } from '../../utils';
 import { CSS3DSprite } from '../../utils/CSS3DRenderer';
@@ -102,14 +102,20 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
             ReactDOM.unmountComponentAtNode(this.html);
         } else {
             const overlayGroups: JSX.Element[] = [];
+            let groupIndex = 0;
             this.overlaysByPosition.forEach((overlays, position) => {
                 const overlayViews: JSX.Element[] = [];
-                overlays.forEach(poorOverlay => {
-                    overlayViews.push(<div ref={(ref => this._renderedOverlays.set(poorOverlay.id, ref))}>
+                overlays.forEach((poorOverlay, index) => {
+                    overlayViews.push(<div
+                        key={`overlay-${index}`}
+                        ref={(ref => this._renderedOverlays.set(poorOverlay.id, ref))}>
                         {this.renderOverlay(poorOverlay, position)}
                     </div>);
                 });
-                overlayGroups.push(<OverlayedGroup position={position}>{overlayViews}</OverlayedGroup>);
+                overlayGroups.push(<OverlayedGroup
+                    key={`overlay-group-${position}-${groupIndex++}`}
+                    position={position}>{overlayViews}
+                </OverlayedGroup>);
             });
 
             const {x, y, z, width, height} = this.getModelFittingBox();

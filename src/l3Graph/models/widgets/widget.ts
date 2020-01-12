@@ -1,4 +1,4 @@
-import { Subscribable } from '../../utils/subscribeable';
+import { Subscribable } from '../../utils/subscribable';
 import { MouseHandler } from '../../utils/mouseHandler';
 import { KeyHandler } from '../../utils';
 import { DiagramModel } from '../diagramModel';

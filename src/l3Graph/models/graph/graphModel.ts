@@ -1,6 +1,6 @@
 import { Node, NodeModel, NodeParameters } from './node';
 import { Link, LinkModel } from './link';
-import { Subscribable } from '../../utils/subscribeable';
+import { Subscribable } from '../../utils/subscribable';
 
 export type NodeDefinition<Contetnt = any> = NodeModel<Contetnt> & NodeParameters;
 export type Element = Node | Link;

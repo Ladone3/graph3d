@@ -1,5 +1,5 @@
 import { Node } from './node';
-import { Subscribable } from '../../utils/subscribeable';
+import { Subscribable } from '../../utils/subscribable';
 import { generate128BitID } from '../../utils';
 
 export const DEFAULT_LINK_ID = 'l3graph-link';

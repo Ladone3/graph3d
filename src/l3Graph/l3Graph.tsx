@@ -12,7 +12,7 @@ import { DEFAULT_MESH_WIDGET_SET } from './defaultWidgetsSet';
 import { WidgetFactory } from './models/widgets/widget';
 import { Node } from './models/graph/node';
 import { OverlayPosition } from './views/graph/overlayAnchor';
-import { ReactOverlay } from './customisation';
+import { ReactOverlay } from './customization';
 import { GamepadHandler } from './vrUtils/gamepadHandler';
 import { GamepadEditor } from './editors/gamepadEditor';
 

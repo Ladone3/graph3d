@@ -2,13 +2,13 @@ import * as THREE from 'three';
 import * as React from 'react';
 
 import { Link } from '../../models/graph/link';
-import { LinkViewTemplate, DEFAULT_LINK_OVERLAY, enrichOverlay } from '../../customisation';
+import { LinkViewTemplate, DEFAULT_LINK_OVERLAY, enrichOverlay } from '../../customization';
 import { multiply, sum, distance, vector3dToTreeVector3 } from '../../utils';
 import { Vector3d } from '../../models/structures';
 import { AbstractOverlayAnchor, OverlayPosition } from './overlayAnchor';
 import { LinkRouter, getPointAlongPolylineByRatio } from '../../utils/linkRouter';
 import { DiagramElementView } from '../viewInterface';
-import { AbstracrOverlayAnchor3d, applyOffset } from './overlay3DAnchor';
+import { AbstractOverlayAnchor3d, applyOffset } from './overlay3DAnchor';
 import { Rendered3dSprite } from '../../utils/htmlToSprite';
 import { SELECTION_PADDING } from '../widgets/selectionView';
 
@@ -124,7 +124,7 @@ export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link, LinkView> {
 }
 
 // The same here
-export class LinkOverlayAnchor3d extends AbstracrOverlayAnchor3d<Link, LinkView> {
+export class LinkOverlayAnchor3d extends AbstractOverlayAnchor3d<Link, LinkView> {
     forceUpdate() {
         this.meshModel.forceUpdate();
     }

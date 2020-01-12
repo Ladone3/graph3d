@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { Subscribable } from './subscribeable';
+import { Subscribable } from './subscribable';
 import { length, eventToPosition } from './geometry';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';

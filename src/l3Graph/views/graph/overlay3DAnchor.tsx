@@ -4,7 +4,7 @@ import { AbstractOverlayAnchor, OverlayPosition } from './overlayAnchor';
 import { Vector3d } from '../../models/structures';
 import { sum } from '../../utils';
 
-export abstract class AbstracrOverlayAnchor3d<Model, View> {
+export abstract class AbstractOverlayAnchor3d<Model, View> {
     readonly mesh: THREE.Object3D;
     sprites: Rendered3dSprite[];
 

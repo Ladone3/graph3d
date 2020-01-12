@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Subscribable } from '../utils/subscribeable';
+import { Subscribable } from '../utils/subscribable';
 import {
     Cancellation, animationFrameInterval,
     threeVector3ToVector3d, getModelFittingBox
@@ -18,7 +18,7 @@ export type Controller = THREE.Group;
  * This function should return
  * the function which restore the initial state of the highlighted mesh
  */
-export type Highligter = (mesh: THREE.Object3D) => (mesh: THREE.Object3D) => void;
+export type Highlighter = (mesh: THREE.Object3D) => (mesh: THREE.Object3D) => void;
 
 interface HighlightingRestorer {
     mesh: THREE.Object3D;
@@ -89,22 +89,22 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
     public readonly keyPressed = new Map<GAMEPAD_BUTTON, Element | undefined>();
 
     private bearers = new Map<Controller, ActiveElementBearer>();
-    private highlighters = new Map<Controller, Highligter>();
+    private highlighters = new Map<Controller, Highlighter>();
 
     private cancellation: Cancellation | undefined;
     private existingControllersNumber = 0;
-    private raycaster: THREE.Raycaster;
+    private rayCaster: THREE.Raycaster;
     private tempMatrix: THREE.Matrix4;
 
     private highlightingRestorers = new Map<Controller, HighlightingRestorer>();
     private elementToController = new Map<THREE.Object3D, Controller>();
 
     constructor(
-        private diagramhModel: DiagramModel,
+        private diagramModel: DiagramModel,
         private diagramView: DiagramView,
     ) {
         super();
-        this.raycaster = new THREE.Raycaster();
+        this.rayCaster = new THREE.Raycaster();
         this.tempMatrix = new THREE.Matrix4();
         window.addEventListener('vrdisplaypresentchange', event => {
             const vrEvent = event as VrEvent;
@@ -116,7 +116,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         }, false );
     }
 
-    public registerHighligter(controller: Controller, highlighter: Highligter) {
+    public registerHighlighter(controller: Controller, highlighter: Highlighter) {
         this.highlighters.set(controller, highlighter);
     }
 
@@ -149,7 +149,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
             const moveBackward = this.keyPressed.has(bearer.dragToKey);
 
             if (this.keyPressed.has(bearer.dragKey) && bearer.target) {
-                draggElement(
+                dragElement(
                     this.diagramView,
                     moveForward ? -GAMEPAD_EXTRA_MOVE_STEP : moveBackward ? GAMEPAD_EXTRA_MOVE_STEP : 0,
                     controller,
@@ -234,11 +234,11 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
 
     private getTarget(controller: Controller): Element | undefined {
         this.tempMatrix.identity().extractRotation(controller.matrixWorld);
-        this.raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
-        this.raycaster.ray.direction.set(0, 0, -1).applyMatrix4(this.tempMatrix);
-        const {meshes, nodeMeshMap} = mapMeshes(this.diagramhModel, this.diagramView);
+        this.rayCaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+        this.rayCaster.ray.direction.set(0, 0, -1).applyMatrix4(this.tempMatrix);
+        const {meshes, nodeMeshMap} = mapMeshes(this.diagramModel, this.diagramView);
 
-        const intersections = this.raycaster.intersectObjects(meshes);
+        const intersections = this.rayCaster.intersectObjects(meshes);
 
         if (intersections.length > 0) {
             const intersectedMesh = intersections[0].object;
@@ -371,7 +371,7 @@ function startDragging(
     }
 }
 
-function draggElement(
+function dragElement(
     diagramView: DiagramView,
     zOffset: number,
     controller: Controller,

@@ -1,4 +1,4 @@
-import { Subscribable } from '../../utils/subscribeable';
+import { Subscribable } from '../../utils/subscribable';
 import { Element, GraphModel } from '../graph/graphModel';
 
 export interface SelectionParameters {

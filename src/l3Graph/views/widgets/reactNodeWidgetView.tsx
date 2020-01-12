@@ -4,7 +4,7 @@ import { FocusNodeWidget } from '../../models/widgets/focusNodeWidget';
 import { OverlayPosition } from '../graph/overlayAnchor';
 import { Node } from '../../models/graph/node';
 
-import { ReactOverlay } from '../../customisation';
+import { ReactOverlay } from '../../customization';
 import { DiagramWidgetView } from '../viewInterface';
 import { DiagramView } from '../diagramView';
 

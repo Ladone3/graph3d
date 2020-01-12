@@ -1,5 +1,5 @@
 import { GraphModel, ImmutableMap, NodeDefinition, ElementModel } from './graph/graphModel';
-import { Subscribable, EventObject } from '../utils/subscribeable';
+import { Subscribable, EventObject } from '../utils/subscribable';
 import { Node } from './graph/node';
 import { Link } from './graph/link';
 import { WidgetsModel } from './widgets/widgetsModel';

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as THREE from 'three';
 import { Vector3d, Vector2d } from '../models/structures';
-import { NodeTemplateProvider, LinkTemplateProvider } from '../customisation';
+import { NodeTemplateProvider, LinkTemplateProvider } from '../customization';
 import { GraphView } from './graph/graphView';
 import { DiagramModel } from '../models/diagramModel';
 import { Element, GraphModelEvents } from '../models/graph/graphModel';
@@ -78,8 +78,8 @@ export class DiagramView extends React.Component<DiagramViewProps> {
     }
 
     mouseTo3dPos(event: MouseEvent | TouchEvent, distanceFromScreen: number = 600): Vector3d {
-        const bbox = this.meshHtmlContainer.getBoundingClientRect();
-        return this.clientPosTo3dPos(eventToPosition(event, bbox) || {x: 0, y: 0}, distanceFromScreen);
+        const bBox = this.meshHtmlContainer.getBoundingClientRect();
+        return this.clientPosTo3dPos(eventToPosition(event, bBox) || {x: 0, y: 0}, distanceFromScreen);
     }
 
     clientPosTo3dPos(position: Vector2d, distanceFromScreen: number = 600): Vector3d {

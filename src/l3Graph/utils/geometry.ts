@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import { Vector3d, Vector2d } from '../models/structures';
-import { Size } from '../models/graph/node';
+import { Vector3d, Vector2d, Size } from '../models/structures';
 
 export function vector3dToTreeVector3(v: Vector3d): THREE.Vector3 {
     const {x, y, z} = v;

@@ -1,4 +1,4 @@
-import { Subscribable } from './subscribeable';
+import { Subscribable } from './subscribable';
 
 export interface KeyHandlerEvents {
     'keyDown': Set<number>;
