@@ -1,12 +1,12 @@
 import * as cola from 'webcola';
 
 import { Link } from '../models/graph/link';
-import { Node } from '../models/graph/node';
+import { Node, NodeId } from '../models/graph/node';
 import { GraphModel } from '../models/graph/graphModel';
 import { calcBounds } from '../utils';
 import { Vector3d } from '../models/structures';
 
-export const PREFFERED_LINK_LENGTH = 75;
+export const PREFERRED_LINK_LENGTH = 75;
 
 export interface LayoutNode {
     id?: string;
@@ -49,13 +49,6 @@ export interface LayoutLink {
     originalLink: Link;
     source: LayoutNode;
     target: LayoutNode;
-}
-
-export function whaterHoleLayout(params: {
-    nodes: LayoutNode[];
-    links: LayoutLink[];
-}) {
-    // ...
 }
 
 export function forceLayout(params: {
@@ -110,15 +103,15 @@ export function flowLayout(params: {
 
 export function applyForceLayout(graph: GraphModel) {
     const { nodes, links } = graph;
-    const proccessMap: { [ id: string]: LayoutNode } = {};
+    const processMap = new Map<string, LayoutNode>();
 
     const layoutNodes: LayoutNode[] = [];
     nodes.forEach(node => {
         const position = node.position;
-        const size = { x: PREFFERED_LINK_LENGTH / 5, y: PREFFERED_LINK_LENGTH / 5 };
+        const size = { x: PREFERRED_LINK_LENGTH / 5, y: PREFERRED_LINK_LENGTH / 5 };
 
         const layoutNode = {
-            id: node.id,
+            id: node.id as string,
             x: position.x,
             y: position.y,
             width: size.x,
@@ -126,7 +119,7 @@ export function applyForceLayout(graph: GraphModel) {
             originalNode: node,
         };
 
-        proccessMap[layoutNode.id] = layoutNode;
+        processMap.set(layoutNode.id, layoutNode);
         layoutNodes.push(layoutNode);
     });
 
@@ -134,8 +127,8 @@ export function applyForceLayout(graph: GraphModel) {
     links.forEach(link => {
         layoutLinks.push({
             originalLink: link,
-            source: proccessMap[link.source.id],
-            target: proccessMap[link.target.id],
+            source: processMap.get(link.source.id as string),
+            target: processMap.get(link.target.id as string),
         });
     });
 
@@ -182,17 +175,17 @@ export function applyRandomLayout(graph: GraphModel, maxDist: number = 500) {
 }
 
 export function applyForceLayout3d(
-    graph: GraphModel, iterations: number = 1, linkLength: number = PREFFERED_LINK_LENGTH,
+    graph: GraphModel, iterations: number = 1, linkLength: number = PREFERRED_LINK_LENGTH,
 ) {
     const { nodes, links } = graph;
-    const proccessMap: { [ id: string]: number } = {};
+    const processMap = new Map<NodeId, number>();
     const layoutNodes: LayoutNode3D[] = [];
 
     let counter = 0;
     nodes.forEach((node, index) => {
         const layoutNode = new LayoutNode3D(node);
 
-        proccessMap[layoutNode.node.id] = counter++;
+        processMap.set(layoutNode.node.id, counter++);
         layoutNodes.push(layoutNode);
     });
 
@@ -200,8 +193,8 @@ export function applyForceLayout3d(
     links.forEach(link => {
         layoutLinks.push(new LayoutLink3D(
             link,
-            proccessMap[link.source.id],
-            proccessMap[link.target.id],
+            processMap.get(link.source.id),
+            processMap.get(link.target.id),
         ));
     });
 
@@ -209,7 +202,7 @@ export function applyForceLayout3d(
         nodes: layoutNodes,
         links: layoutLinks,
         iterations: iterations || 1,
-        preferredLinkLength: linkLength || PREFFERED_LINK_LENGTH,
+        preferredLinkLength: linkLength || PREFERRED_LINK_LENGTH,
     });
 
     const {average} = calcBounds(layoutNodes);

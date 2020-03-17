@@ -47,7 +47,7 @@ export class ReactNodeWidgetView implements DiagramWidgetView {
         this.clearNode(this.model.prevFocusNode);
 
         if (this.model.focusNode) {
-            const curAnchor = this.diagramView.graphView.views.get(this.model.focusNode.id).overlayAnchor;
+            const curAnchor = this.diagramView.graphView.nodeViews.get(this.model.focusNode.id).overlayAnchor;
             if (!curAnchor.hasOverlay(this.overlay.id)) {
                 curAnchor.setOverlay(this.overlay, this.position);
             }
@@ -61,9 +61,9 @@ export class ReactNodeWidgetView implements DiagramWidgetView {
 
     private clearNode(node: Node) {
         if (node && this.overlay) {
-            const view = this.diagramView.graphView.views.get(node.id);
+            const view = this.diagramView.graphView.nodeViews.get(node.id);
             if (view) {
-                const anchor = this.diagramView.graphView.views.get(node.id).overlayAnchor;
+                const anchor = this.diagramView.graphView.nodeViews.get(node.id).overlayAnchor;
                 anchor.removeOverlay(this.overlay.id);
             }
         }

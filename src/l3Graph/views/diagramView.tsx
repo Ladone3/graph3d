@@ -12,6 +12,8 @@ import { WidgetsModelEvents } from '../models/widgets/widgetsModel';
 import { WebGLRenderer } from '../vrUtils/webVr';
 import { VrManager } from '../vrUtils/vrManager';
 import { CSS3DRenderer } from '../utils/CSS3DRenderer';
+import { NodeId } from '../models/graph/node';
+import { LinkId } from '../models/graph/link';
 
 export interface ViewOptions {
     nodeTemplateProvider?: NodeTemplateProvider;
@@ -247,22 +249,39 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.props.model.on('syncupdate', combinedEvent => {
             const events = combinedEvent.data;
 
-            const updatedElementIds: string[] = [];
-            events.graphEvents.forEach((event: EventObject<keyof GraphModelEvents, any>) => {
+            const updatedNodeIds: NodeId[] = [];
+            const updatedLinkIds: LinkId[] = [];
+            events.graphEvents.forEach(event => {
                 switch (event.eventId) {
-                    case 'add:elements':
-                        for (const el of event.data) {
-                            this.graphView.registerElement(el);
+                    case 'add:nodes':
+                        for (const node of event.data) {
+                            this.graphView.registerNode(node);
                         }
                         break;
-                    case 'remove:elements':
-                        for (const el of event.data) {
-                            this.graphView.removeElementView(el);
+                    case 'remove:nodes':
+                        for (const node of event.data) {
+                            this.graphView.removeNodeView(node);
                         }
                         break;
-                    case 'update:element':
-                        const element: Element = event.data;
-                        updatedElementIds.push(element.id);
+                    case 'update:nodes':
+                        for (const node of event.data) {
+                            updatedNodeIds.push(node.id);
+                        }
+                        break;
+                    case 'add:links':
+                        for (const link of event.data) {
+                            this.graphView.registerLink(link);
+                        }
+                        break;
+                    case 'remove:links':
+                        for (const link of event.data) {
+                            this.graphView.removeLinkView(link);
+                        }
+                        break;
+                    case 'update:links':
+                        for (const link of event.data) {
+                            updatedLinkIds.push(link.id);
+                        }
                         break;
                 }
             });
@@ -283,7 +302,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
                 }
             });
 
-            this.graphView.update(updatedElementIds);
+            this.graphView.update({updatedNodeIds, updatedLinkIds});
             this.widgetsView.update(updatedWidgetIds);
 
             this.renderGraph();

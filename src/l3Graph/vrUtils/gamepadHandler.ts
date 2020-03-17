@@ -254,7 +254,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
 
         const restorer = this.highlightingRestorers.get(controller);
         if (newTarget) {
-            const view = this.diagramView.graphView.views.get(newTarget.id);
+            const view = this.diagramView.graphView.nodeViews.get(newTarget.id);
             const targetMesh = view.mesh;
             const meshIsChanged = !restorer || restorer.mesh !== targetMesh;
             if (meshIsChanged) {
@@ -359,7 +359,7 @@ function startDragging(
     bearer: ActiveElementBearer,
 ) {
     if (target && target instanceof Node) {
-        const elementMesh = diagramView.graphView.views.get(target.id).mesh;
+        const elementMesh = diagramView.graphView.nodeViews.get(target.id).mesh;
         if (controller) {
             const mockObject = elementMesh.clone();
             mockObject.visible = false;

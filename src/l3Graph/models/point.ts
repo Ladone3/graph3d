@@ -1,6 +1,8 @@
 import { Vector3d } from './structures';
 import { Subscribable } from '../utils';
 
+export type PointId = String & { pointPlaceholder?: boolean };
+
 export interface PointParameters {
     position: Vector3d;
 }
@@ -10,7 +12,7 @@ export interface PointEvents {
 }
 
 export abstract class Point<Events extends PointEvents = PointEvents> extends Subscribable<Events> {
-    public readonly id: string;
+    public readonly id: PointId;
     protected _position: Vector3d;
 
     constructor(parameters: PointParameters) {

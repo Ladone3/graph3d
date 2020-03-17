@@ -1,6 +1,6 @@
 import { Vector3d, Size } from '../structures';
 import { Link } from './link';
-import { PointEvents, Point, PointParameters } from '../point';
+import { PointEvents, Point, PointParameters, PointId } from '../point';
 
 const SIZE_VALUE = 40;
 const DEFAULT_NODE_PARAMETERS: NodeParameters = {
@@ -8,8 +8,10 @@ const DEFAULT_NODE_PARAMETERS: NodeParameters = {
     size: { x: SIZE_VALUE, y: SIZE_VALUE, z: SIZE_VALUE, placeholder: true },
 };
 
+export type NodeId = PointId & { nodePlaceholder?: boolean };
+
 export interface NodeModel<NodeContent = any> {
-    id: string;
+    id: NodeId;
     data?: NodeContent;
 }
 

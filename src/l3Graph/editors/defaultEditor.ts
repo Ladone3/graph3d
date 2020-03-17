@@ -18,7 +18,7 @@ export class DefaultEditor {
         // private gamepadHandler: GamepadHandler
     ) {
         this.mouseHandler.on('elementClick', e => {
-            if (!this.diagramModel.selection.elements.has(e.data.element)) {
+            if (e.data.element instanceof Node && !this.diagramModel.selection.elements.has(e.data.element)) {
                 this.diagramModel.selection.setSelection(new Set([e.data.element]));
             }
         });
@@ -62,8 +62,8 @@ export class DefaultEditor {
         const cameraPos = this.diagramView.camera.position;
         let distanceToNode = nodeThreePos.distanceTo(cameraPos);
         if (isMouseWheelEvent(event)) {
-            const delata = -(event.deltaX || event.deltaY || event.deltaZ);
-            distanceToNode += (delata > 0 ? 1 : -1) * WHEEL_STEP;
+            const delta = -(event.deltaX || event.deltaY || event.deltaZ);
+            distanceToNode += (delta > 0 ? 1 : -1) * WHEEL_STEP;
         }
         const size = target.size;
         const minDist = Math.max(size.x, size.y, size.z) / 2 + MIN_DISTANCE_TO_CAMERA;

@@ -45,7 +45,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
     private mouseDownOnElement: Element;
 
     constructor(
-        private diagramhModel: DiagramModel,
+        private diagramModel: DiagramModel,
         private diagramView: DiagramView,
     ) {
         super();
@@ -125,8 +125,8 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
 
     private getIntersectedObject(event: MouseEvent | TouchEvent): Element | undefined {
         const view = this.diagramView;
-        const bbox = view.meshHtmlContainer.getBoundingClientRect();
-        const position = eventToPosition(event, bbox);
+        const bBox = view.meshHtmlContainer.getBoundingClientRect();
+        const position = eventToPosition(event, bBox);
         if (!position) { return undefined; }
         const screenParameters = view.screenParameters;
         const vector = new THREE.Vector3(
@@ -136,12 +136,12 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         );
         const viewDirection = vector.unproject(view.camera);
 
-        const {meshes, nodeMeshMap} = mapMeshes(this.diagramhModel, this.diagramView);
+        const {meshes, nodeMeshMap} = mapMeshes(this.diagramModel, this.diagramView);
 
-        this.diagramhModel.nodes.forEach(node => {
-            const nodeView = this.diagramView.graphView.views.get(node.id);
+        this.diagramModel.nodes.forEach(node => {
+            const nodeView = this.diagramView.graphView.nodeViews.get(node.id);
 
-            if (nodeView.mesh) {
+            if (nodeView && nodeView.mesh) {
                 if (nodeView.mesh instanceof THREE.Group) {
                     for (const obj of nodeView.mesh.children) {
                         meshes.push(obj);
@@ -170,11 +170,11 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
     }
 }
 
-export function mapMeshes(diagramhModel: DiagramModel, diagramView: DiagramView)  {
+export function mapMeshes(diagramModel: DiagramModel, diagramView: DiagramView)  {
     const meshes: THREE.Object3D[] = [];
     const nodeMeshMap: Element[] = [];
-    diagramhModel.nodes.forEach(node => {
-        const nodeView = diagramView.graphView.views.get(node.id);
+    diagramModel.nodes.forEach(node => {
+        const nodeView = diagramView.graphView.nodeViews.get(node.id);
 
         if (nodeView && nodeView.mesh) {
             if (nodeView.mesh instanceof THREE.Group) {
@@ -210,25 +210,25 @@ export function handleDragging(
         };
     };
 
-    const _onchange = (e: MouseEvent | TouchEvent) => {
+    const _onChange = (e: MouseEvent | TouchEvent) => {
         const offset = getOffset(e);
         if (offset) {
             onChange(e, offset);
         } else {
-            _onend(e);
+            _onEnd(e);
         }
     };
 
-    const _onend = (e: MouseEvent | TouchEvent) => {
-        document.body.removeEventListener('mousemove', _onchange);
-        document.body.removeEventListener('touchmove', _onchange);
-        document.body.removeEventListener('mouseup', _onend);
-        document.body.removeEventListener('touchend', _onend);
+    const _onEnd = (e: MouseEvent | TouchEvent) => {
+        document.body.removeEventListener('mousemove', _onChange);
+        document.body.removeEventListener('touchmove', _onChange);
+        document.body.removeEventListener('mouseup', _onEnd);
+        document.body.removeEventListener('touchend', _onEnd);
         if (onEnd) { onEnd(e, getOffset(e)); }
     };
 
-    document.body.addEventListener('mousemove', _onchange);
-    document.body.addEventListener('touchmove', _onchange);
-    document.body.addEventListener('mouseup', _onend);
-    document.body.addEventListener('touchend', _onend);
+    document.body.addEventListener('mousemove', _onChange);
+    document.body.addEventListener('touchmove', _onChange);
+    document.body.addEventListener('mouseup', _onEnd);
+    document.body.addEventListener('touchend', _onEnd);
 }

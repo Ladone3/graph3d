@@ -1,15 +1,18 @@
-import { Node, NodeModel, NodeParameters } from './node';
-import { Link, LinkModel } from './link';
+import { Node, NodeModel, NodeParameters, NodeId } from './node';
+import { Link, LinkModel, LinkId } from './link';
 import { Subscribable } from '../../utils/subscribable';
 
-export type NodeDefinition<Contetnt = any> = NodeModel<Contetnt> & NodeParameters;
+export type NodeDefinition<Content = any> = NodeModel<Content> & NodeParameters;
 export type Element = Node | Link;
 export type ElementModel = NodeModel | LinkModel;
 
 export interface GraphModelEvents {
-    'add:elements': Element[];
-    'remove:elements': Element[];
-    'update:element': Element;
+    'add:nodes': Node[];
+    'remove:nodes': Node[];
+    'update:nodes': Node[];
+    'add:links': Link[];
+    'remove:links': Link[];
+    'update:links': Link[];
 }
 
 export interface ImmutableMap<K, V> {
@@ -26,22 +29,22 @@ export interface ImmutableSet<T> {
 }
 
 export class GraphModel extends Subscribable<GraphModelEvents> {
-    private _nodes: Map<string, Node> = new Map();
-    private _links: Map<string, Link> = new Map();
+    private _nodes: Map<NodeId, Node> = new Map();
+    private _links: Map<LinkId, Link> = new Map();
 
-    get nodes(): ImmutableMap<string, Node> {
+    get nodes(): ImmutableMap<NodeId, Node> {
         return this._nodes;
     }
 
-    get links(): ImmutableMap<string, Link> {
+    get links(): ImmutableMap<LinkId, Link> {
         return this._links;
     }
 
-    public getNodeById(id: string) {
+    public getNodeById(id: NodeId) {
         return this.nodes.get(id);
     }
 
-    public getLinkById(id: string) {
+    public getLinkById(id: LinkId) {
         return this.links.get(id);
     }
 
@@ -57,7 +60,7 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
             }
         }
         if (newNodes.length > 0) {
-            this.trigger('add:elements', newNodes);
+            this.trigger('add:nodes', newNodes);
         }
     }
 
@@ -90,7 +93,7 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
             }
         }
         if (newLinks.length > 0) {
-            this.trigger('add:elements', newLinks);
+            this.trigger('add:links', newLinks);
         }
     }
 
@@ -131,17 +134,21 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
     }
 
     private performNodeUpdate(node: Node) {
-        this.trigger('update:element', node);
+        this.trigger('update:nodes', [node]);
+
+        const updatedLinks: Link[] = []
         node.incomingLinks.forEach(link => {
-            this.trigger('update:element', link);
+            updatedLinks.push(link);
         });
         node.outgoingLinks.forEach(link => {
-            this.trigger('update:element', link);
+            updatedLinks.push(link);
         });
+        this.trigger('update:links', updatedLinks);
+
     }
 
     private performLinkUpdate(link: Link) {
-        this.trigger('update:element', link);
+        this.trigger('update:links', [link]);
     }
 
     public removeNodes(nodes: Node[]) {
@@ -165,7 +172,7 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         for (const node of nodesToDelete) {
             this._nodes.delete(node.id);
         }
-        this.trigger('remove:elements', nodesToDelete);
+        this.trigger('remove:nodes', nodesToDelete);
     }
 
     public removeLinks(links: Link[]) {
@@ -184,6 +191,6 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
                 l.target.outgoingLinks.delete(l);
             }
         }
-        this.trigger('remove:elements', deletedLinks);
+        this.trigger('remove:links', deletedLinks);
     }
 }

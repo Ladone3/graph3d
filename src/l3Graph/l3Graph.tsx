@@ -60,14 +60,14 @@ export class L3Graph extends React.Component<L3GraphProps> {
     }
 
     attachOverlayToNode(node: Node, overlay: ReactOverlay, position: OverlayPosition) {
-        const nodeView = this.view.graphView.views.get(node.id);
+        const nodeView = this.view.graphView.nodeViews.get(node.id);
         if (nodeView) {
             nodeView.overlayAnchor.setOverlay(overlay, position);
         }
     }
 
     removeOverlayFromNode(node: Node, overlayId: string) {
-        const nodeView = this.view.graphView.views.get(node.id);
+        const nodeView = this.view.graphView.nodeViews.get(node.id);
         if (nodeView) {
             nodeView.overlayAnchor.removeOverlay(overlayId);
         }

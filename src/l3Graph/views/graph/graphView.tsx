@@ -11,8 +11,8 @@ import {
     DEFAULT_LINK_TEMPLATE,
 } from '../../customization';
 import { Subscribable } from '../../utils';
-import { Link } from '../../models/graph/link';
-import { Node } from '../../models/graph/node';
+import { Link, LinkId } from '../../models/graph/link';
+import { Node, NodeId } from '../../models/graph/node';
 import { LinkRouter, DefaultLinkRouter } from '../../utils/linkRouter';
 import { DiagramElementView } from '../viewInterface';
 import { VrManager } from '../../vrUtils/vrManager';
@@ -33,7 +33,8 @@ export interface GraphViewEvents {
 }
 
 export class GraphView extends Subscribable<GraphViewEvents> {
-    views: Map<string, DiagramElementView>;
+    nodeViews = new Map<NodeId, NodeView>();
+    linkViews = new Map<LinkId, LinkView>();
     anchors3d: Set<AbstractOverlayAnchor3d<any, any>>;
 
     graphModel: GraphModel;
@@ -45,11 +46,10 @@ export class GraphView extends Subscribable<GraphViewEvents> {
 
     constructor(private props: GraphViewProps) {
         super();
-        this.views = new Map();
         this.graphModel = props.graphModel;
         this.linkRouter = new DefaultLinkRouter();
-        this.graphModel.nodes.forEach(node => this.registerElement(node));
-        this.graphModel.links.forEach(link => this.registerElement(link));
+        this.graphModel.nodes.forEach(node => this.registerNode(node));
+        this.graphModel.links.forEach(link => this.registerLink(link));
         this.anchors3d = new Set();
         this.vrManager = props.vrManager;
         this.vrManager.on('presenting:state:changed', () => {
@@ -61,57 +61,91 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         })
     }
 
-    public registerElement(element: Element): DiagramElementView {
-        const elementViewExists = this.views.get(element.id);
+    public registerNode(node: Node): DiagramElementView {
+        const isNodeViewExists = this.nodeViews.get(node.id);
+        if (isNodeViewExists) {
+            return; // We've already registered the view for this element
+        }
+        const templateProvider =  this.props.nodeTemplateProvider || DEFAULT_NODE_TEMPLATE_PROVIDER;
+        const nodeTemplate = {
+            ...DEFAULT_NODE_TEMPLATE,
+            ...templateProvider(node.data),
+        };
+
+        const view = new NodeView(node, nodeTemplate);
+        this.registerView(view);
+        this.nodeViews.set(node.id, view);
+
+        return view;
+    }
+
+    public registerLink(link: Link): DiagramElementView {
+        const elementViewExists = this.linkViews.get(link.id);
         if (elementViewExists) {
             return; // We've registered the view for this element
         }
-        let view: DiagramElementView;
-        if (element instanceof Node) {
-            view = this.createNodeView(element);
-        } else {
-            view = this.createLinkView(element);
-        }
+        const templateProvider = this.props.linkTemplateProvider || DEFAULT_LINK_TEMPLATE_PROVIDER;
+        const linkTemplate = {
+            ...DEFAULT_LINK_TEMPLATE,
+            ...templateProvider(link.model),
+        };
+        const view = new LinkView(link, this.linkRouter, linkTemplate);
+        this.registerView(view);
+        this.linkViews.set(link.id, view);
+
+        return view;
+    }
+
+    public removeNodeView(node: Node) {
+        const view = this.nodeViews.get(node.id);
         if (view) {
-            if (view.mesh) {
-                this.onAdd3dObject(view.mesh);
+            this.unsubscribeFromView(view);
+            this.nodeViews.delete(node.id);
+        }
+    }
+
+    public removeLinkView(link: Link) {
+        const view = this.linkViews.get(link.id);
+        if (view) {
+            this.unsubscribeFromView(view);
+            this.linkViews.delete(link.id);
+        }
+    }
+
+    private registerView(view: DiagramElementView) {
+        if (view.mesh) {
+            this.onAdd3dObject(view.mesh);
+        }
+        if (view.overlayAnchor) {
+            view.overlayAnchor.html.addEventListener('mousedown', e => {
+                this.trigger('overlay:down', {event: e, target: view.model});
+            }, false);
+            view.overlayAnchor.html.addEventListener('touchstart', e => {
+                this.trigger('overlay:down', {event: e, target: view.model});
+            }, false);
+            this.onAdd3dObject(view.overlayAnchor.sprite);
+        }
+        if (view.overlayAnchor3d) {
+            this.anchors3d.add(view.overlayAnchor3d);
+            if (this.vrManager.isStarted) {
+                this.onAdd3dObject(view.overlayAnchor3d.mesh);
             }
-            if (view.overlayAnchor) {
-                view.overlayAnchor.html.addEventListener('mousedown', e => {
-                    this.trigger('overlay:down', {event: e, target: element});
-                }, false);
-                view.overlayAnchor.html.addEventListener('touchstart', e => {
-                    this.trigger('overlay:down', {event: e, target: element});
-                }, false);
-                this.onAdd3dObject(view.overlayAnchor.sprite);
-            }
-            if (view.overlayAnchor3d) {
-                this.anchors3d.add(view.overlayAnchor3d);
-                if (this.vrManager.isStarted) {
-                    this.onAdd3dObject(view.overlayAnchor3d.mesh);
-                }
-            }
-            this.views.set(element.id, view);
         }
 
         return view;
     }
 
-    public removeElementView(element: Element) {
-        const view = this.views.get(element.id);
-        if (view) {
-            if (view.mesh) {
-                this.onRemove3dObject(view.mesh);
-            }
-            if (view.overlayAnchor) {
-                this.onRemove3dObject(view.overlayAnchor.sprite);
-            }
-            if (view.overlayAnchor3d) {
-                this.onRemove3dObject(view.overlayAnchor3d.mesh);
-                this.anchors3d.delete(view.overlayAnchor3d);
-            }
+    private unsubscribeFromView(view: DiagramElementView) {
+        if (view.mesh) {
+            this.onRemove3dObject(view.mesh);
         }
-        this.views.delete(element.id);
+        if (view.overlayAnchor) {
+            this.onRemove3dObject(view.overlayAnchor.sprite);
+        }
+        if (view.overlayAnchor3d) {
+            this.onRemove3dObject(view.overlayAnchor3d.mesh);
+            this.anchors3d.delete(view.overlayAnchor3d);
+        }
     }
 
     private onAdd3dObject(object: THREE.Object3D) {
@@ -122,55 +156,71 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         this.props.onRemove3dObject(object)
     }
 
-    private createNodeView(node: Node): DiagramElementView {
-        const templateProvider =  this.props.nodeTemplateProvider || DEFAULT_NODE_TEMPLATE_PROVIDER;
-        const nodeTemplate = {
-            ...DEFAULT_NODE_TEMPLATE,
-            ...templateProvider(node.data),
-        };
-        return new NodeView(node, nodeTemplate);
-    }
-
-    private createLinkView(link: Link): DiagramElementView | undefined {
-        const templateProvider = this.props.linkTemplateProvider || DEFAULT_LINK_TEMPLATE_PROVIDER;
-        const linkTemplate = {
-            ...DEFAULT_LINK_TEMPLATE,
-            ...templateProvider(link.model),
-        };
-        return new LinkView(link, this.linkRouter, linkTemplate);
-    }
-
-    update(specificIds: string[]) {
-        const updateView = (elementId: string) => {
-            const element = this.graphModel.getNodeById(elementId) || this.graphModel.getLinkById(elementId);
-            if (element.modelIsChanged) {
-                const oldView = this.views.get(element.id);
-                this.removeElementView(element);
-                const newView = this.registerElement(element);
-
-                // Restore overlays
-                oldView.overlayAnchor.overlays.forEach((overlaysById, position) => {
-                    overlaysById.forEach(overlay =>{
-                        newView.overlayAnchor.setOverlay(overlay, position);
-                    });
-                })
-
-                element.modelIsChanged = false;
-            }
-            const view = this.views.get(elementId);
-            if (view) { // View is added asynchronously
-                view.update();
-            }
-        };
-        if (specificIds) {
-            for (const id of specificIds) {
-                updateView(id);
+    update({
+        updatedNodeIds,
+        updatedLinkIds
+    }: {updatedNodeIds: NodeId[], updatedLinkIds: LinkId[]}) {
+        if (updatedNodeIds) {
+            for (const id of updatedNodeIds) {
+                this.updateNodeView(id);
             }
         } else {
-            specificIds = [];
-            this.views.forEach(view => {
-                updateView(view.model.id);
+            this.nodeViews.forEach(view => {
+                this.updateNodeView(view.model.id);
+            });
+        }
+        if (updatedLinkIds) {
+            for (const id of updatedLinkIds) {
+                this.updateLinkView(id);
+            }
+        } else {
+            this.linkViews.forEach(view => {
+                this.updateLinkView(view.model.id);
             });
         }
     }
+
+    private updateLinkView(linkId: LinkId) {
+        const link = this.graphModel.getLinkById(linkId);
+        if (link.modelIsChanged) {
+            const oldView = this.linkViews.get(link.id);
+            this.removeLinkView(link);
+            const newView = this.registerLink(link);
+
+            // Restore overlays
+            oldView.overlayAnchor.overlays.forEach((overlaysById, position) => {
+                overlaysById.forEach(overlay =>{
+                    newView.overlayAnchor.setOverlay(overlay, position);
+                });
+            })
+
+            link.modelIsChanged = false;
+        }
+        const view = this.linkViews.get(linkId);
+        if (view) { // Can be case when model is not changed but also is not loaded
+            view.update();
+        }
+    };
+
+    private updateNodeView(nodeId: NodeId) {
+        const node = this.graphModel.getNodeById(nodeId);
+        if (node.modelIsChanged) {
+            const oldView = this.nodeViews.get(node.id);
+            this.removeNodeView(node);
+            const newView = this.registerNode(node);
+
+            // Restore overlays
+            oldView.overlayAnchor.overlays.forEach((overlaysById, position) => {
+                overlaysById.forEach(overlay =>{
+                    newView.overlayAnchor.setOverlay(overlay, position);
+                });
+            })
+
+            node.modelIsChanged = false;
+        }
+        const view = this.nodeViews.get(nodeId);
+        if (view) { // Can be case when model is not changed but also is not loaded
+            view.update();
+        }
+    };
 }

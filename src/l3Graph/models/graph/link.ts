@@ -1,13 +1,14 @@
-import { Node } from './node';
+import { Node, NodeId } from './node';
 import { Subscribable } from '../../utils/subscribable';
-import { generate128BitID } from '../../utils';
 
 export const DEFAULT_LINK_ID = 'l3graph-link';
 
+export type LinkId = String & { linkPlaceholder?: boolean };
+
 export interface LinkModel<LinkContent = any> {
-    id: string;
-    sourceId: string;
-    targetId: string;
+    id: LinkId;
+    sourceId: NodeId;
+    targetId: NodeId;
     data?: LinkContent;
 }
 
