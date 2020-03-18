@@ -9,12 +9,14 @@ import { DiagramView } from '../../views/diagramView';
 
 export const DEFAULT_SELECTION_TYPE_ID = 'l3graph-selection';
 
+export type WidgetId = string & { widgetPlaceholder?: boolean };
+
 export interface WidgetEvents {
     'update:widget': void;
 }
 
 export abstract class Widget<Events extends WidgetEvents = WidgetEvents> extends Subscribable<Events> {
-    readonly widgetId: string;
+    readonly widgetId: WidgetId;
     onRemove?(): void;
     forceUpdate = () => {
         this.trigger('update:widget');
@@ -36,8 +38,12 @@ export interface WidgetViewContext<WidgetModel extends Widget = Widget> {
 }
 
 // todo: rethink the best place for this structures
-export type WidgetModelResolver<WidgetModel extends Widget = Widget> = (context: WidgetModelContext) => WidgetModel;
-export type WidgetViewResolver<WidgetModel extends Widget = Widget> = (context: WidgetViewContext<WidgetModel>) => DiagramWidgetView;
+export type WidgetModelResolver<WidgetModel extends Widget = Widget> = (
+    context: WidgetModelContext
+) => WidgetModel;
+export type WidgetViewResolver<WidgetModel extends Widget = Widget> = (
+    context: WidgetViewContext<WidgetModel>
+) => DiagramWidgetView;
 
 export interface WidgetFactory<WidgetModel extends Widget = any> {
     getModel: WidgetModelResolver<WidgetModel>;

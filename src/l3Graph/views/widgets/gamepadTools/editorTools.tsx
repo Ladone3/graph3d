@@ -9,6 +9,7 @@ import { Element } from '../../../models/graph/graphModel';
 import { VrManager } from '../../../vrUtils/vrManager';
 import { DEFAULT_SCREEN_PARAMETERS } from '../../diagramView';
 import { ImageMesh } from './imageMesh';
+import { Vector3d } from '../../../models/structures';
 
 export const DISPLAY_TARGET_WIDTH = 0.2;
 export const DISPLAY_OFFSET = -5;
@@ -87,7 +88,7 @@ export class LeftGamepadEditorTool extends GamepadTool {
         this.render();
     }
 
-    public getTargetPosition() {
+    public getTargetPosition(): Vector3d {
         const scene = (this.mesh.parent.parent || this.mesh.parent) as THREE.Scene;
         const tool = this.mesh;
         attach(this.mockObject, scene, scene);

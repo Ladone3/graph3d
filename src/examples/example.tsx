@@ -9,6 +9,8 @@ import {
     ReactNodeWidgetView,
     WidgetViewContext, WidgetModelContext,
     MeshKind,
+    Toolbar,
+    ViewController,
 } from '../index';
 import { generateData } from './generateData';
 
@@ -89,24 +91,39 @@ const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    ReactDOM.render(React.createElement(L3Graph, {
-        viewOptions: {
-            // nodeTemplateProvider: (data: {label: string; types: string[]}) => {
-            //     if (data.types.indexOf('l3graph-node-custom') !== -1) {
-            //         return CUSTOM_NODE_TEMPLATE_2;
-            //     } else {
-            //         return CUSTOM_NODE_TEMPLATE_1;
-            //     }
-            // },
-            linkTemplateProvider: () => ({
-                color: 'green',
-                thickness: 2,
-            }),
-        },
-        onComponentMount: onComponentMount,
-    }), rootHtml);
+    let l3Graph: L3Graph;
+    mountGraph();
+
+    function mountGraph() {
+        ReactDOM.render(React.createElement(L3Graph, {
+            viewOptions: {
+                // nodeTemplateProvider: (data: {label: string; types: string[]}) => {
+                //     if (data.types.indexOf('l3graph-node-custom') !== -1) {
+                //         return CUSTOM_NODE_TEMPLATE_2;
+                //     } else {
+                //         return CUSTOM_NODE_TEMPLATE_1;
+                //     }
+                // },
+                linkTemplateProvider: () => ({
+                    color: 'green',
+                    thickness: 2,
+                }),
+            },
+            onComponentMount: onComponentMount,
+        }, React.createElement(Toolbar, {
+            viewControllers: l3Graph ? l3Graph.getViewControllers() : [],
+            defaultViewController: l3Graph ? l3Graph.getViewController() : undefined,
+            onChangeViewController: (viewController: ViewController) => {
+                l3Graph.setViewController(viewController);
+            },
+            onApplyLayout: () => {
+                applyForceLayout3d(l3Graph.model.graph, 30, 200);
+            },
+        })), rootHtml);
+    }
 
     function onComponentMount(l3graph: L3Graph) {
+        l3Graph = l3graph;
         const graphElements = generateData(10);
         l3graph.model.graph.addNodes(graphElements.nodes);
         l3graph.model.graph.addLinks(graphElements.links);
@@ -124,5 +141,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 overlay: WIDGET_OVERLAY,
             }),
         });
+        mountGraph();
     }
 });

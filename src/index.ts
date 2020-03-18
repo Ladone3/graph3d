@@ -2,8 +2,8 @@ require('../styles/main.scss');
 
 export { L3Graph, L3GraphProps } from './l3Graph/l3Graph';
 export { ViewOptions } from './l3Graph/views/diagramView';
-export { Node, NodeModel } from './l3Graph/models/graph/node';
-export { Link, LinkModel } from './l3Graph/models/graph/link';
+export { Node, NodeModel, NodeId } from './l3Graph/models/graph/node';
+export { Link, LinkModel, LinkId } from './l3Graph/models/graph/link';
 export { NodeDefinition, Element } from './l3Graph/models/graph/graphModel';
 
 export {
@@ -31,6 +31,7 @@ export {
     Widget as MeshWidget,
     WidgetModelContext,
     WidgetViewContext,
+    WidgetId,
 } from './l3Graph/models/widgets/widget';
 
 export { GamepadsWidget } from './l3Graph/models/widgets/gamepadsWidget';
@@ -46,3 +47,4 @@ export * from './l3Graph/defaultWidgetsSet';
 
 export { GAMEPAD_BUTTON } from './l3Graph/vrUtils/gamepadHandler';
 export { htmlToImage } from './l3Graph/utils/htmlToSprite';
+export * from './l3Graph/toolbar';

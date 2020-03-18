@@ -3,7 +3,7 @@ import { Subscribable } from '../../utils/subscribable';
 
 export const DEFAULT_LINK_ID = 'l3graph-link';
 
-export type LinkId = String & { linkPlaceholder?: boolean };
+export type LinkId = string & { linkPlaceholder?: boolean };
 
 export interface LinkModel<LinkContent = any> {
     id: LinkId;

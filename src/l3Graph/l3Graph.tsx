@@ -1,20 +1,19 @@
 import * as React from 'react';
 import { ViewController, ViewControllersSet } from './controllers/viewController';
-import { DEFAULT_VIEW_CONTROLLERS_SET } from './controllers/defaultViewControllers';
 import { KeyHandler } from './utils/keyHandler';
 import { DefaultEditor } from './editors/defaultEditor';
 import { DiagramModel } from './models/diagramModel';
 import { DiagramView, ViewOptions } from './views/diagramView';
 import { Vector2d, Vector3d } from './models/structures';
-import { applyForceLayout3d, applyRandomLayout } from './layout/layouts';
 import { MouseHandler } from './utils/mouseHandler';
-import { DEFAULT_MESH_WIDGET_SET } from './defaultWidgetsSet';
 import { WidgetFactory } from './models/widgets/widget';
 import { Node } from './models/graph/node';
 import { OverlayPosition } from './views/graph/overlayAnchor';
 import { ReactOverlay } from './customization';
 import { GamepadHandler } from './vrUtils/gamepadHandler';
 import { GamepadEditor } from './editors/gamepadEditor';
+import { DEFAULT_VIEW_CONTROLLERS_SET } from './controllers/defaultViewControllers';
+import { DEFAULT_MESH_WIDGET_SET } from './defaultWidgetsSet';
 
 export interface L3GraphProps {
     viewOptions?: ViewOptions;
@@ -31,7 +30,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
     private mouseHandler: MouseHandler;
     private viewControllers: ViewController[] = [];
     private viewController: ViewController;
-    // todo: handle dublication - the one should substitute another depending on the events
+    // todo: handle duplication - the one should substitute another depending on the events
     private defaultEditor: DefaultEditor;
     private gamepadEditor: GamepadEditor;
 
@@ -47,6 +46,14 @@ export class L3Graph extends React.Component<L3GraphProps> {
 
     resize() {
         if (this.view) { this.view.resize(); }
+    }
+
+    getViewControllers(): ReadonlyArray<ViewController> {
+        return this.viewControllers;
+    }
+
+    getViewController(): ViewController {
+        return this.viewController;
     }
 
     setViewController(viewController: ViewController) {
@@ -127,10 +134,9 @@ export class L3Graph extends React.Component<L3GraphProps> {
                 if (currentViewControllerWasSwitchedOff) {
                     this.setViewController(this.viewControllers[0]);
                 }
-            })
+            });
         }
-
-    } 
+    }
 
     private onFocus = () => {
         this.keyHandler.switchOn();
@@ -183,34 +189,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
                     viewOptions={viewOptions}>
                 </DiagramView>
             </div>
-            <div className='l3graph-toolbar'>
-                <button
-                    title='Help'
-                    onClick={() => { alert(HELP_TEXT); }}>
-                    <h2 style={{margin: 0}}>?</h2>
-                </button>
-                {this.viewControllers.map((viewController, index) => {
-                    return <button
-                        title={viewController.label}
-                        key={`controller-button-${index}`}
-                        className={this.viewController === viewController ? 'l3graph-selected' : ''}
-                        onClick={() => { this.setViewController(viewController); }}>
-                        {viewController.label[0]}
-                    </button>;
-                })}
-                <button
-                    id='l3graph-force-layout-button'
-                    title='Force layaout'
-                    onClick={() => { applyForceLayout3d(this.diagramModel.graph, 30, 200); }}>
-                    FL
-                </button>
-                <button
-                    id='l3graph-random-layout-button'
-                    title='Random layaout'
-                    onClick={() => { applyRandomLayout(this.diagramModel.graph); }}>
-                    RL
-                </button>
-            </div>
+            {this.props.children}
         </div>;
     }
 }

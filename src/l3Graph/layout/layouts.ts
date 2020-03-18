@@ -151,29 +151,6 @@ export function applyForceLayout(graph: GraphModel) {
     }
 }
 
-export function applyRandomLayout(graph: GraphModel, maxDist: number = 500) {
-    const { nodes } = graph;
-    const positions: Vector3d[] = [];
-    for (let i = 0; i < nodes.size; i++) {
-        positions.push({
-            x: Math.round(Math.random() * maxDist),
-            y: Math.round(Math.random() * maxDist),
-            z: Math.round(Math.random() * maxDist),
-        });
-    }
-
-    const {average} = calcBounds(positions);
-    let index = 0;
-    nodes.forEach(node => {
-        const pos = positions[index++];
-        node.setPosition({
-            x: pos.x - average.x,
-            y: pos.y - average.y,
-            z: pos.z - average.z,
-        });
-    });
-}
-
 export function applyForceLayout3d(
     graph: GraphModel, iterations: number = 1, linkLength: number = PREFERRED_LINK_LENGTH,
 ) {

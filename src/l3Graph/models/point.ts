@@ -1,7 +1,7 @@
 import { Vector3d } from './structures';
 import { Subscribable } from '../utils';
 
-export type PointId = String & { pointPlaceholder?: boolean };
+export type PointId = string & { pointPlaceholder?: boolean };
 
 export interface PointParameters {
     position: Vector3d;

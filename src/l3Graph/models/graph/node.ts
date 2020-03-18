@@ -41,7 +41,7 @@ export class Node<NodeContent = any> extends Point<NodeEvents> {
         super(parameters);
         this._size = parameters.size || DEFAULT_NODE_PARAMETERS.size;
     }
-    
+
     get data() {
         return this._model.data;
     }
@@ -63,7 +63,7 @@ export class Node<NodeContent = any> extends Point<NodeEvents> {
         this._size = size;
         this.trigger('change:size', previous);
     }
-    
+
     forceUpdate() {
         this.trigger('force-update');
     }

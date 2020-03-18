@@ -373,7 +373,7 @@ export class OBJLoader {
 
         const state = new ParserState();
         if (text.indexOf('\r\n') !== - 1) {
-            // This is faster than String.split with regex that splits on both
+            // This is faster than string.split with regex that splits on both
             text = text.replace(/\r\n/g, '\n');
         }
 
