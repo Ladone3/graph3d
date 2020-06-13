@@ -6,7 +6,6 @@ import { WidgetFactory } from './models/widgets/widget';
 import { GamepadsWidget } from './models/widgets/gamepadsWidget';
 import { GamepadsWidgetView } from './views/widgets/gamepadsWidgetView';
 import { LeftCreationTool } from './views/widgets/gamepadTools/elementCreationTools';
-import { LeftGamepadEditorTool } from './views/widgets/gamepadTools/editorTools';
 import { RightGamepadTool, LeftGamepadTool } from './views/widgets/gamepadTools/defaultTools';
 
 export const selectionWidgetFactory: WidgetFactory<SelectionWidget> = {

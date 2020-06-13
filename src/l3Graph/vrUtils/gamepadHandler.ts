@@ -10,6 +10,7 @@ import { DiagramModel } from '../models/diagramModel';
 import { DiagramView, DEFAULT_SCREEN_PARAMETERS } from '../views/diagramView';
 import { mapMeshes } from '../utils/mouseHandler';
 import { Node } from '../models/graph/node';
+import { Link } from '../models/graph/link';
 import { Vector3d } from '../models/structures';
 
 export type Controller = THREE.Group;

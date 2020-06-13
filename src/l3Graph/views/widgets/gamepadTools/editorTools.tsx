@@ -6,6 +6,8 @@ import { MeshObj, MeshKind } from '../../../customization';
 import { GamepadTool } from './defaultTools';
 import { DiagramModel } from '../../../models/diagramModel';
 import { Element } from '../../../models/graph/graphModel';
+import { Node } from '../../../models/graph/node';
+import { Link } from '../../../models/graph/link';
 import { VrManager } from '../../../vrUtils/vrManager';
 import { DEFAULT_SCREEN_PARAMETERS } from '../../diagramView';
 import { ImageMesh } from './imageMesh';

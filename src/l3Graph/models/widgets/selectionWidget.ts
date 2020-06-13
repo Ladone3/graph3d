@@ -2,6 +2,7 @@ import { Element } from '../graph/graphModel';
 import { DiagramModel } from '../diagramModel';
 import { Widget } from './widget';
 import { Node } from '../graph/node';
+import { Link } from '../graph/link';
 
 export interface SelectionParameters {
     diagramModel: DiagramModel;

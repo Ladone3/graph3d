@@ -6,6 +6,8 @@ import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';
 import { Vector2d } from '../models/structures';
 import { Element } from '../models/graph/graphModel';
+import { Node } from '../models/graph/node';
+import { Link } from '../models/graph/link';
 export const MIN_DRAG_OFFSET = 5;
 
 export interface HandlerElementClickEvent {
