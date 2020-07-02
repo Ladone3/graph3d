@@ -247,56 +247,49 @@ export class DiagramView extends React.Component<DiagramViewProps> {
 
     private subscribeOnModel() {
         this.props.model.on('syncupdate', combinedEvent => {
-            const events = combinedEvent.data;
+            const { nodeEvents, linkEvents, widgetEvents } = combinedEvent.data;
 
             const updatedNodeIds: NodeId[] = [];
+            nodeEvents.forEach(event => {
+                switch (event.type) {
+                    case 'add:node':
+                        this.graphView.registerNode(event.target);
+                        break;
+                    case 'remove:node':
+                        this.graphView.removeNodeView(event.target);
+                        break;
+                    case 'update:node':
+                        updatedNodeIds.push(event.target.id);
+                        break;
+                }
+            });
+
             const updatedLinkIds: LinkId[] = [];
-            events.graphEvents.forEach(event => {
-                switch (event.eventId) {
-                    case 'add:nodes':
-                        for (const node of event.data) {
-                            this.graphView.registerNode(node);
-                        }
+            linkEvents.forEach(event => {
+                switch (event.type) {
+                    case 'add:link':
+                        this.graphView.registerLink(event.target);
                         break;
-                    case 'remove:nodes':
-                        for (const node of event.data) {
-                            this.graphView.removeNodeView(node);
-                        }
+                    case 'remove:link':
+                        this.graphView.removeLinkView(event.target);
                         break;
-                    case 'update:nodes':
-                        for (const node of event.data) {
-                            updatedNodeIds.push(node.id);
-                        }
-                        break;
-                    case 'add:links':
-                        for (const link of event.data) {
-                            this.graphView.registerLink(link);
-                        }
-                        break;
-                    case 'remove:links':
-                        for (const link of event.data) {
-                            this.graphView.removeLinkView(link);
-                        }
-                        break;
-                    case 'update:links':
-                        for (const link of event.data) {
-                            updatedLinkIds.push(link.id);
-                        }
+                    case 'update:link':
+                        updatedLinkIds.push(event.target.id);
                         break;
                 }
             });
 
             const updatedWidgetIds: string[] = [];
-            events.widgetEvents.forEach((event: EventObject<keyof WidgetsModelEvents, any>) => {
-                switch (event.eventId) {
+            widgetEvents.forEach(event => {
+                switch (event.type) {
                     case 'add:widget':
-                        this.widgetsView.registerWidgetViewForModel(event.data);
+                        this.widgetsView.registerWidgetViewForModel(event.target);
                         break;
                     case 'remove:widget':
-                        this.widgetsView.removeWidgetViewOfModel(event.data);
+                        this.widgetsView.removeWidgetViewOfModel(event.target);
                         break;
                     case 'update:widget':
-                        const widget: Widget = event.data;
+                        const widget: Widget = event.target;
                         updatedWidgetIds.push(widget.widgetId);
                         break;
                 }

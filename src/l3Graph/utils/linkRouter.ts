@@ -9,18 +9,18 @@ export interface LinkRouter {
 const LINK_OFFSET = 30;
 
 export class DefaultLinkRouter implements LinkRouter {
-    private getLinkNeighbours(link: Link): Link[] {
+    private getLinkGroup(link: Link): Link[] {
         return Array.from(link.source.outgoingLinks).filter(l => l.target === link.target).concat(
             Array.from(link.target.outgoingLinks).filter(l => l.target === link.source)
         );
     }
 
     getRout(link: Link): Vector3d[] {
-        const group = this.getLinkNeighbours(link);
+        const group = this.getLinkGroup(link);
 
         const sourcePos = link.source.position;
         const targetPos = link.target.position;
-        const mediana = multiply(sum(sourcePos, targetPos), 0.5);
+        const median = multiply(sum(sourcePos, targetPos), 0.5);
 
         if (group.length === 1) {
             return [sourcePos, targetPos];
@@ -39,7 +39,7 @@ export class DefaultLinkRouter implements LinkRouter {
                 multiply(dirUp, Math.sin(angle)),
             ));
             const offset = multiply(offsetDir, groupSize > 1 ? LINK_OFFSET : 0);
-            const kinkPoint = sum(mediana, offset);
+            const kinkPoint = sum(median, offset);
             return [sourcePos, kinkPoint, targetPos];
         }
     }

@@ -4,17 +4,40 @@ import { Node, NodeId } from './graph/node';
 import { Link, LinkId } from './graph/link';
 import { WidgetsModel } from './widgets/widgetsModel';
 import { Selection } from './widgets/selection';
+import { Widget } from './widgets/widget';
 
-type GraphEvents = 
-    EventObject<'add:nodes', Node[]> | EventObject<'remove:nodes', Node[]> | EventObject<'update:nodes', Node[]> |
-    EventObject<'add:links', Link[]> | EventObject<'remove:links', Link[]> | EventObject<'update:links', Link[]>;
+export interface NodeEvent {
+    type: 'add:node' | 'remove:node' | 'update:node';
+    target: Node;
+}
+
+export interface LinkEvent {
+    type: 'add:link' | 'remove:link' | 'update:link';
+    target: Link;
+}
+
+export interface WidgetEvent {
+    type: 'add:widget' | 'remove:widget' | 'update:widget';
+    target: Widget;
+}
+
+export interface DiagramEvents {
+    nodeEvents: ReadonlyArray<NodeEvent>;
+    linkEvents: ReadonlyArray<LinkEvent>;
+    widgetEvents: ReadonlyArray<WidgetEvent>;
+}
 
 export interface DiagramModelEvents {
-    'syncupdate': {
-        graphEvents: Set<GraphEvents>;
-        widgetEvents: Set<EventObject>;
-    };
+    'syncupdate': DiagramEvents;
 }
+
+const mapEvent = new Map();
+mapEvent.set('add:nodes', 'add:node');
+mapEvent.set('update:nodes', 'update:node');
+mapEvent.set('remove:nodes', 'remove:node');
+mapEvent.set('add:links', 'add:link');
+mapEvent.set('update:links', 'update:link');
+mapEvent.set('remove:links', 'remove:link');
 
 export class DiagramModel extends Subscribable<DiagramModelEvents> {
     public graph: GraphModel;
@@ -22,8 +45,9 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
     public selection: Selection;
 
     private animationFrame: number;
-    private graphEvents = new Set<EventObject>();
-    private widgetEvents = new Set<EventObject>();
+    private nodeEvents = new Map<Node, NodeEvent>();
+    private linkEvents = new Map<Link, LinkEvent>();
+    private widgetEvents = new Map<Widget, WidgetEvent>();
 
     constructor() {
         super();
@@ -31,16 +55,16 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         this.widgetRegistry = new WidgetsModel();
         this.selection = new Selection({graph: this.graph});
 
-        this.graph.on('add:nodes', this.groupGraphEvents);
-        this.graph.on('remove:nodes', this.groupGraphEvents);
-        this.graph.on('update:nodes', this.groupGraphEvents);
-        this.graph.on('add:links', this.groupGraphEvents);
-        this.graph.on('remove:links', this.groupGraphEvents);
-        this.graph.on('update:links', this.groupGraphEvents);
+        this.graph.on('add:nodes', this.onNodeEvent);
+        this.graph.on('remove:nodes', this.onNodeEvent);
+        this.graph.on('update:nodes', this.onNodeEvent);
+        this.graph.on('add:links', this.onLinkEvent);
+        this.graph.on('remove:links', this.onLinkEvent);
+        this.graph.on('update:links', this.onLinkEvent);
 
-        this.widgetRegistry.on('add:widget', this.groupWidgetEvents);
-        this.widgetRegistry.on('remove:widget', this.groupWidgetEvents);
-        this.widgetRegistry.on('update:widget', this.groupWidgetEvents);
+        this.widgetRegistry.on('add:widget', this.onWidgetEvent);
+        this.widgetRegistry.on('remove:widget', this.onWidgetEvent);
+        this.widgetRegistry.on('update:widget', this.onWidgetEvent);
     }
 
     public get nodes(): ImmutableMap<NodeId, Node> {
@@ -54,23 +78,77 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
     public performSyncUpdate = () => {
         cancelAnimationFrame(this.animationFrame);
         this.animationFrame = requestAnimationFrame(() => {
-            const events = {
-                graphEvents: this.graphEvents,
-                widgetEvents: this.widgetEvents,
+            const events: DiagramEvents = {
+                nodeEvents: Array.from(this.nodeEvents.values()),
+                linkEvents: Array.from(this.linkEvents.values()),
+                widgetEvents: Array.from(this.widgetEvents.values()),
             };
-            this.graphEvents = new Set();
-            this.widgetEvents = new Set();
+            this.nodeEvents = new Map();
+            this.linkEvents = new Map();
+            this.widgetEvents = new Map();
             this.trigger('syncupdate', events);
         });
     }
 
-    private groupGraphEvents = (event: EventObject) => {
-        this.graphEvents.add(event);
+    private onNodeEvent = (event: EventObject<any, Node[]>) => {
+        for (const model of event.data) {
+            const oldEvent = this.nodeEvents.get(model);
+            const eventType = mapEvent.get(event.eventId);
+            if (oldEvent) {
+                if (eventType === 'add:node' && oldEvent.type === 'remove:node') {
+                    this.nodeEvents.set(model, {type: 'update:node', target: model});
+                } else if (eventType === 'remove:node') {
+                    if (oldEvent.type === 'add:node') {
+                        this.nodeEvents.delete(model);
+                    } else {
+                        this.nodeEvents.set(model, {type: eventType, target: model});
+                    }
+                }
+            } else {
+                this.nodeEvents.set(model, {type: eventType, target: model});
+            }
+        }
         this.performSyncUpdate();
     }
 
-    private groupWidgetEvents = (event: EventObject) => {
-        this.widgetEvents.add(event);
+    private onLinkEvent = (event: EventObject<any, Link[]>) => {
+        for (const model of event.data) {
+            const oldEvent = this.linkEvents.get(model);
+            const eventType = mapEvent.get(event.eventId);
+            if (oldEvent) {
+                if (eventType === 'add:link' && oldEvent.type === 'remove:link') {
+                    this.linkEvents.set(model, {type: 'update:link', target: model});
+                } else if (eventType === 'remove:link') {
+                    if (oldEvent.type === 'add:link') {
+                        this.linkEvents.delete(model);
+                    } else {
+                        this.linkEvents.set(model, {type: eventType, target: model});
+                    }
+                }
+            } else {
+                this.linkEvents.set(model, {type: eventType, target: model});
+            }
+        }
+        this.performSyncUpdate();
+    }
+
+    private onWidgetEvent = (event: EventObject<any, Widget>) => {
+        const oldEvent = this.widgetEvents.get(event.data);
+        const eventType = event.eventId;
+        if (oldEvent) {
+            if (eventType === 'add:widget' && oldEvent.type === 'remove:widget') {
+                this.widgetEvents.set(event.data, {type: 'update:widget', target: event.data});
+            } else if (eventType === 'remove:widget') {
+                if (oldEvent.type === 'add:widget') {
+                    this.widgetEvents.delete(event.data);
+                } else {
+                    this.widgetEvents.set(event.data, {type: eventType, target: event.data});
+                }
+            }
+        } else {
+            this.widgetEvents.set(event.data, {type: eventType, target: event.data});
+        }
+
         this.performSyncUpdate();
     }
 }

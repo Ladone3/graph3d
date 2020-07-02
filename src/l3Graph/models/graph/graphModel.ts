@@ -136,7 +136,7 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
     private performNodeUpdate(node: Node) {
         this.trigger('update:nodes', [node]);
 
-        const updatedLinks: Link[] = []
+        const updatedLinks: Link[] = [];
         node.incomingLinks.forEach(link => {
             updatedLinks.push(link);
         });
