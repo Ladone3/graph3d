@@ -12,6 +12,7 @@ import { mapMeshes } from '../utils/mouseHandler';
 import { Node } from '../models/graph/node';
 import { Link } from '../models/graph/link';
 import { Vector3d } from '../models/structures';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
 
 export type Controller = THREE.Group;
 
@@ -32,25 +33,25 @@ export interface ElementBearer {
     dragFromKey: GAMEPAD_BUTTON;
 }
 
-interface ActiveElementBearer extends ElementBearer {
+interface ActiveElementBearer<Descriptor extends GraphDescriptor> extends ElementBearer {
     targetParent?: THREE.Object3D;
     mockObject?: THREE.Object3D;
     position?: Vector3d;
-    target?: Node;
+    target?: Node<Descriptor>;
 }
 
-export interface GamepadDragEventData {
-    target: Element;
+export interface GamepadDragEventData<Descriptor extends GraphDescriptor> {
+    target: Element<Descriptor>;
     position: Vector3d;
 }
 
-export interface GamepadHandlerEvents {
-    'keyDown': Map<GAMEPAD_BUTTON, Element | undefined>;
-    'keyUp': Map<GAMEPAD_BUTTON, Element | undefined>;
-    'keyPressed': Map<GAMEPAD_BUTTON, Element | undefined>;
-    'elementDragStart': GamepadDragEventData;
-    'elementDrag': GamepadDragEventData;
-    'elementDragEnd': GamepadDragEventData;
+export interface GamepadHandlerEvents<Descriptor extends GraphDescriptor> {
+    'keyDown': Map<GAMEPAD_BUTTON, Element<Descriptor> | undefined>;
+    'keyUp': Map<GAMEPAD_BUTTON, Element<Descriptor> | undefined>;
+    'keyPressed': Map<GAMEPAD_BUTTON, Element<Descriptor> | undefined>;
+    'elementDragStart': GamepadDragEventData<Descriptor>;
+    'elementDrag': GamepadDragEventData<Descriptor>;
+    'elementDragEnd': GamepadDragEventData<Descriptor>;
 }
 
 export const GAMEPAD_EXTRA_MOVE_STEP = 10;
@@ -86,10 +87,10 @@ export const OCULUS_CONTROLLERS = {
 export const CONTROLLERS_NUMBER = Object.keys(OCULUS_CONTROLLERS).length;
 
 // It's currently support only OCULUS gamepads
-export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
-    public readonly keyPressed = new Map<GAMEPAD_BUTTON, Element | undefined>();
+export class GamepadHandler<Descriptor extends GraphDescriptor> extends Subscribable<GamepadHandlerEvents<Descriptor>> {
+    public readonly keyPressed = new Map<GAMEPAD_BUTTON, Element<Descriptor> | undefined>();
 
-    private bearers = new Map<Controller, ActiveElementBearer>();
+    private bearers = new Map<Controller, ActiveElementBearer<Descriptor>>();
     private highlighters = new Map<Controller, Highlighter>();
 
     private cancellation: Cancellation | undefined;
@@ -101,8 +102,8 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
     private elementToController = new Map<THREE.Object3D, Controller>();
 
     constructor(
-        private diagramModel: DiagramModel,
-        private diagramView: DiagramView,
+        private diagramModel: DiagramModel<Descriptor>,
+        private diagramView: DiagramView<Descriptor>,
     ) {
         super();
         this.rayCaster = new THREE.Raycaster();
@@ -125,7 +126,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         this.bearers.set(controller, bearer);
     }
 
-    private handleDraggingStart(keyDownMap: Map<GAMEPAD_BUTTON, Element>) {
+    private handleDraggingStart(keyDownMap: Map<GAMEPAD_BUTTON, Element<Descriptor>>) {
         this.bearers.forEach((bearer, controller) => {
             if (keyDownMap.has(bearer.dragKey)) {
                 const target = this.keyPressed.get(bearer.dragKey);
@@ -165,7 +166,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         });
     }
 
-    private handleDraggingEnd(keyUpMap: Map<GAMEPAD_BUTTON, Element>) {
+    private handleDraggingEnd(keyUpMap: Map<GAMEPAD_BUTTON, Element<Descriptor>>) {
         this.bearers.forEach((bearer, controller) => {
             if (keyUpMap.has(bearer.dragKey) && bearer.target) {
                 stopDragging(bearer, this.diagramView, controller);
@@ -189,8 +190,8 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
     }
 
     private updateBtnMap() {
-        const keyDown = new Map<GAMEPAD_BUTTON, Element | undefined>();
-        const keyUp = new Map<GAMEPAD_BUTTON, Element | undefined>();
+        const keyDown = new Map<GAMEPAD_BUTTON, Element<Descriptor> | undefined>();
+        const keyUp = new Map<GAMEPAD_BUTTON, Element<Descriptor> | undefined>();
         let gamepadNumber = 0;
         for (let gamepadId = 0; gamepadId < CONTROLLERS_NUMBER; gamepadId++) {
             const controller = this.diagramView.vrManager.getController(gamepadId);
@@ -233,7 +234,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         if (gamepadNumber !== this.existingControllersNumber) { this.existingControllersNumber = gamepadNumber; }
     }
 
-    private getTarget(controller: Controller): Element | undefined {
+    private getTarget(controller: Controller): Element<Descriptor> | undefined {
         this.tempMatrix.identity().extractRotation(controller.matrixWorld);
         this.rayCaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
         this.rayCaster.ray.direction.set(0, 0, -1).applyMatrix4(this.tempMatrix);
@@ -250,7 +251,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         }
     }
 
-    private updateHighlighting(controller: Controller, newTarget?: Element) {
+    private updateHighlighting(controller: Controller, newTarget?: Element<Descriptor>) {
         if (!this.highlighters.has(controller)) { return; }
 
         const restorer = this.highlightingRestorers.get(controller);
@@ -353,11 +354,11 @@ function getGamepad(id: number): Gamepad | undefined {
     }
 }
 
-function startDragging(
-    target: Element,
-    diagramView: DiagramView,
+function startDragging<Descriptor extends GraphDescriptor>(
+    target: Element<Descriptor>,
+    diagramView: DiagramView<Descriptor>,
     controller: Controller,
-    bearer: ActiveElementBearer,
+    bearer: ActiveElementBearer<Descriptor>,
 ) {
     if (target && target instanceof Node) {
         const elementMesh = diagramView.graphView.nodeViews.get(target.id).mesh;
@@ -372,11 +373,11 @@ function startDragging(
     }
 }
 
-function dragElement(
-    diagramView: DiagramView,
+function dragElement<Descriptor extends GraphDescriptor>(
+    diagramView: DiagramView<Descriptor>,
     zOffset: number,
     controller: Controller,
-    bearer: ActiveElementBearer,
+    bearer: ActiveElementBearer<Descriptor>,
 ) {
     if (bearer) {
         if (controller) {
@@ -399,9 +400,9 @@ function dragElement(
     }
 }
 
-function stopDragging(
-    bearer: ActiveElementBearer,
-    diagramView: DiagramView,
+function stopDragging<Descriptor extends GraphDescriptor>(
+    bearer: ActiveElementBearer<Descriptor>,
+    diagramView: DiagramView<Descriptor>,
     controller: Controller,
 ) {
     if (bearer) {

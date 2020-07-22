@@ -4,10 +4,11 @@ export { L3Graph, L3GraphProps } from './l3Graph/l3Graph';
 export { ViewOptions } from './l3Graph/views/diagramView';
 export { Node, NodeModel, NodeId } from './l3Graph/models/graph/node';
 export { Link, LinkModel, LinkId } from './l3Graph/models/graph/link';
+export { GraphDescriptor } from './l3Graph/models/graph/graphDescriptor';
 export { NodeDefinition, Element } from './l3Graph/models/graph/graphModel';
 
 export {
-    NodeViewTemplate,
+    ViewTemplate,
     LinkViewTemplate,
     MeshKind,
     L3Mesh,
@@ -18,8 +19,10 @@ export {
     DEFAULT_NODE_TEMPLATE_PROVIDER,
     DEFAULT_LINK_TEMPLATE,
     DEFAULT_LINK_TEMPLATE_PROVIDER,
-    NodeTemplateProvider,
-    LinkTemplateProvider,
+    OverlayProps,
+    NodeOverlayProps,
+    LinkOverlayProps,
+    TemplateProvider,
 } from './l3Graph/customization';
 
 export { ViewController } from './l3Graph/controllers/viewController';

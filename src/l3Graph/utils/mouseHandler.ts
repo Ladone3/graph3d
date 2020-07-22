@@ -8,16 +8,17 @@ import { Vector2d } from '../models/structures';
 import { Element } from '../models/graph/graphModel';
 import { Node } from '../models/graph/node';
 import { Link } from '../models/graph/link';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
 export const MIN_DRAG_OFFSET = 5;
 
-export interface HandlerElementClickEvent {
+export interface HandlerElementClickEvent<Descriptor extends GraphDescriptor> {
     nativeEvent: MouseEvent | MouseWheelEvent | TouchEvent;
-    element: Element;
+    element: Element<Descriptor>;
 }
 
-export interface HandlerDragElementEvent  {
+export interface HandlerDragElementEvent<Descriptor extends GraphDescriptor>  {
     nativeEvent: MouseEvent | MouseWheelEvent | TouchEvent;
-    element: Element;
+    element: Element<Descriptor>;
 }
 
 export interface HandlerDragEvent  {
@@ -25,30 +26,30 @@ export interface HandlerDragEvent  {
     offset: Vector2d;
 }
 
-export interface MouseHandlerEvents {
-    'elementScroll': HandlerElementClickEvent;
+export interface MouseHandlerEvents<Descriptor extends GraphDescriptor> {
+    'elementScroll': HandlerElementClickEvent<Descriptor>;
     'paperScroll': MouseWheelEvent;
 
-    'elementClick': HandlerElementClickEvent;
+    'elementClick': HandlerElementClickEvent<Descriptor>;
     'paperClick': MouseEvent | TouchEvent;
 
-    'elementStartDrag': HandlerDragElementEvent;
-    'elementDrag': HandlerDragElementEvent;
-    'elementEndDrag': HandlerDragElementEvent;
+    'elementStartDrag': HandlerDragElementEvent<Descriptor>;
+    'elementDrag': HandlerDragElementEvent<Descriptor>;
+    'elementEndDrag': HandlerDragElementEvent<Descriptor>;
 
     'paperStartDrag': HandlerDragEvent;
     'paperDrag': HandlerDragEvent;
     'paperEndDrag': HandlerDragEvent;
 }
 
-export class MouseHandler extends Subscribable<MouseHandlerEvents> {
+export class MouseHandler<Descriptor extends GraphDescriptor> extends Subscribable<MouseHandlerEvents<Descriptor>> {
     private raycaster: THREE.Raycaster;
     private dragging = false;
-    private mouseDownOnElement: Element;
+    private mouseDownOnElement: Element<Descriptor>;
 
     constructor(
-        private diagramModel: DiagramModel,
-        private diagramView: DiagramView,
+        private diagramModel: DiagramModel<Descriptor>,
+        private diagramView: DiagramView<Descriptor>,
     ) {
         super();
         this.raycaster = new THREE.Raycaster();
@@ -62,7 +63,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         return this.dragging && Boolean(this.mouseDownOnElement);
     }
 
-    get draggedElement(): Element | undefined {
+    get draggedElement(): Element<Descriptor> | undefined {
         if (this.isDragging) {
             return this.mouseDownOnElement;
         } else {
@@ -70,7 +71,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         }
     }
 
-    fireMouseDownEvent(event: MouseEvent | TouchEvent, element?: Element) {
+    fireMouseDownEvent(event: MouseEvent | TouchEvent, element?: Element<Descriptor>) {
         this.mouseDownOnElement = element || this.getIntersectedObject(event);
         this.dragging = false;
 
@@ -111,7 +112,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         });
     }
 
-    fireScrollEvent(event: MouseWheelEvent, element?: Element) {
+    fireScrollEvent(event: MouseWheelEvent, element?: Element<Descriptor>) {
         event.stopPropagation();
         if (this.mouseDownOnElement) {
             this.dragging = true;
@@ -125,7 +126,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         }
     }
 
-    private getIntersectedObject(event: MouseEvent | TouchEvent): Element | undefined {
+    private getIntersectedObject(event: MouseEvent | TouchEvent): Element<Descriptor> | undefined {
         const view = this.diagramView;
         const bBox = view.meshHtmlContainer.getBoundingClientRect();
         const position = eventToPosition(event, bBox);
@@ -172,9 +173,11 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
     }
 }
 
-export function mapMeshes(diagramModel: DiagramModel, diagramView: DiagramView)  {
+export function mapMeshes<Descriptor extends GraphDescriptor>(
+    diagramModel: DiagramModel<Descriptor>, diagramView: DiagramView<Descriptor>
+)  {
     const meshes: THREE.Object3D[] = [];
-    const nodeMeshMap: Element[] = [];
+    const nodeMeshMap: Element<Descriptor>[] = [];
     diagramModel.nodes.forEach(node => {
         const nodeView = diagramView.graphView.nodeViews.get(node.id);
 

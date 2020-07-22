@@ -1,19 +1,20 @@
-import { GraphModel, ImmutableMap, NodeDefinition, ElementModel } from './graph/graphModel';
+import { GraphModel, ImmutableMap, NodeDefinition, ElementModel, GraphModelEvents } from './graph/graphModel';
 import { Subscribable, EventObject } from '../utils/subscribable';
 import { Node, NodeId } from './graph/node';
 import { Link, LinkId } from './graph/link';
 import { WidgetsModel } from './widgets/widgetsModel';
 import { Selection } from './widgets/selection';
 import { Widget } from './widgets/widget';
+import { GraphDescriptor } from './graph/graphDescriptor';
 
-export interface NodeEvent {
+export interface NodeEvent<Descriptor extends GraphDescriptor> {
     type: 'add:node' | 'remove:node' | 'update:node';
-    target: Node;
+    target: Node<Descriptor>;
 }
 
-export interface LinkEvent {
+export interface LinkEvent<Descriptor extends GraphDescriptor> {
     type: 'add:link' | 'remove:link' | 'update:link';
-    target: Link;
+    target: Link<Descriptor>;
 }
 
 export interface WidgetEvent {
@@ -21,14 +22,14 @@ export interface WidgetEvent {
     target: Widget;
 }
 
-export interface DiagramEvents {
-    nodeEvents: ReadonlyArray<NodeEvent>;
-    linkEvents: ReadonlyArray<LinkEvent>;
+export interface DiagramEvents<Descriptor extends GraphDescriptor> {
+    nodeEvents: ReadonlyArray<NodeEvent<Descriptor>>;
+    linkEvents: ReadonlyArray<LinkEvent<Descriptor>>;
     widgetEvents: ReadonlyArray<WidgetEvent>;
 }
 
-export interface DiagramModelEvents {
-    'syncupdate': DiagramEvents;
+export interface DiagramModelEvents<Descriptor extends GraphDescriptor> {
+    'syncupdate': DiagramEvents<Descriptor>;
 }
 
 const mapEvent = new Map();
@@ -39,14 +40,14 @@ mapEvent.set('add:links', 'add:link');
 mapEvent.set('update:links', 'update:link');
 mapEvent.set('remove:links', 'remove:link');
 
-export class DiagramModel extends Subscribable<DiagramModelEvents> {
-    public graph: GraphModel;
+export class DiagramModel<Descriptor extends GraphDescriptor> extends Subscribable<DiagramModelEvents<Descriptor>> {
+    public graph: GraphModel<Descriptor>;
     public widgetRegistry: WidgetsModel;
-    public selection: Selection;
+    public selection: Selection<Descriptor>;
 
     private animationFrame: number;
-    private nodeEvents = new Map<Node, NodeEvent>();
-    private linkEvents = new Map<Link, LinkEvent>();
+    private nodeEvents = new Map<Node<Descriptor>, NodeEvent<Descriptor>>();
+    private linkEvents = new Map<Link<Descriptor>, LinkEvent<Descriptor>>();
     private widgetEvents = new Map<Widget, WidgetEvent>();
 
     constructor() {
@@ -67,18 +68,18 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         this.widgetRegistry.on('update:widget', this.onWidgetEvent);
     }
 
-    public get nodes(): ImmutableMap<NodeId, Node> {
+    public get nodes(): ImmutableMap<NodeId, Node<Descriptor>> {
         return this.graph.nodes;
     }
 
-    public get links(): ImmutableMap<LinkId, Link> {
+    public get links(): ImmutableMap<LinkId, Link<Descriptor>> {
         return this.graph.links;
     }
 
     public performSyncUpdate = () => {
         cancelAnimationFrame(this.animationFrame);
         this.animationFrame = requestAnimationFrame(() => {
-            const events: DiagramEvents = {
+            const events: DiagramEvents<Descriptor> = {
                 nodeEvents: Array.from(this.nodeEvents.values()),
                 linkEvents: Array.from(this.linkEvents.values()),
                 widgetEvents: Array.from(this.widgetEvents.values()),
@@ -90,7 +91,7 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         });
     }
 
-    private onNodeEvent = (event: EventObject<any, Node[]>) => {
+    private onNodeEvent = (event: EventObject<keyof GraphModelEvents<Descriptor>, Node<Descriptor>[]>) => {
         for (const model of event.data) {
             const oldEvent = this.nodeEvents.get(model);
             const eventType = mapEvent.get(event.eventId);
@@ -111,7 +112,7 @@ export class DiagramModel extends Subscribable<DiagramModelEvents> {
         this.performSyncUpdate();
     }
 
-    private onLinkEvent = (event: EventObject<any, Link[]>) => {
+    private onLinkEvent = (event: EventObject<any, Link<Descriptor>[]>) => {
         for (const model of event.data) {
             const oldEvent = this.linkEvents.get(model);
             const eventType = mapEvent.get(event.eventId);

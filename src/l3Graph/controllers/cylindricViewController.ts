@@ -3,14 +3,17 @@ import { DiagramView } from '../views/diagramView';
 import { MouseHandler } from '../utils/mouseHandler';
 import { KeyHandler } from '../utils';
 import { BORDER_OPACITY } from './viewController';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
 
-export class CylindricalViewController extends SphericalViewController {
+export class CylindricalViewController<Descriptor extends GraphDescriptor> extends SphericalViewController<Descriptor> {
+    readonly id: string;
     constructor(
-        view: DiagramView,
-        mouseHandler: MouseHandler,
+        view: DiagramView<Descriptor>,
+        mouseHandler: MouseHandler<Descriptor>,
         keyHandler: KeyHandler,
     ) {
         super(view, mouseHandler, keyHandler);
+        this.id = 'cylindrical-view-controller';
         this.label = 'Cylindrical View Controller';
     }
 

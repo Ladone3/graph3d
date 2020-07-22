@@ -7,24 +7,25 @@ import { Node } from '../../models/graph/node';
 import { ReactOverlay } from '../../customization';
 import { DiagramWidgetView } from '../viewInterface';
 import { DiagramView } from '../diagramView';
+import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
-export interface ReactNodeWidgetViewParameters {
-    diagramView: DiagramView;
-    model: FocusNodeWidget;
-    overlay: ReactOverlay;
+export interface ReactNodeWidgetViewParameters<Descriptor extends GraphDescriptor> {
+    diagramView: DiagramView<Descriptor>;
+    model: FocusNodeWidget<Descriptor>;
+    overlay: ReactOverlay<Node<Descriptor>>;
     position?: OverlayPosition;
 }
 
-export class ReactNodeWidgetView implements DiagramWidgetView {
-    public readonly model: FocusNodeWidget;
+export class ReactNodeWidgetView<Descriptor extends GraphDescriptor> implements DiagramWidgetView {
+    public readonly model: FocusNodeWidget<Descriptor>;
     public readonly mesh: THREE.Group;
 
     private htmlOverlay: HTMLElement;
-    private overlay: ReactOverlay;
+    private overlay: ReactOverlay<Node<Descriptor>>;
     private position: OverlayPosition;
-    private diagramView: DiagramView;
+    private diagramView: DiagramView<Descriptor>;
 
-    constructor(parameters: ReactNodeWidgetViewParameters) {
+    constructor(parameters: ReactNodeWidgetViewParameters<Descriptor>) {
         this.model = parameters.model;
         this.position = parameters.position || 'c';
         this.mesh = null;
@@ -59,7 +60,7 @@ export class ReactNodeWidgetView implements DiagramWidgetView {
         this.clearNode(this.model.prevFocusNode);
     }
 
-    private clearNode(node: Node) {
+    private clearNode(node: Node<Descriptor>) {
         if (node && this.overlay) {
             const view = this.diagramView.graphView.nodeViews.get(node.id);
             if (view) {

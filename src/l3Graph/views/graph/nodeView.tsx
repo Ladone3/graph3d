@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Node } from '../../models/graph/node';
 import {
-    NodeViewTemplate,
+    ViewTemplate,
     MeshKind,
     ReactOverlay,
     enrichOverlay,
@@ -10,23 +10,24 @@ import { preparePrimitive, prepareMesh } from '../../utils/shapeUtils';
 import { Vector3d } from '../../models/structures';
 import { threeVector3ToVector3d, getModelFittingBox, vector3dToTreeVector3 } from '../../utils';
 import { AbstractOverlayAnchor, OverlayPosition } from './overlayAnchor';
-import { DiagramElementView } from '../viewInterface';
+import { View } from '../viewInterface';
 import { AbstractOverlayAnchor3d, applyOffset } from './overlay3DAnchor';
 import { SELECTION_PADDING } from '../widgets/selectionView';
 import { Rendered3dSprite } from '../../utils/htmlToSprite';
+import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
-export class NodeView implements DiagramElementView {
-    public readonly model: Node;
+export class NodeView<Descriptor extends GraphDescriptor> implements View<Node<Descriptor>> {
+    public readonly model: Node<Descriptor>;
     public readonly mesh: THREE.Object3D;
-    public readonly overlayAnchor: NodeOverlayAnchor;
-    public readonly overlayAnchor3d: NodeOverlayAnchor3d;
+    public readonly overlayAnchor: NodeOverlayAnchor<Descriptor>;
+    public readonly overlayAnchor3d: NodeOverlayAnchor3d<Descriptor>;
 
     private boundingBox: THREE.Box3;
     private meshOriginalSize: THREE.Vector3;
     private meshOffset: Vector3d;
     private preserveRatio: boolean;
 
-    constructor(model: Node, template: NodeViewTemplate) {
+    constructor(model: Node<Descriptor>, template: ViewTemplate<Node<Descriptor>>) {
         this.model = model;
         this.boundingBox = new THREE.Box3();
         const meshDescriptor = template.mesh();
@@ -113,7 +114,8 @@ export class NodeView implements DiagramElementView {
     }
 }
 
-export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node, NodeView> {
+export class NodeOverlayAnchor<Descriptor extends GraphDescriptor> extends
+AbstractOverlayAnchor<Node<Descriptor>, NodeView<Descriptor>> {
     getModelFittingBox() {
         return {
             ...this.meshModel.position,
@@ -121,12 +123,13 @@ export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node, NodeView> {
         };
     }
 
-    protected enrichOverlay(poorOverlay: ReactOverlay): ReactOverlay {
-        return enrichOverlay(poorOverlay, this.meshModel.data);
+    protected enrichOverlay(poorOverlay: ReactOverlay<Node<Descriptor>>) {
+        return enrichOverlay(poorOverlay, this.meshModel);
     }
 }
 
-export class NodeOverlayAnchor3d extends AbstractOverlayAnchor3d<Node, NodeView> {
+export class NodeOverlayAnchor3d<Descriptor extends GraphDescriptor> extends
+AbstractOverlayAnchor3d<Node<Descriptor>, NodeView<Descriptor>> {
     forceUpdate() {
         this.meshModel.forceUpdate();
     }
@@ -153,10 +156,10 @@ export class NodeOverlayAnchor3d extends AbstractOverlayAnchor3d<Node, NodeView>
             let offset = applyOffset({x: 0, y: 0, z: 0}, initialOffset, position);
             for (const renderedSprite of sprites) {
                 renderedSprite.sprite.position.set(
-                    offset.x, 
-                    offset.y, 
-                    offset.z, 
-                )
+                    offset.x,
+                    offset.y,
+                    offset.z,
+                );
                 offset = applyOffset(offset, {
                     x: SELECTION_PADDING + renderedSprite.size.x,
                     y: SELECTION_PADDING + renderedSprite.size.y,

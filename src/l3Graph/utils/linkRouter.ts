@@ -1,21 +1,22 @@
 import { Link, LinkModel } from '../models/graph/link';
 import { Vector3d } from '../models/structures';
 import { sum, multiply, normalize, sub, inverse, normalRight, normalUp, vectorLength } from './geometry';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
 
-export interface LinkRouter {
-    getRout(link: Link): Vector3d[];
+export interface LinkRouter<Descriptor extends GraphDescriptor> {
+    getRout(link: Link<Descriptor>): Vector3d[];
 }
 
 const LINK_OFFSET = 30;
 
-export class DefaultLinkRouter implements LinkRouter {
-    private getLinkGroup(link: Link): Link[] {
+export class DefaultLinkRouter<Descriptor extends GraphDescriptor> implements LinkRouter<Descriptor> {
+    private getLinkGroup(link: Link<Descriptor>): Link<Descriptor>[] {
         return Array.from(link.source.outgoingLinks).filter(l => l.target === link.target).concat(
             Array.from(link.target.outgoingLinks).filter(l => l.target === link.source)
         );
     }
 
-    getRout(link: Link): Vector3d[] {
+    getRout(link: Link<Descriptor>): Vector3d[] {
         const group = this.getLinkGroup(link);
 
         const sourcePos = link.source.position;

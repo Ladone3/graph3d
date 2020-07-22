@@ -5,15 +5,16 @@ import { Element } from '../models/graph/graphModel';
 import { MouseHandler } from '../utils/mouseHandler';
 import { Link } from '../models/graph/link';
 import { Node } from '../models/graph/node';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
 
 const WHEEL_STEP = 100;
 const MIN_DISTANCE_TO_CAMERA = 10;
 
-export class DefaultEditor {
+export class DefaultEditor<Descriptor extends GraphDescriptor> {
     constructor(
-        private diagramModel: DiagramModel,
-        private diagramView: DiagramView,
-        private mouseHandler: MouseHandler,
+        private diagramModel: DiagramModel<Descriptor>,
+        private diagramView: DiagramView<Descriptor>,
+        private mouseHandler: MouseHandler<Descriptor>,
         private keyHandler: KeyHandler,
         // private gamepadHandler: GamepadHandler
     ) {
@@ -40,8 +41,8 @@ export class DefaultEditor {
 
     private onKeyPressed(keyMap: Set<number>) {
         if (keyMap.has(KEY_CODES.DELETE) && this.diagramModel.selection.elements.size > 0) {
-            const nodesToDelete: Node[] = [];
-            const linksToDelete: Link[] = [];
+            const nodesToDelete: Node<Descriptor>[] = [];
+            const linksToDelete: Link<Descriptor>[] = [];
             this.diagramModel.selection.elements.forEach(el => {
                 if (el instanceof Node) {
                     nodesToDelete.push(el);
@@ -54,7 +55,7 @@ export class DefaultEditor {
         }
     }
 
-    private onElementDrag(event: MouseEvent | TouchEvent | MouseWheelEvent, target: Element) {
+    private onElementDrag(event: MouseEvent | TouchEvent | MouseWheelEvent, target: Element<Descriptor>) {
         if (target instanceof Link) { return; }
         if (event instanceof TouchEvent && event.touches.length === 0) { return; }
 
@@ -72,7 +73,7 @@ export class DefaultEditor {
         target.setPosition(newNodePosition);
     }
 
-    private onElementDragEnd(event: MouseEvent | TouchEvent | MouseWheelEvent, target: Element) {
+    private onElementDragEnd(event: MouseEvent | TouchEvent | MouseWheelEvent, target: Element<Descriptor>) {
         this.onElementDrag(event, target);
     }
 }

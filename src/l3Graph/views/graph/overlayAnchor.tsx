@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
 import { ReactOverlay, createContextProvider, enrichOverlay } from '../../customization';
@@ -18,7 +17,10 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
     readonly _renderedOverlays = new Map<string, HTMLElement>();
     readonly _overlayPositions: Map<string, OverlayPosition>;
     readonly sprite: CSS3DSprite;
-    protected overlaysByPosition: Map<OverlayPosition, Map<string, ReactOverlay>>;
+    protected overlaysByPosition: Map<
+        OverlayPosition,
+        Map<string, ReactOverlay<Model>>
+    >;
 
     constructor(
         protected meshModel: Model,
@@ -31,12 +33,12 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
         this._overlayPositions = new Map();
     }
 
-    get overlays(): ReadonlyMap<OverlayPosition, ReadonlyMap<string, ReactOverlay>> {
+    get overlays(): ReadonlyMap<OverlayPosition, ReadonlyMap<string, ReactOverlay<Model>>> {
         return this.overlaysByPosition;
     }
 
-    hasOverlay(owelrayId: string): boolean {
-        return this._overlayPositions.has(owelrayId);
+    hasOverlay(overlayId: string): boolean {
+        return this._overlayPositions.has(overlayId);
     }
 
     isVisible() {
@@ -49,7 +51,7 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
         });
     }
 
-    setOverlay(overlay: ReactOverlay, position: OverlayPosition) {
+    setOverlay(overlay: ReactOverlay<Model>, position: OverlayPosition) {
         if (!this.overlaysByPosition.has(position)) {
             this.overlaysByPosition.set(position, new Map());
         }
@@ -80,8 +82,8 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
         }
     }
 
-    protected enrichOverlay(pooreOverlay: ReactOverlay): ReactOverlay {
-        return enrichOverlay(pooreOverlay, this.meshModel);
+    protected enrichOverlay(poorOverlay: ReactOverlay<Model>): ReactOverlay<Model> {
+        return enrichOverlay(poorOverlay, this.meshModel);
     }
 
     protected overlayedGroup = (props: any) => {
@@ -132,7 +134,7 @@ export abstract class AbstractOverlayAnchor<Model, View> extends Subscribable<Ov
         }
     }
 
-    private renderOverlay(poorOverlay: ReactOverlay, position: OverlayPosition) {
+    private renderOverlay(poorOverlay: ReactOverlay<Model>, position: OverlayPosition) {
         const overlay = this.enrichOverlay(poorOverlay);
         const key = `position-${position}-${poorOverlay.id}`;
         if (overlay.context) {

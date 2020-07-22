@@ -7,17 +7,18 @@ import { multiply, sum, distance, vector3dToTreeVector3 } from '../../utils';
 import { Vector3d } from '../../models/structures';
 import { AbstractOverlayAnchor, OverlayPosition } from './overlayAnchor';
 import { LinkRouter, getPointAlongPolylineByRatio } from '../../utils/linkRouter';
-import { DiagramElementView } from '../viewInterface';
+import { View } from '../viewInterface';
 import { AbstractOverlayAnchor3d, applyOffset } from './overlay3DAnchor';
 import { Rendered3dSprite } from '../../utils/htmlToSprite';
 import { SELECTION_PADDING } from '../widgets/selectionView';
+import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
 const ARROW_LENGTH = 10;
 
-export class LinkView implements DiagramElementView {
+export class LinkView<Descriptor extends GraphDescriptor> implements View<Link<Descriptor>> {
     public readonly mesh: THREE.Group;
-    public readonly overlayAnchor: LinkOverlayAnchor;
-    public readonly overlayAnchor3d: LinkOverlayAnchor3d;
+    public readonly overlayAnchor: LinkOverlayAnchor<Descriptor>;
+    public readonly overlayAnchor3d: LinkOverlayAnchor3d<Descriptor>;
     public polyline: Vector3d[] = [];
 
     private lines: THREE.Group[];
@@ -28,9 +29,9 @@ export class LinkView implements DiagramElementView {
     private boundingBox: THREE.Box3;
 
     constructor(
-        public readonly model: Link,
-        public readonly router: LinkRouter,
-        private template: LinkViewTemplate,
+        public readonly model: Link<Descriptor>,
+        public readonly router: LinkRouter<Descriptor>,
+        private template: LinkViewTemplate<Descriptor>,
     ) {
         this.model = model;
 
@@ -50,7 +51,10 @@ export class LinkView implements DiagramElementView {
         // Overlay
         this.overlayAnchor = new LinkOverlayAnchor(this.model, this);
         if (this.model.data) {
-            this.overlayAnchor.setOverlay(enrichOverlay(DEFAULT_LINK_OVERLAY, this.model.data), 'c');
+            this.overlayAnchor.setOverlay(enrichOverlay(
+                DEFAULT_LINK_OVERLAY as any,
+                this.model
+            ), 'c');
         }
 
         this.overlayAnchor3d = new LinkOverlayAnchor3d(this.model, this, this.overlayAnchor);
@@ -98,7 +102,8 @@ export class LinkView implements DiagramElementView {
 }
 
 // It is not completed, but for now it's enough
-export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link, LinkView> {
+export class LinkOverlayAnchor<Descriptor extends GraphDescriptor> extends
+AbstractOverlayAnchor<Link<Descriptor>, LinkView<Descriptor>> {
     getModelFittingBox() {
         const polyline = this.meshView.polyline;
         if (polyline.length > 0) {
@@ -124,7 +129,8 @@ export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link, LinkView> {
 }
 
 // The same here
-export class LinkOverlayAnchor3d extends AbstractOverlayAnchor3d<Link, LinkView> {
+export class LinkOverlayAnchor3d<Descriptor extends GraphDescriptor> extends
+AbstractOverlayAnchor3d<Link<Descriptor>, LinkView<Descriptor>> {
     forceUpdate() {
         this.meshModel.forceUpdate();
     }
@@ -171,7 +177,7 @@ export class LinkOverlayAnchor3d extends AbstractOverlayAnchor3d<Link, LinkView>
 // 1 - lines can't have thikness on Windows OS,
 // 2 - There is bug with lines when they are too close to the camera
 // There is simpleLinkView.ts - you can check the behavior
-function createLine(template: LinkViewTemplate): THREE.Group {
+function createLine<Descriptor extends GraphDescriptor>(template: LinkViewTemplate<Descriptor>): THREE.Group {
     const lineGeometry = new THREE.PlaneGeometry(1, 0.5 * template.thickness, 1, 1);
     const lineMaterial = new THREE.MeshBasicMaterial({color: template.color, side: THREE.DoubleSide});
     const line1 = new THREE.Mesh(lineGeometry, lineMaterial);

@@ -4,19 +4,21 @@ import { KeyHandler, KEY_CODES, EventObject, Subscribable } from '../utils';
 import { ViewController, ViewControllerEvents } from './viewController';
 import { VrManager } from '../vrUtils/vrManager';
 import { GamepadHandler } from '../vrUtils/gamepadHandler';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
 
-export class VrViewController extends Subscribable<ViewControllerEvents> implements ViewController {
+export class VrViewController<Descriptor extends GraphDescriptor> extends
+Subscribable<ViewControllerEvents> implements ViewController {
     public readonly id = 'vr-view-controller';
     public readonly label = 'VR View Controller';
 
-    private vrManager: VrManager;
+    private vrManager: VrManager<Descriptor>;
     private connectionPromise: Promise<void>;
 
     constructor(
-        protected view: DiagramView,
-        protected mouseHandler: MouseHandler,
+        protected view: DiagramView<Descriptor>,
+        protected mouseHandler: MouseHandler<Descriptor>,
         protected keyHandler: KeyHandler,
-        protected gamepadHandler: GamepadHandler,
+        protected gamepadHandler: GamepadHandler<Descriptor>,
     ) {
         super();
         this.vrManager = this.view.vrManager;

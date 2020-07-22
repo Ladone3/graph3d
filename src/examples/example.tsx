@@ -4,13 +4,16 @@ import {
     L3Graph,
     applyForceLayout3d,
     MeshObj,
-    NodeViewTemplate,
+    ViewTemplate,
     FocusNodeWidget,
     ReactNodeWidgetView,
     WidgetViewContext, WidgetModelContext,
     MeshKind,
     Toolbar,
     ViewController,
+    GraphDescriptor,
+    OverlayProps,
+    NodeOverlayProps,
 } from '../index';
 import { generateData } from './generateData';
 
@@ -19,35 +22,33 @@ const cubePortal = require<string>('./portalCube.obj');
 const cat3d = require<string>('./cat.obj');
 const person3d = require<string>('./dummy_obj.obj');
 
-interface NodeData {
-    label: string;
-}
+export type CustomGraphDescriptor = GraphDescriptor<{name?: string}, {label?: string}>;
 
-class NodeSprite extends React.Component<NodeData> {
+class NodeOverlay extends React.Component<NodeOverlayProps<CustomGraphDescriptor>> {
     render() {
-        const {label} = this.props;
+        const {name} = this.props.target.data;
 
         return <div className='l3graph-node-template'>
-            Label: {label} - redefined template.
+            Label: {name}.
         </div>;
     }
 }
 
-class WidgetSprite extends React.Component<NodeData> {
+class WidgetOverlay extends React.Component<NodeOverlayProps<CustomGraphDescriptor>> {
     render() {
-        const {label} = this.props;
+        const {name} = this.props.target.data;
 
         return <div className='l3graph-widget-overlay'>
-            Super overlay with label: {label}.
+            Super overlay with label: {name}.
         </div>;
     }
 }
 
-const NODE_OVERLAY = {id: 'node-overlay', value: <NodeSprite label=''/>};
-const WIDGET_OVERLAY = {id: 'test-widget-overlay', value: <WidgetSprite label=''/>};
+const NODE_OVERLAY = {id: 'node-overlay', value: <NodeOverlay/>};
+const WIDGET_OVERLAY = {id: 'test-widget-overlay', value: <WidgetOverlay/>};
 const rootHtml = document.getElementById('rootHtml');
 
-const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
+const CUSTOM_NODE_TEMPLATE_1: ViewTemplate<CustomGraphDescriptor['nodeContentType']> = {
     mesh: () => {
         const shapeNumber = Math.round(Math.random() * 8);
         // const randomSize = 10 + Math.round(Math.random() * 20);
@@ -80,30 +81,19 @@ const CUSTOM_NODE_TEMPLATE_1: NodeViewTemplate<{label: string}> = {
             };
         }
     },
-};
-
-const CUSTOM_NODE_TEMPLATE_2: NodeViewTemplate<{label: string}> = {
-    mesh: (): MeshObj => ({
-        type: MeshKind.Obj,
-        markup: cubePortal,
-    }),
-    overlay: NODE_OVERLAY as any,
+    overlay: NODE_OVERLAY,
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    let l3Graph: L3Graph;
+    let l3Graph: L3Graph<CustomGraphDescriptor>;
     mountGraph();
 
     function mountGraph() {
         ReactDOM.render(React.createElement(L3Graph, {
             viewOptions: {
-                // nodeTemplateProvider: (data: {label: string; types: string[]}) => {
-                //     if (data.types.indexOf('l3graph-node-custom') !== -1) {
-                //         return CUSTOM_NODE_TEMPLATE_2;
-                //     } else {
-                //         return CUSTOM_NODE_TEMPLATE_1;
-                //     }
-                // },
+                nodeTemplateProvider: () => {
+                    return CUSTOM_NODE_TEMPLATE_1 as any;
+                },
                 linkTemplateProvider: () => ({
                     color: 'green',
                     thickness: 2,
@@ -122,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })), rootHtml);
     }
 
-    function onComponentMount(l3graph: L3Graph) {
+    function onComponentMount(l3graph: L3Graph<CustomGraphDescriptor>) {
         l3Graph = l3graph;
         const graphElements = generateData(10);
         l3graph.model.graph.addNodes(graphElements.nodes);
@@ -130,11 +120,14 @@ document.addEventListener('DOMContentLoaded', () => {
         applyForceLayout3d(l3graph.model.graph, 30, 200);
 
         l3graph.registerWidget({
-            getModel: (context: WidgetModelContext) => new FocusNodeWidget({
-                ...context,
-                widgetId: 'l3graph-react-node-widget',
-            } as any) ,
-            getView: (context: WidgetViewContext) => new ReactNodeWidgetView({
+            getModel: (context: WidgetModelContext<CustomGraphDescriptor>) =>
+                new FocusNodeWidget<CustomGraphDescriptor>({
+                    ...context,
+                    widgetId: 'l3graph-react-node-widget',
+                } as any) ,
+            getView: (
+                context: WidgetViewContext<FocusNodeWidget<GraphDescriptor>, GraphDescriptor>
+            ) => new ReactNodeWidgetView({
                 model: context.widget as any,
                 diagramView: context.diagramView,
                 position: 'w',

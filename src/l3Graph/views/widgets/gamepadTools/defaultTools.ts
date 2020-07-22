@@ -2,10 +2,11 @@ import * as THREE from 'three';
 import { GamepadHandler, GAMEPAD_BUTTON, OCULUS_CONTROLLERS } from '../../../vrUtils/gamepadHandler';
 import { Subscribable, setColor, backupColors, restoreColors } from '../../../utils';
 import { VrManager } from '../../../vrUtils/vrManager';
+import { GraphDescriptor } from '../../../models/graph/graphDescriptor';
 
-export interface GamepadToolProps {
-    gamepadHandler: GamepadHandler;
-    vrManager: VrManager;
+export interface GamepadToolProps<Descriptor extends GraphDescriptor> {
+    gamepadHandler: GamepadHandler<Descriptor>;
+    vrManager: VrManager<Descriptor>;
 }
 
 export interface GamepadToolEvents {
@@ -31,9 +32,9 @@ export abstract class GamepadTool extends Subscribable<GamepadToolEvents> {
     public abstract onDiscard(): void;
 }
 
-export class LeftGamepadTool extends GamepadTool {
+export class LeftGamepadTool<Descriptor extends GraphDescriptor> extends GamepadTool {
     protected TARGET_BUTTON = GAMEPAD_BUTTON.LEFT_TRIGGER;
-    constructor(protected props: GamepadToolProps) {
+    constructor(protected props: GamepadToolProps<Descriptor>) {
         super();
         this.forGamepadId = OCULUS_CONTROLLERS.LEFT_CONTROLLER;
         this.props.gamepadHandler = props.gamepadHandler;
@@ -101,8 +102,8 @@ export class LeftGamepadTool extends GamepadTool {
     }
 }
 
-export class RightGamepadTool extends LeftGamepadTool {
-    constructor(props: GamepadToolProps) {
+export class RightGamepadTool<Descriptor extends GraphDescriptor> extends LeftGamepadTool<Descriptor> {
+    constructor(props: GamepadToolProps<Descriptor>) {
         super(props);
         this.forGamepadId = OCULUS_CONTROLLERS.RIGHT_CONTROLLER;
     }

@@ -4,38 +4,39 @@ import { DiagramWidgetView } from '../viewInterface';
 import { WidgetViewResolver, Widget } from '../../models/widgets/widget';
 import { VrManager } from '../../vrUtils/vrManager';
 import { DiagramView } from '../diagramView';
+import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
-export interface WidgetsViewProps {
-    diagramView: DiagramView;
-    vrManager: VrManager;
+export interface WidgetsViewProps<Descriptor extends GraphDescriptor> {
+    diagramView: DiagramView<Descriptor>;
+    vrManager: VrManager<Descriptor>;
     widgetsModel: WidgetsModel;
     onAdd3dObject: (object: THREE.Object3D) => void;
     onRemove3dObject: (object: THREE.Object3D) => void;
 }
 
-export class WidgetsView {
+export class WidgetsView<CustomWidget extends Widget, Descriptor extends GraphDescriptor> {
     private views: Map<string, DiagramWidgetView>;
-    private viewRegistry: Map<string, WidgetViewResolver>;
+    private viewRegistry: Map<string, WidgetViewResolver<CustomWidget, Descriptor>>;
 
-    diagramView: DiagramView;
-    vrManager: VrManager;
+    diagramView: DiagramView<Descriptor>;
+    vrManager: VrManager<Descriptor>;
     widgetsModel: WidgetsModel;
 
-    constructor(private props: WidgetsViewProps) {
+    constructor(private props: WidgetsViewProps<Descriptor>) {
         this.views = new Map();
         this.diagramView = props.diagramView;
         this.vrManager = props.vrManager;
         this.viewRegistry = new Map();
         this.widgetsModel = props.widgetsModel;
-        this.widgetsModel.widgets.forEach(widget => this.registerWidgetViewForModel(widget));
+        this.widgetsModel.widgets.forEach(widget => this.registerWidgetViewForModel(widget as any));
     }
 
-    public registerViewResolver(widgetId: string, viewResolver: WidgetViewResolver) {
+    public registerViewResolver(widgetId: string, viewResolver: WidgetViewResolver<CustomWidget, Descriptor>) {
         this.viewRegistry.set(widgetId, viewResolver);
     }
 
     // todo - rename it
-    public registerWidgetViewForModel(widget: Widget) {
+    public registerWidgetViewForModel(widget: CustomWidget) {
         const widgetViewExists = this.views.get(widget.widgetId);
         if (widgetViewExists) {
             return; // We already have view for this widget
@@ -75,16 +76,16 @@ export class WidgetsView {
         }
         this.views.delete(widget.widgetId);
     }
-    
+
     private onAdd3dObject(object: THREE.Object3D) {
-        this.props.onAdd3dObject(object)
+        this.props.onAdd3dObject(object);
     }
 
     private onRemove3dObject(object: THREE.Object3D) {
-        this.props.onRemove3dObject(object)
+        this.props.onRemove3dObject(object);
     }
 
-    private findViewForWidget(widget: Widget): DiagramWidgetView | undefined {
+    private findViewForWidget(widget: CustomWidget): DiagramWidgetView | undefined {
         return this.viewRegistry.get(widget.widgetId)({
             widget,
             diagramView: this.diagramView,

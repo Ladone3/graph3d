@@ -2,22 +2,23 @@ import * as THREE from 'three';
 import { Node } from '../../models/graph/node';
 import { SelectionWidget } from '../../models/widgets/selectionWidget';
 import { DiagramWidgetView } from '../viewInterface';
+import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
 export const SELECTION_PADDING = 5;
 
-export interface SelectionViewParameters {
-    model: SelectionWidget;
+export interface SelectionViewParameters<Descriptor extends GraphDescriptor> {
+    model: SelectionWidget<Descriptor>;
 }
 
-export class SelectionView implements DiagramWidgetView {
+export class SelectionView<Descriptor extends GraphDescriptor> implements DiagramWidgetView {
     public readonly material: THREE.MeshLambertMaterial;
     public readonly geometry: THREE.BoxGeometry;
     public readonly mesh: THREE.Mesh;
 
-    readonly model: SelectionWidget;
+    readonly model: SelectionWidget<Descriptor>;
     private boundingBox: THREE.Box3;
 
-    constructor(parameters: SelectionViewParameters) {
+    constructor(parameters: SelectionViewParameters<Descriptor>) {
         this.model = parameters.model;
         this.material = new THREE.MeshLambertMaterial({color: 'red', opacity: 0.1, transparent: true});
         this.geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -31,7 +32,7 @@ export class SelectionView implements DiagramWidgetView {
     }
 
     public update() {
-        const nodes: Node[] = [];
+        const nodes: Node<Descriptor>[] = [];
         for (const element of this.model.selectedElements) {
             if (element instanceof Node) {
                 nodes.push(element);

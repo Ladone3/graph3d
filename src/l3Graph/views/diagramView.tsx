@@ -1,29 +1,28 @@
 import * as React from 'react';
 import * as THREE from 'three';
 import { Vector3d, Vector2d } from '../models/structures';
-import { NodeTemplateProvider, LinkTemplateProvider } from '../customization';
+import { TemplateProvider } from '../customization';
 import { GraphView } from './graph/graphView';
 import { DiagramModel } from '../models/diagramModel';
-import { Element, GraphModelEvents } from '../models/graph/graphModel';
 import { WidgetsView } from './widgets/widgetsView';
 import { Widget } from '../models/widgets/widget';
 import { vector3dToTreeVector3, EventObject, eventToPosition } from '../utils';
-import { WidgetsModelEvents } from '../models/widgets/widgetsModel';
 import { WebGLRenderer } from '../vrUtils/webVr';
 import { VrManager } from '../vrUtils/vrManager';
 import { CSS3DRenderer } from '../utils/CSS3DRenderer';
-import { NodeId } from '../models/graph/node';
-import { LinkId } from '../models/graph/link';
+import { NodeId, Node } from '../models/graph/node';
+import { LinkId, Link } from '../models/graph/link';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
 
-export interface ViewOptions {
-    nodeTemplateProvider?: NodeTemplateProvider;
-    linkTemplateProvider?: LinkTemplateProvider;
+export interface ViewOptions<Descriptor extends GraphDescriptor> {
+    nodeTemplateProvider?: TemplateProvider<Node<Descriptor>>;
+    linkTemplateProvider?: TemplateProvider<Link<Descriptor>, Descriptor>;
 }
 
-export interface DiagramViewProps {
-    model: DiagramModel;
-    onViewMount?: (view: DiagramView) => void;
-    viewOptions?: ViewOptions;
+export interface DiagramViewProps<Descriptor extends GraphDescriptor> {
+    model: DiagramModel<Descriptor>;
+    onViewMount?: (view: DiagramView<Descriptor>) => void;
+    viewOptions?: ViewOptions<Descriptor>;
 }
 
 export interface CameraState {
@@ -38,18 +37,18 @@ export const DEFAULT_SCREEN_PARAMETERS = {
     FAR: 10000,
 };
 
-export class DiagramView extends React.Component<DiagramViewProps> {
+export class DiagramView<Descriptor extends GraphDescriptor> extends React.Component<DiagramViewProps<Descriptor>> {
     renderer: WebGLRenderer;
     overlayRenderer: CSS3DRenderer;
 
-    graphView: GraphView;
-    widgetsView: WidgetsView;
+    graphView: GraphView<Descriptor>;
+    widgetsView: WidgetsView<any, Descriptor>;
 
     camera: THREE.PerspectiveCamera;
     scene: THREE.Scene;
     meshHtmlContainer: HTMLElement;
     overlayHtmlContainer: HTMLElement;
-    vrManager: VrManager;
+    vrManager: VrManager<Descriptor>;
 
     screenParameters: {
         WIDTH: number;
@@ -60,7 +59,7 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         FAR: number;
     };
 
-    constructor(props: DiagramViewProps) {
+    constructor(props: DiagramViewProps<Descriptor>) {
         super(props);
     }
 

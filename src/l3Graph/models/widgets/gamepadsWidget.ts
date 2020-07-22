@@ -1,9 +1,10 @@
 import { Widget } from './widget';
 import { GamepadHandler, OCULUS_CONTROLLERS } from '../../vrUtils/gamepadHandler';
 import { GamepadTool } from '../../views/widgets/gamepadTools/defaultTools';
+import { GraphDescriptor } from '../graph/graphDescriptor';
 
-export interface GamepadsWidgetProps {
-    gamepadHandler: GamepadHandler;
+export interface GamepadsWidgetProps<Descriptor extends GraphDescriptor> {
+    gamepadHandler: GamepadHandler<Descriptor>;
     leftTools: GamepadTool[];
     rightTools: GamepadTool[];
 }
@@ -13,11 +14,11 @@ export interface GamepadsTools {
     rightTool: GamepadTool;
 }
 
-export class GamepadsWidget extends Widget {
+export class GamepadsWidget<Descriptor extends GraphDescriptor> extends Widget {
     public readonly widgetId: string;
     private _tools: GamepadsTools;
 
-    constructor(private props: GamepadsWidgetProps) {
+    constructor(private props: GamepadsWidgetProps<Descriptor>) {
         super();
         this.widgetId = 'l3graph-gamepad-widget';
 

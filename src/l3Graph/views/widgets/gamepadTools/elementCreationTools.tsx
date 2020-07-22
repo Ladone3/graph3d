@@ -6,27 +6,23 @@ import { Element, NodeDefinition } from '../../../models/graph/graphModel';
 import { htmlToImage } from '../../../utils/htmlToSprite';
 import { LeftGamepadEditorTool, GamepadEditorToolProps } from './editorTools';
 import { EventObject } from '../../../utils';
+import { GraphDescriptor } from '../../../models/graph/graphDescriptor';
 
 export interface StateControllerEvents {
     'update': void;
 }
 
-export interface EditorState {
-    node?: NodeDefinition;
-    displayImage?: HTMLImageElement;
-}
-
-export interface LeftCreationToolProps extends GamepadEditorToolProps {
+export interface LeftCreationToolProps<Descriptor extends GraphDescriptor> extends GamepadEditorToolProps<Descriptor> {
     nodeIdPrefix: string;
 }
 
-export class LeftCreationTool extends LeftGamepadEditorTool {
-    private node?: NodeDefinition;
+export class LeftCreationTool<Descriptor extends GraphDescriptor> extends LeftGamepadEditorTool<Descriptor> {
+    private node?: NodeDefinition<Descriptor['nodeContentType']>;
     private rootHtml: HTMLElement;
     private container: HTMLElement;
     private idCounter: number;
 
-    constructor(protected props: LeftCreationToolProps) {
+    constructor(protected props: LeftCreationToolProps<Descriptor>) {
         super(props);
         this.idCounter = 0;
 
@@ -71,7 +67,7 @@ export class LeftCreationTool extends LeftGamepadEditorTool {
         };
     }
 
-    protected onKeyUp = (e: EventObject<'keyUp', Map<GAMEPAD_BUTTON, Element>>) => {
+    protected onKeyUp = (e: EventObject<'keyUp', Map<GAMEPAD_BUTTON, Element<Descriptor>>>) => {
         if (e.data.has(this.BUTTON_CONFIG.createButton)) {
             this.node.position = this.getTargetPosition();
             this.props.diagramModel.graph.addNodes([this.node]);
@@ -99,7 +95,7 @@ export class LeftCreationTool extends LeftGamepadEditorTool {
         );
     }
 
-    private onRefreshDone(node: NodeDefinition) {
+    private onRefreshDone(node: NodeDefinition<Descriptor['nodeContentType']>) {
         this.rootHtml.style.display = 'block';
         htmlToImage(this.container as HTMLElement).then(img => {
             this.node = node;

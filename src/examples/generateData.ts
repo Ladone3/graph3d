@@ -1,4 +1,5 @@
 import { LinkModel, NodeDefinition } from '../index';
+import { CustomGraphDescriptor } from './example';
 
 export interface NodeData {
     label: string;
@@ -8,16 +9,15 @@ export function generateData(
     nodeNumber: number = 50,
     linkDuplicationNumber: number = 1,
 ) {
-    const nodes: NodeDefinition[] = [];
-    const links: LinkModel<{label: string}>[] = [];
+    const nodes: NodeDefinition<CustomGraphDescriptor['nodeContentType']>[] = [];
+    const links: LinkModel<CustomGraphDescriptor['linkContentType']>[] = [];
     const linkMap = new Set<string>();
 
     for (let i = 0; i < nodeNumber; i++) {
         nodes.push({
             id: `Node-${i}`,
             data: {
-                label: 'Node ' + i,
-                types: i % 10 === 0 ? ['l3graph-node-custom'] : ['l3graph-node'],
+                name: 'Node ' + i,
             },
             position: { x: 0, y: 0, z: 0 },
         });

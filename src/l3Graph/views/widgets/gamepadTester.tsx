@@ -2,10 +2,11 @@ import * as THREE from 'three';
 import { GamepadTool } from './gamepadTools/defaultTools';
 import { DiagramWidgetView } from '../viewInterface';
 import { GamepadsWidget } from '../../models/widgets/gamepadsWidget';
+import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
-export class GamepadTester implements DiagramWidgetView {
+export class GamepadTester<Descriptor extends GraphDescriptor> implements DiagramWidgetView {
     public readonly tool: GamepadTool;
-    public readonly model: GamepadsWidget;
+    public readonly model: GamepadsWidget<Descriptor>;
     public readonly mesh: THREE.Group;
 
     private boundingBox: THREE.Box3 = new THREE.Box3();

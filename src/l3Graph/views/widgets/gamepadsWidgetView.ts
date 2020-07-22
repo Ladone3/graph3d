@@ -3,22 +3,23 @@ import { DiagramWidgetView } from '../viewInterface';
 import { GamepadsWidget } from '../../models/widgets/gamepadsWidget';
 import { OCULUS_CONTROLLERS } from '../../vrUtils/gamepadHandler';
 import { VrManager } from '../../vrUtils/vrManager';
+import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
-export interface GamepadsWidgetViewParameters {
-    model: GamepadsWidget;
-    vrManager: VrManager;
+export interface GamepadsWidgetViewParameters<Descriptor extends GraphDescriptor> {
+    model: GamepadsWidget<Descriptor>;
+    vrManager: VrManager<Descriptor>;
 }
 
-export class GamepadsWidgetView implements DiagramWidgetView {
-    public readonly model: GamepadsWidget;
+export class GamepadsWidgetView<Descriptor extends GraphDescriptor> implements DiagramWidgetView {
+    public readonly model: GamepadsWidget<Descriptor>;
     public readonly mesh: THREE.Group;
 
-    private vrManager: VrManager;
+    private vrManager: VrManager<Descriptor>;
     private boundingBox: THREE.Box3 = new THREE.Box3();
     private leftGamepad: THREE.Group;
     private rightGamepad: THREE.Group;
 
-    constructor(parameters: GamepadsWidgetViewParameters) {
+    constructor(parameters: GamepadsWidgetViewParameters<Descriptor>) {
         this.vrManager = parameters.vrManager;
         this.model = parameters.model;
 

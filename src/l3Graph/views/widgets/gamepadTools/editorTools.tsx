@@ -6,12 +6,11 @@ import { MeshObj, MeshKind } from '../../../customization';
 import { GamepadTool } from './defaultTools';
 import { DiagramModel } from '../../../models/diagramModel';
 import { Element } from '../../../models/graph/graphModel';
-import { Node } from '../../../models/graph/node';
-import { Link } from '../../../models/graph/link';
 import { VrManager } from '../../../vrUtils/vrManager';
 import { DEFAULT_SCREEN_PARAMETERS } from '../../diagramView';
 import { ImageMesh } from './imageMesh';
 import { Vector3d } from '../../../models/structures';
+import { GraphDescriptor } from '../../../models/graph/graphDescriptor';
 
 export const DISPLAY_TARGET_WIDTH = 0.2;
 export const DISPLAY_OFFSET = -5;
@@ -36,13 +35,13 @@ const LEFT_GAMEPAD_COLOR = 'green';
 const RIGHT_GAMEPAD_COLOR = 'blue';
 const DEFAULT_CREATION_DISTANCE = 150;
 
-export interface GamepadEditorToolProps {
-    gamepadHandler: GamepadHandler;
-    diagramModel: DiagramModel;
-    vrManager: VrManager;
+export interface GamepadEditorToolProps<Descriptor extends GraphDescriptor> {
+    gamepadHandler: GamepadHandler<Descriptor>;
+    diagramModel: DiagramModel<Descriptor>;
+    vrManager: VrManager<Descriptor>;
 }
 
-export class LeftGamepadEditorTool extends GamepadTool {
+export class LeftGamepadEditorTool<Descriptor extends GraphDescriptor> extends GamepadTool {
     protected display: ImageMesh;
     protected mockObject: THREE.Object3D;
 
@@ -65,7 +64,7 @@ export class LeftGamepadEditorTool extends GamepadTool {
         return this.props.vrManager.getController(OCULUS_CONTROLLERS.LEFT_CONTROLLER);
     }
 
-    constructor(protected props: GamepadEditorToolProps) {
+    constructor(protected props: GamepadEditorToolProps<Descriptor>) {
         super();
         const {group, mockObject} = renderEditorToolMesh(this.COLOR, this.ROTATE_Y_ANGLE, DEFAULT_CREATION_DISTANCE);
 
@@ -100,14 +99,14 @@ export class LeftGamepadEditorTool extends GamepadTool {
     }
 
     public onDiscard() {
-        this.props.gamepadHandler.unsubscribe('keyPressed', this.onKeyPressed);
+        this.props.gamepadHandler.unsubscribe('keyPressed', this.onKeyPressed as any);
     }
 
     protected render = () => {
         this.display.position.setX(-DISPLAY_TARGET_WIDTH + DISPLAY_OFFSET);
     }
 
-    protected onKeyPressed = (e: EventObject<'keyPressed', Map<GAMEPAD_BUTTON, Element>>) => {
+    protected onKeyPressed = (e: EventObject<'keyPressed', Map<GAMEPAD_BUTTON, Element<Descriptor>>>) => {
         if (e.data.has(this.BUTTON_CONFIG.pushMock) || e.data.has(this.BUTTON_CONFIG.pullMock)) {
             let distance = this.mockObject.position.z;
             if (e.data.has(this.BUTTON_CONFIG.pushMock) && !e.data.has(this.BUTTON_CONFIG.pullMock)) {
@@ -127,8 +126,8 @@ export class LeftGamepadEditorTool extends GamepadTool {
     }
 }
 
-export class RightGamepadEditorTool extends LeftGamepadEditorTool {
-    constructor(props: GamepadEditorToolProps) {
+export class RightGamepadEditorTool<Descriptor extends GraphDescriptor> extends LeftGamepadEditorTool<Descriptor> {
+    constructor(props: GamepadEditorToolProps<Descriptor>) {
         super(props);
         this.forGamepadId = OCULUS_CONTROLLERS.RIGHT_CONTROLLER;
     }

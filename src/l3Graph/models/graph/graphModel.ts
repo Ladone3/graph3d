@@ -1,18 +1,21 @@
 import { Node, NodeModel, NodeParameters, NodeId } from './node';
 import { Link, LinkModel, LinkId } from './link';
 import { Subscribable } from '../../utils/subscribable';
+import { GraphDescriptor } from './graphDescriptor';
 
-export type NodeDefinition<Content = any> = NodeModel<Content> & NodeParameters;
-export type Element = Node | Link;
-export type ElementModel = NodeModel | LinkModel;
+export type NodeDefinition<NodeContent> = NodeModel<NodeContent> & NodeParameters;
+export type Element<Descriptor extends GraphDescriptor> =
+    Node<Descriptor> | Link<Descriptor>;
+export type ElementModel<Descriptor extends GraphDescriptor> =
+    NodeModel<Descriptor['nodeContentType']> | LinkModel<Descriptor['linkContentType']>;
 
-export interface GraphModelEvents {
-    'add:nodes': Node[];
-    'remove:nodes': Node[];
-    'update:nodes': Node[];
-    'add:links': Link[];
-    'remove:links': Link[];
-    'update:links': Link[];
+export interface GraphModelEvents<Descriptor extends GraphDescriptor> {
+    'add:nodes': Node<Descriptor>[];
+    'remove:nodes': Node<Descriptor>[];
+    'update:nodes': Node<Descriptor>[];
+    'add:links': Link<Descriptor>[];
+    'remove:links': Link<Descriptor>[];
+    'update:links': Link<Descriptor>[];
 }
 
 export interface ImmutableMap<K, V> {
@@ -28,15 +31,15 @@ export interface ImmutableSet<T> {
     readonly size: number;
 }
 
-export class GraphModel extends Subscribable<GraphModelEvents> {
-    private _nodes: Map<NodeId, Node> = new Map();
-    private _links: Map<LinkId, Link> = new Map();
+export class GraphModel<Descriptor extends GraphDescriptor> extends Subscribable<GraphModelEvents<Descriptor>> {
+    private _nodes: Map<NodeId, Node<Descriptor>> = new Map();
+    private _links: Map<LinkId, Link<Descriptor>> = new Map();
 
-    get nodes(): ImmutableMap<NodeId, Node> {
+    get nodes(): ImmutableMap<NodeId, Node<Descriptor>> {
         return this._nodes;
     }
 
-    get links(): ImmutableMap<LinkId, Link> {
+    get links(): ImmutableMap<LinkId, Link<Descriptor>> {
         return this._links;
     }
 
@@ -48,8 +51,8 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         return this.links.get(id);
     }
 
-    public addNodes(nodes: NodeDefinition[]) {
-        const newNodes: Node[] = [];
+    public addNodes(nodes: NodeDefinition<Descriptor['nodeContentType']>[]) {
+        const newNodes: Node<Descriptor>[] = [];
         for (const model of nodes) {
             if (!this._nodes.has(model.id)) {
                 const parameters: NodeParameters = model;
@@ -64,8 +67,8 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         }
     }
 
-    public addLinks(models: LinkModel[]) {
-        const newLinks: Link[] = [];
+    public addLinks(models: LinkModel<Descriptor['linkContentType']>[]) {
+        const newLinks: Link<Descriptor>[] = [];
         for (const model of models) {
             if (!this._links.has(model.id)) {
                 const endpointsAreNotExists = !(
@@ -97,7 +100,7 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         }
     }
 
-    public updateNodes(definitions: NodeDefinition[]) {
+    public updateNodes(definitions: NodeDefinition<Descriptor['nodeContentType']>[]) {
         for (const definition of definitions) {
             const node = this._nodes.get(definition.id);
             node.setData(definition.data);
@@ -108,52 +111,49 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         }
     }
 
-    public updateLinks(models: LinkModel[]) {
+    public updateLinks(models: LinkModel<Descriptor['linkContentType']>[]) {
         for (const model of models) {
             const link = this._links.get(model.id);
             link.setData(model.data);
         }
     }
 
-    private subscribeOnNode(element: Node) {
+    private subscribeOnNode(element: Node<Descriptor>) {
         element.on('force-update', () => this.performNodeUpdate(element));
         element.on('change:position', () => this.performNodeUpdate(element));
         element.on('change:size', () => this.performNodeUpdate(element));
     }
 
-    private subscribeOnLink(element: Link) {
+    private subscribeOnLink(element: Link<Descriptor>) {
         element.on('force-update', () => this.performLinkUpdate(element));
     }
 
-    private unsubscribeFromElement(element: Element) {
-        // if (isNode(element)) {
-        //     element.on('');
-        // } else if (isLink(element)) {
-
-        // }
+    private unsubscribeFromElement(element: Element<Descriptor>) {
+        // do nothing for now
     }
 
-    private performNodeUpdate(node: Node) {
+    private performNodeUpdate(node: Node<Descriptor>) {
         this.trigger('update:nodes', [node]);
 
-        const updatedLinks: Link[] = [];
+        const updatedLinks: Link<Descriptor>[] = [];
         node.incomingLinks.forEach(link => {
             updatedLinks.push(link);
         });
         node.outgoingLinks.forEach(link => {
             updatedLinks.push(link);
         });
-        this.trigger('update:links', updatedLinks);
-
+        if (updatedLinks.length > 0) {
+            this.trigger('update:links', updatedLinks);
+        }
     }
 
-    private performLinkUpdate(link: Link) {
+    private performLinkUpdate(link: Link<Descriptor>) {
         this.trigger('update:links', [link]);
     }
 
-    public removeNodes(nodes: Node[]) {
-        const nodesToDelete: Node[] = [];
-        const linksToDelete: Link[] = [];
+    public removeNodes(nodes: Node<Descriptor>[]) {
+        const nodesToDelete: Node<Descriptor>[] = [];
+        const linksToDelete: Link<Descriptor>[] = [];
         for (const {id} of nodes) {
             if (this._nodes.has(id)) {
                 const n = this._nodes.get(id);
@@ -175,8 +175,8 @@ export class GraphModel extends Subscribable<GraphModelEvents> {
         this.trigger('remove:nodes', nodesToDelete);
     }
 
-    public removeLinks(links: Link[]) {
-        const deletedLinks: Link[] = [];
+    public removeLinks(links: Link<Descriptor>[]) {
+        const deletedLinks: Link<Descriptor>[] = [];
         for (const link of links) {
             const id = link.id;
             if (this._links.has(id)) {

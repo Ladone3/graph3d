@@ -2,13 +2,14 @@ import { SelectionWidget } from './models/widgets/selectionWidget';
 import { SelectionView } from './views/widgets/selectionView';
 import { ArrowHelperView } from './views/widgets/arrowHelperView';
 import { ArrowHelper } from './models/widgets/arrowHelper';
-import { WidgetFactory } from './models/widgets/widget';
+import { WidgetFactory, Widget } from './models/widgets/widget';
 import { GamepadsWidget } from './models/widgets/gamepadsWidget';
 import { GamepadsWidgetView } from './views/widgets/gamepadsWidgetView';
 import { LeftCreationTool } from './views/widgets/gamepadTools/elementCreationTools';
 import { RightGamepadTool, LeftGamepadTool } from './views/widgets/gamepadTools/defaultTools';
+import { GraphDescriptor } from './models/graph/graphDescriptor';
 
-export const selectionWidgetFactory: WidgetFactory<SelectionWidget> = {
+export const selectionWidgetFactory: WidgetFactory<SelectionWidget<any>, any> = {
     getModel: context => new SelectionWidget({
         diagramModel: context.diagramModel,
     }),
@@ -17,7 +18,7 @@ export const selectionWidgetFactory: WidgetFactory<SelectionWidget> = {
     }),
 };
 
-export const arrowHelperWidgetFactory: WidgetFactory<ArrowHelper> = {
+export const arrowHelperWidgetFactory: WidgetFactory<ArrowHelper<any>, any> = {
     getModel: context => {
         return new ArrowHelper({mouseHandler: context.mouseHandler});
     },
@@ -26,7 +27,7 @@ export const arrowHelperWidgetFactory: WidgetFactory<ArrowHelper> = {
     }),
 };
 
-export const gamepadsWidgetFactory: WidgetFactory<GamepadsWidget> = {
+export const gamepadsWidgetFactory: WidgetFactory<GamepadsWidget<any>, any> = {
     getModel: context => {
         const {gamepadHandler, diagramModel, vrManager} = context;
         return new GamepadsWidget({
@@ -52,7 +53,7 @@ export const gamepadsWidgetFactory: WidgetFactory<GamepadsWidget> = {
     }),
 };
 
-export const testToolFactory: WidgetFactory<any> = {
+export const testToolFactory: WidgetFactory<any, any> = {
     getModel: context => {
         const {gamepadHandler, diagramModel, vrManager} = context;
         return {
@@ -72,7 +73,7 @@ export const testToolFactory: WidgetFactory<any> = {
         };
     },
     getView: context => {
-        const model: LeftCreationTool = context.widget.model;
+        const model: LeftCreationTool<any> = context.widget.model;
         return {
             mesh: model.mesh,
             getBoundingBox: () => undefined,
@@ -82,9 +83,12 @@ export const testToolFactory: WidgetFactory<any> = {
     },
 };
 
-export const DEFAULT_MESH_WIDGET_SET: WidgetFactory[] = [
-    selectionWidgetFactory,
-    arrowHelperWidgetFactory,
-    gamepadsWidgetFactory,
-    // testToolFactory,
-];
+export function DEFAULT_MESH_WIDGET_SET<Descriptor extends GraphDescriptor>(
+): WidgetFactory<any, Descriptor>[] {
+    return [
+        selectionWidgetFactory,
+        arrowHelperWidgetFactory,
+        gamepadsWidgetFactory,
+        // testToolFactory,
+    ];
+}

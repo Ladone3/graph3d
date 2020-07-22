@@ -1,26 +1,35 @@
 import * as React from 'react';
-import { ReactOverlay } from '.';
+import { ReactOverlay, OverlayProps } from './templates';
+import { Node } from '../models/graph/node';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
+import { Link } from '../models/graph/link';
 
-class DefaultLinkOverlayClass extends React.Component<{label: string}> {
+class DefaultLinkOverlayClass extends React.Component<OverlayProps<Node<GraphDescriptor>>> {
     render() {
-        const {label} = this.props;
+        const {label} = this.props.target.data;
         return <div className='l3graph-link-html-view'>
             {label}
         </div>;
     }
 }
 
-class DefaultNodeOverlayClass extends React.Component<{label: string}> {
+class DefaultNodeOverlayClass extends React.Component<OverlayProps<Link<GraphDescriptor>>> {
     render() {
-        const {label} = this.props;
+        const {label} = this.props.target.data;
         return <div className='l3graph-default-node-view'>
             {label}
         </div>;
     }
 }
 
-export const DEFAULT_LINK_OVERLAY: ReactOverlay = {id: 'link-overlay', value: <DefaultLinkOverlayClass label=''/>};
-export const DEFAULT_NODE_OVERLAY: ReactOverlay = {id: 'node-overlay', value: <DefaultNodeOverlayClass label=''/>};
+export const DEFAULT_NODE_OVERLAY: ReactOverlay<Node<GraphDescriptor>> = {
+    id: 'node-overlay',
+    value: <DefaultNodeOverlayClass/>,
+};
+export const DEFAULT_LINK_OVERLAY: ReactOverlay<Link<GraphDescriptor>> = {
+    id: 'link-overlay',
+    value: <DefaultLinkOverlayClass/>,
+};
 
 export function createContextProvider(context: any): React.ComponentClass {
     class ContextProvider extends React.Component {
@@ -39,17 +48,17 @@ export function createContextProvider(context: any): React.ComponentClass {
     return ContextProvider;
 }
 
-export function enrichOverlay<Data>(
-    pooreOverlay: ReactOverlay<Data>,
-    data: Data,
-): ReactOverlay<Data> {
-    const overlayProps: Data = {
-        ...pooreOverlay.value.props as any,
-        ...data as any,
+export function enrichOverlay<Model>(
+    poorOverlay: ReactOverlay<Model>,
+    data: Model,
+): ReactOverlay<Model> {
+    const overlayProps: OverlayProps<Model> = {
+        ...poorOverlay.value.props,
+        target: data,
     };
 
     return {
-        ...pooreOverlay,
-        value: React.cloneElement(pooreOverlay.value, overlayProps),
+        ...poorOverlay,
+        value: React.cloneElement(poorOverlay.value, overlayProps),
     };
 }

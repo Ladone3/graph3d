@@ -1,20 +1,21 @@
 import { NodeWidget, NodeWidgetParameters } from './nodeWidget';
 import { Node } from '../graph/node';
 import { DiagramModel } from '../diagramModel';
+import { GraphDescriptor } from '../graph/graphDescriptor';
 
-export interface FocusNodeWidgetParameters extends NodeWidgetParameters {
-    diagramModel: DiagramModel;
+export interface FocusNodeWidgetParameters<Descriptor extends GraphDescriptor> extends NodeWidgetParameters {
+    diagramModel: DiagramModel<Descriptor>;
 }
 
-export class FocusNodeWidget extends NodeWidget {
-    constructor(parameters: FocusNodeWidgetParameters) {
+export class FocusNodeWidget<Descriptor extends GraphDescriptor> extends NodeWidget<Descriptor> {
+    constructor(parameters: FocusNodeWidgetParameters<Descriptor>) {
         super(parameters);
 
         const selection = parameters.diagramModel.selection;
         selection.on('change', () => {
-            const selecteElements = selection.elements;
-            if (selecteElements.size === 1) {
-                selecteElements.forEach(element => {
+            const selectedElements = selection.elements;
+            if (selectedElements.size === 1) {
+                selectedElements.forEach(element => {
                     if (element instanceof Node) {
                         this.setFocusNode(element);
                     }

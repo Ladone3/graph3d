@@ -25,8 +25,10 @@ import {
 
 import { DiagramView } from '../views/diagramView';
 import { MouseHandler, HandlerDragEvent } from '../utils/mouseHandler';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
 
-export class OpenSpaceViewController extends Subscribable<ViewControllerEvents> implements ViewController {
+export class OpenSpaceViewController<Descriptor extends GraphDescriptor> extends
+Subscribable<ViewControllerEvents> implements ViewController {
     readonly id: string;
     public label: string;
     protected cameraAngle: Vector2d = { x: 0, y: 0 };
@@ -34,8 +36,8 @@ export class OpenSpaceViewController extends Subscribable<ViewControllerEvents> 
     protected startAngle: Vector2d;
 
     constructor(
-        protected view: DiagramView,
-        protected mouseHandler: MouseHandler,
+        protected view: DiagramView<Descriptor>,
+        protected mouseHandler: MouseHandler<Descriptor>,
         protected keyHandler: KeyHandler,
     ) {
         super();

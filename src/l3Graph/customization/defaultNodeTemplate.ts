@@ -1,8 +1,10 @@
 import { DEFAULT_NODE_OVERLAY } from './defaultOverlay';
-import { NodeViewTemplate, NodeTemplateProvider } from './templates';
+import { ViewTemplate, TemplateProvider } from './templates';
 import { MeshKind } from './mesh';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
+import { Node } from '../models/graph/node';
 
-export const DEFAULT_NODE_TEMPLATE: NodeViewTemplate<{label: string}> = {
+export const DEFAULT_NODE_TEMPLATE: ViewTemplate<Node<GraphDescriptor>> = {
     mesh: () => ({
         type: MeshKind.Primitive,
         shape: 'sphere',
@@ -10,6 +12,6 @@ export const DEFAULT_NODE_TEMPLATE: NodeViewTemplate<{label: string}> = {
     overlay: DEFAULT_NODE_OVERLAY,
 };
 
-export const DEFAULT_NODE_TEMPLATE_PROVIDER: NodeTemplateProvider<{label: string}> = (data: {label: string}) => {
+export const DEFAULT_NODE_TEMPLATE_PROVIDER: TemplateProvider<Node<GraphDescriptor>> = () => {
     return DEFAULT_NODE_TEMPLATE;
 };

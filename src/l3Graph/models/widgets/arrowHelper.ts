@@ -1,15 +1,16 @@
 import { NodeWidget } from './nodeWidget';
 import { MouseHandler } from '../../utils/mouseHandler';
 import { Node } from '../graph/node';
+import { GraphDescriptor } from '../graph/graphDescriptor';
 
-export interface ArrowHelperParameters {
-    mouseHandler: MouseHandler;
+export interface ArrowHelperParameters<Descriptor extends GraphDescriptor> {
+    mouseHandler: MouseHandler<Descriptor>;
 }
 
-export class ArrowHelper extends NodeWidget {
-    private mouseHandler: MouseHandler;
+export class ArrowHelper<Descriptor extends GraphDescriptor> extends NodeWidget<Descriptor> {
+    private mouseHandler: MouseHandler<Descriptor>;
 
-    constructor(parameters: ArrowHelperParameters) {
+    constructor(parameters: ArrowHelperParameters<Descriptor>) {
         super({widgetId: 'l3graph-arrow-helper-widget'});
         this.mouseHandler = parameters.mouseHandler;
 

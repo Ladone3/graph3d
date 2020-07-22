@@ -1,20 +1,21 @@
 import * as THREE from 'three';
 import { DiagramWidgetView } from '../viewInterface';
 import { ArrowHelper } from '../../models/widgets/arrowHelper';
+import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
 const LINES_LENGTH = 100;
 
-export interface ArrowHelperViewParameters {
-    model: ArrowHelper;
+export interface ArrowHelperViewParameters<Descriptor extends GraphDescriptor> {
+    model: ArrowHelper<Descriptor>;
 }
 
-export class ArrowHelperView implements DiagramWidgetView {
-    public readonly model: ArrowHelper;
+export class ArrowHelperView<Descriptor extends GraphDescriptor> implements DiagramWidgetView {
+    public readonly model: ArrowHelper<Descriptor>;
     public readonly mesh: THREE.Group;
 
     private boundingBox: THREE.Box3;
 
-    constructor(parameters: ArrowHelperViewParameters) {
+    constructor(parameters: ArrowHelperViewParameters<Descriptor>) {
         this.model = parameters.model;
 
         this.mesh = new THREE.Group();

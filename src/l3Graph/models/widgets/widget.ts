@@ -6,6 +6,7 @@ import { DiagramWidgetView } from '../../views/viewInterface';
 import { GamepadHandler } from '../../vrUtils/gamepadHandler';
 import { VrManager } from '../../vrUtils/vrManager';
 import { DiagramView } from '../../views/diagramView';
+import { GraphDescriptor } from '../graph/graphDescriptor';
 
 export const DEFAULT_SELECTION_TYPE_ID = 'l3graph-selection';
 
@@ -23,29 +24,29 @@ export abstract class Widget<Events extends WidgetEvents = WidgetEvents> extends
     }
 }
 
-export interface WidgetModelContext {
-    diagramModel: DiagramModel;
+export interface WidgetModelContext<Descriptor extends GraphDescriptor> {
+    diagramModel: DiagramModel<Descriptor>;
     keyHandler: KeyHandler;
-    mouseHandler: MouseHandler;
-    gamepadHandler: GamepadHandler;
-    vrManager: VrManager;
+    mouseHandler: MouseHandler<Descriptor>;
+    gamepadHandler: GamepadHandler<Descriptor>;
+    vrManager: VrManager<Descriptor>;
 }
 
-export interface WidgetViewContext<WidgetModel extends Widget = Widget> {
-    diagramView: DiagramView;
-    vrManager: VrManager;
+export interface WidgetViewContext<WidgetModel extends Widget, Descriptor extends GraphDescriptor> {
+    diagramView: DiagramView<Descriptor>;
+    vrManager: VrManager<Descriptor>;
     widget: WidgetModel;
 }
 
 // todo: rethink the best place for this structures
-export type WidgetModelResolver<WidgetModel extends Widget = Widget> = (
-    context: WidgetModelContext
+export type WidgetModelResolver<WidgetModel extends Widget, Descriptor extends GraphDescriptor> = (
+    context: WidgetModelContext<Descriptor>
 ) => WidgetModel;
-export type WidgetViewResolver<WidgetModel extends Widget = Widget> = (
-    context: WidgetViewContext<WidgetModel>
+export type WidgetViewResolver<WidgetModel extends Widget, Descriptor extends GraphDescriptor> = (
+    context: WidgetViewContext<WidgetModel, Descriptor>
 ) => DiagramWidgetView;
 
-export interface WidgetFactory<WidgetModel extends Widget = any> {
-    getModel: WidgetModelResolver<WidgetModel>;
-    getView: WidgetViewResolver<WidgetModel>;
+export interface WidgetFactory<WidgetModel extends Widget, Descriptor extends GraphDescriptor> {
+    getModel: WidgetModelResolver<WidgetModel, Descriptor>;
+    getView: WidgetViewResolver<WidgetModel, Descriptor>;
 }

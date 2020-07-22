@@ -1,13 +1,14 @@
 import Subscribable from '../utils/subscribable';
 import { DiagramView } from '../views/diagramView';
 import { Device, Session, isXrNavigator, VrEvent } from './webVr';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
 
 export interface VrManagerEvents {
     'presenting:state:changed': void;
     'connection:state:changed': void;
 }
 
-export class VrManager extends Subscribable<VrManagerEvents> {
+export class VrManager<Descriptor extends GraphDescriptor> extends Subscribable<VrManagerEvents> {
     private device?: Device;
     private session?: Session; // only for XR mode
 
@@ -17,7 +18,7 @@ export class VrManager extends Subscribable<VrManagerEvents> {
     private isXr: boolean;
 
     constructor(
-        private view: DiagramView,
+        private view: DiagramView<Descriptor>,
     ) {
         super();
     }

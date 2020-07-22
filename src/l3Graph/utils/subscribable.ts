@@ -1,29 +1,29 @@
-export interface EventObject<Key = any, Events = any> {
+export interface EventObject<Key, Events> {
     eventId: Key;
     data: Events;
 }
 
-export type EventCallback<Events = any, Key extends keyof Events = any> =
+export type EventCallback<Events, Key extends keyof Events> =
     (event: EventObject<Key, Events[Key]>) => void;
 
 export class Subscribable<Events> {
-    private _subscribtions: {[Key in keyof Events]?: EventCallback<Events, Key>[] } = {};
-    private _subscribtionsOnAny: EventCallback[] = [];
+    private _subscriptions: {[Key in keyof Events]?: EventCallback<Events, Key>[] } = {};
+    private _subscriptionsOnAny: EventCallback<Events, keyof Events>[] = [];
 
     public on<Key extends keyof Events>(eventId: Key, callback: EventCallback<Events, Key>) {
-        if (!this._subscribtions[eventId]) {
-            this._subscribtions[eventId] = [];
+        if (!this._subscriptions[eventId]) {
+            this._subscriptions[eventId] = [];
         }
-        this._subscribtions[eventId].push(callback);
+        this._subscriptions[eventId].push(callback);
     }
 
-    public onAny(callback: EventCallback) {
-        this._subscribtionsOnAny.push(callback);
+    public onAny(callback: EventCallback<Events, keyof Events>) {
+        this._subscriptionsOnAny.push(callback);
     }
 
-    public unsubscribe<Key extends keyof Events>(eventId: Key, callback: EventCallback) {
-        if (this._subscribtions[eventId]) {
-            const subscribers = this._subscribtions[eventId];
+    public unsubscribe<Key extends keyof Events>(eventId: Key, callback: EventCallback<Events, Key>) {
+        if (this._subscriptions[eventId]) {
+            const subscribers = this._subscriptions[eventId];
             const index = subscribers.indexOf(callback);
             if (index !== -1) {
                 subscribers.splice(index, 1);
@@ -32,10 +32,10 @@ export class Subscribable<Events> {
         }
     }
 
-    public unsubscribeFromAll(callback: EventCallback) {
-        for (const subscribtionKey in this._subscribtions) {
-            if (this._subscribtions[subscribtionKey]) {
-                const subscribers = this._subscribtions[subscribtionKey];
+    public unsubscribeFromAll(callback: EventCallback<Events, keyof Events>) {
+        for (const subscriptionKey in this._subscriptions) {
+            if (this._subscriptions[subscriptionKey]) {
+                const subscribers = this._subscriptions[subscriptionKey];
                 const index = subscribers.indexOf(callback);
                 if (index !== -1) {
                     subscribers.splice(index, 1);
@@ -46,8 +46,8 @@ export class Subscribable<Events> {
     }
 
     public trigger<Key extends keyof Events>(eventId: Key, eventObject?: Events[Key]) {
-        if (this._subscribtions[eventId]) {
-            this._subscribtions[eventId].forEach(c => {
+        if (this._subscriptions[eventId]) {
+            this._subscriptions[eventId].forEach(c => {
                 c.call(this, {
                     eventId,
                     target: this,
@@ -55,8 +55,8 @@ export class Subscribable<Events> {
                 });
             });
         }
-        if (this._subscribtionsOnAny) {
-            this._subscribtionsOnAny.forEach(c => {
+        if (this._subscriptionsOnAny) {
+            this._subscriptionsOnAny.forEach(c => {
                 c.call(this, {
                     eventId,
                     target: this,

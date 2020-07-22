@@ -1,6 +1,7 @@
 import { Vector3d, Size } from '../structures';
 import { Link } from './link';
 import { PointEvents, Point, PointParameters, PointId } from '../point';
+import { GraphDescriptor } from './graphDescriptor';
 
 const SIZE_VALUE = 40;
 const DEFAULT_NODE_PARAMETERS: NodeParameters = {
@@ -10,7 +11,7 @@ const DEFAULT_NODE_PARAMETERS: NodeParameters = {
 
 export type NodeId = PointId & { nodePlaceholder?: boolean };
 
-export interface NodeModel<NodeContent = any> {
+export interface NodeModel<NodeContent> {
     id: NodeId;
     data?: NodeContent;
 }
@@ -24,9 +25,9 @@ export interface NodeEvents extends PointEvents {
     'force-update': void;
 }
 
-export class Node<NodeContent = any> extends Point<NodeEvents> {
-    public incomingLinks: Set<Link> = new Set();
-    public outgoingLinks: Set<Link> = new Set();
+export class Node<Descriptor extends GraphDescriptor> extends Point<NodeEvents> {
+    public incomingLinks: Set<Link<Descriptor>> = new Set();
+    public outgoingLinks: Set<Link<Descriptor>> = new Set();
     public modelIsChanged: boolean = false;
     private _size: Size;
 
@@ -35,7 +36,7 @@ export class Node<NodeContent = any> extends Point<NodeEvents> {
     }
 
     constructor(
-        private _model: NodeModel<NodeContent>,
+        private _model: NodeModel<Descriptor['nodeContentType']>,
         parameters: NodeParameters = DEFAULT_NODE_PARAMETERS,
     ) {
         super(parameters);
@@ -45,13 +46,13 @@ export class Node<NodeContent = any> extends Point<NodeEvents> {
     get data() {
         return this._model.data;
     }
-    setData(data: NodeContent) {
+    setData(data: Descriptor['nodeContentType']) {
         this._model.data = data;
         this.modelIsChanged = true;
         this.forceUpdate();
     }
 
-    get model(): NodeModel<NodeContent> {
+    get model(): NodeModel<Descriptor['nodeContentType']> {
         return this._model;
     }
 

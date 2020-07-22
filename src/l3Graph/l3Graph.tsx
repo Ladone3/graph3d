@@ -6,7 +6,7 @@ import { DiagramModel } from './models/diagramModel';
 import { DiagramView, ViewOptions } from './views/diagramView';
 import { Vector2d, Vector3d } from './models/structures';
 import { MouseHandler } from './utils/mouseHandler';
-import { WidgetFactory } from './models/widgets/widget';
+import { WidgetFactory, Widget } from './models/widgets/widget';
 import { Node } from './models/graph/node';
 import { OverlayPosition } from './views/graph/overlayAnchor';
 import { ReactOverlay } from './customization';
@@ -14,27 +14,28 @@ import { GamepadHandler } from './vrUtils/gamepadHandler';
 import { GamepadEditor } from './editors/gamepadEditor';
 import { DEFAULT_VIEW_CONTROLLERS_SET } from './controllers/defaultViewControllers';
 import { DEFAULT_MESH_WIDGET_SET } from './defaultWidgetsSet';
+import { GraphDescriptor } from './models/graph/graphDescriptor';
 
-export interface L3GraphProps {
-    viewOptions?: ViewOptions;
-    viewControllers?: ViewControllersSet;
-    onComponentMount?: (graph: L3Graph) => void;
-    onComponentUnmount?: (graph: L3Graph) => void;
+export interface L3GraphProps<Descriptor extends GraphDescriptor> {
+    viewOptions?: ViewOptions<Descriptor>;
+    viewControllers?: ViewControllersSet<Descriptor>;
+    onComponentMount?: (graph: L3Graph<Descriptor>) => void;
+    onComponentUnmount?: (graph: L3Graph<Descriptor>) => void;
 }
 
-export class L3Graph extends React.Component<L3GraphProps> {
-    private diagramModel: DiagramModel;
-    private view: DiagramView;
+export class L3Graph<Descriptor extends GraphDescriptor> extends React.Component<L3GraphProps<Descriptor>> {
+    private diagramModel: DiagramModel<Descriptor>;
+    private view: DiagramView<Descriptor>;
     private keyHandler: KeyHandler;
-    private gamepadHandler: GamepadHandler;
-    private mouseHandler: MouseHandler;
+    private gamepadHandler: GamepadHandler<Descriptor>;
+    private mouseHandler: MouseHandler<Descriptor>;
     private viewControllers: ViewController[] = [];
     private viewController: ViewController;
     // todo: handle duplication - the one should substitute another depending on the events
-    private defaultEditor: DefaultEditor;
-    private gamepadEditor: GamepadEditor;
+    private defaultEditor: DefaultEditor<Descriptor>;
+    private gamepadEditor: GamepadEditor<Descriptor>;
 
-    constructor(props: L3GraphProps) {
+    constructor(props: L3GraphProps<Descriptor>) {
         super(props);
         this.diagramModel = new DiagramModel();
         this.state = {};
@@ -66,14 +67,18 @@ export class L3Graph extends React.Component<L3GraphProps> {
         this.forceUpdate();
     }
 
-    attachOverlayToNode(node: Node, overlay: ReactOverlay, position: OverlayPosition) {
+    attachOverlayToNode(
+        node: Node<Descriptor>,
+        overlay: ReactOverlay<Node<Descriptor>>,
+        position: OverlayPosition
+    ) {
         const nodeView = this.view.graphView.nodeViews.get(node.id);
         if (nodeView) {
             nodeView.overlayAnchor.setOverlay(overlay, position);
         }
     }
 
-    removeOverlayFromNode(node: Node, overlayId: string) {
+    removeOverlayFromNode(node: Node<Descriptor>, overlayId: string) {
         const nodeView = this.view.graphView.nodeViews.get(node.id);
         if (nodeView) {
             nodeView.overlayAnchor.removeOverlay(overlayId);
@@ -101,7 +106,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
         return this.view.pos3dToClientPos(position);
     }
 
-    private onViewMount = (view: DiagramView) => {
+    private onViewMount = (view: DiagramView<Descriptor>) => {
         this.view = view;
         this.view.graphView.on('overlay:down',
             ({data: {event, target}}) => this.mouseHandler.fireMouseDownEvent(event, target));
@@ -117,15 +122,15 @@ export class L3Graph extends React.Component<L3GraphProps> {
             this.keyHandler,
         );
         this.gamepadEditor = new GamepadEditor(this.gamepadHandler);
-        for (const widgetFactory of DEFAULT_MESH_WIDGET_SET) {
-            this.registerWidget(widgetFactory);
+        for (const widgetFactory of DEFAULT_MESH_WIDGET_SET()) {
+            this.registerWidget(widgetFactory as any);
         }
         this.forceUpdate();
     }
 
     private configureViewControllers() {
         this.viewControllers =
-        (this.props.viewControllers || DEFAULT_VIEW_CONTROLLERS_SET)
+        (this.props.viewControllers || DEFAULT_VIEW_CONTROLLERS_SET())
             .map(makeController => makeController(this.view, this.mouseHandler, this.keyHandler, this.gamepadHandler));
         this.setViewController(this.viewControllers[0]);
         for (const vc of this.viewControllers) {
@@ -146,7 +151,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
         this.keyHandler.switchOff();
     }
 
-    public registerWidget(widgetResolver: WidgetFactory) {
+    public registerWidget<CustomWidget extends Widget>(widgetResolver: WidgetFactory<CustomWidget, Descriptor>) {
         const widgetModel = widgetResolver.getModel({
             vrManager: this.view.vrManager,
             diagramModel: this.diagramModel,
@@ -166,7 +171,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
     }
 
     render() {
-        const viewOptions: ViewOptions = this.props.viewOptions || {};
+        const viewOptions: ViewOptions<Descriptor> = this.props.viewOptions || {};
         return <div
             tabIndex={0}
             className='l3graph-main'

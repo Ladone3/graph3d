@@ -12,10 +12,12 @@ import { vector3dToTreeVector3, KEY_CODES, KeyHandler, EventObject, Subscribable
 
 import { DiagramView } from '../views/diagramView';
 import { MouseHandler, HandlerDragEvent } from '../utils/mouseHandler';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
 
 const WHEEL_SPEED = 100;
 
-export class SphericalViewController extends Subscribable<ViewControllerEvents> implements ViewController {
+export class SphericalViewController<Descriptor extends GraphDescriptor> extends
+Subscribable<ViewControllerEvents> implements ViewController {
     readonly id: string;
     public label: string;
     protected cameraAngle: Vector2d = { x: 0, y: Math.PI / 4 };
@@ -23,8 +25,8 @@ export class SphericalViewController extends Subscribable<ViewControllerEvents> 
     protected startAngle: Vector2d;
 
     constructor(
-        protected view: DiagramView,
-        protected mouseHandler: MouseHandler,
+        protected view: DiagramView<Descriptor>,
+        protected mouseHandler: MouseHandler<Descriptor>,
         protected keyHandler: KeyHandler,
     ) {
         super();
@@ -111,11 +113,11 @@ export class SphericalViewController extends Subscribable<ViewControllerEvents> 
         return Math.min(Math.max(0.001, distance), this.view.screenParameters.FAR / 2 - BORDER_OPACITY);
     }
 
-    private onMouseDragStart = (event: EventObject<"paperStartDrag", HandlerDragEvent>) => {
+    private onMouseDragStart = (event: EventObject<'paperStartDrag', HandlerDragEvent>) => {
         this.startAngle = this.cameraAngle;
     }
 
-    private onMouseDrag = (event: EventObject<"paperDrag", HandlerDragEvent>) => {
+    private onMouseDrag = (event: EventObject<'paperDrag', HandlerDragEvent>) => {
         const offset = event.data.offset;
         this.setCameraAngle({
             x: this.startAngle.x + offset.x / ROTATION_DECREASE_SPEED,
@@ -123,7 +125,7 @@ export class SphericalViewController extends Subscribable<ViewControllerEvents> 
         });
     }
 
-    private onMouseWheel = (event: EventObject<"paperScroll", WheelEvent>) => {
+    private onMouseWheel = (event: EventObject<'paperScroll', WheelEvent>) => {
         const wheelEvent = event.data;
         const delta = wheelEvent.deltaY || wheelEvent.deltaX || wheelEvent.deltaZ;
         const deltaNorma = delta < 0 ? 1 : -1;
