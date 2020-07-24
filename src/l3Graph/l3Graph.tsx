@@ -136,7 +136,7 @@ export class L3Graph<Descriptor extends GraphDescriptor> extends React.Component
         for (const vc of this.viewControllers) {
             vc.on('switched:off', () => {
                 const currentViewControllerWasSwitchedOff = this.viewController === vc;
-                if (currentViewControllerWasSwitchedOff) {
+                if (currentViewControllerWasSwitchedOff && this.viewControllers[0] !== vc) {
                     this.setViewController(this.viewControllers[0]);
                 }
             });

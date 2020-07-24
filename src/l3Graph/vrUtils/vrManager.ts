@@ -1,30 +1,43 @@
 import Subscribable from '../utils/subscribable';
 import { DiagramView } from '../views/diagramView';
-import { Device, Session, isXrNavigator, VrEvent } from './webVr';
-import { GraphDescriptor } from '../models/graph/graphDescriptor';
+import { Device, Session, isXrNavigator, VrEvent, hasVrDisplays, XrNavigator } from './webVr';
 
 export interface VrManagerEvents {
     'presenting:state:changed': void;
     'connection:state:changed': void;
 }
 
-export class VrManager<Descriptor extends GraphDescriptor> extends Subscribable<VrManagerEvents> {
+export interface UnsupportedMode {
+    type: 'unsupported';
+    error: any;
+}
+
+export interface XrMode {
+    type: 'xr';
+}
+
+export interface VrMode {
+    type: 'vr';
+    device: Device;
+}
+
+const VR_UNSUPPORTED_ERROR = 'Vr mode is not supported!';
+
+export type RMode = XrMode | VrMode | UnsupportedMode;
+
+export class VrManager extends Subscribable<VrManagerEvents> {
     private device?: Device;
     private session?: Session; // only for XR mode
+    private connectionPromise?: Promise<RMode>;
 
     private _isStarted: boolean;
-    private errorMessages: string[] = [];
-
-    private isXr: boolean;
 
     constructor(
-        private view: DiagramView<Descriptor>,
+        private view: DiagramView<any>,
     ) {
         super();
-    }
-
-    get errors() {
-        return this.errorMessages;
+        this.connectionPromise = this._connect();
+        this.listenToEvents();
     }
 
     get isStarted() {
@@ -39,27 +52,49 @@ export class VrManager<Descriptor extends GraphDescriptor> extends Subscribable<
         return this.view.renderer.vr.getCamera(this.view.camera);
     }
 
+    connect() {
+        if (this.isConnected) {
+            return Promise.resolve();
+        } else {
+            if (!this.connectionPromise) {
+                this.connectionPromise = this._connect();
+            }
+            return this.connectionPromise.then(rMode => {
+                this.connectionPromise = null;
+                if (rMode.type === 'xr') {
+                    const sessionInit = {optionalFeatures: ['local-floor', 'bounded-floor']};
+                    return (navigator as XrNavigator).xr.requestSession('immersive-vr', sessionInit).then(session => {
+                        this.session = session;
+                        return;
+                    });
+                } else if (rMode.type === 'vr') {
+                    this.device = rMode.device;
+                    return;
+                } else {
+                    throw rMode.error;
+                }
+            });
+        }
+    }
+
     getController(id: number) {
         return this.view.renderer.vr.getController(id);
     }
 
     start() {
         if (this.isStarted) { return; }
-        this._initVr();
-        // var vrControls = new THREE.VR(this.view.camera);
+        this.view.renderer.vr.enabled = true;
+        this.view.renderer.setAnimationLoop(this.animationLoop);
         const vr = this.view.renderer.vr;
         vr.setFramebufferScaleFactor(0.8);
-        if (this.isXr) {
-            const onSessionStarted = (session: Session) => {
-                this.session.addEventListener('end', onSessionEnded);
-                vr.setSession(session);
-            };
+        if (this.session) {
             const onSessionEnded = (event: Event) => {
-                this.session.removeEventListener( 'end', onSessionEnded );
+                this.session.removeEventListener('end', onSessionEnded);
                 vr.setSession(null);
                 this.session = null;
             };
-            this.device.requestSession({immersive: true, exclusive: true}).then(onSessionStarted);
+            this.session.addEventListener('end', onSessionEnded);
+            vr.setSession(this.session);
         } else {
             this.device.requestPresent([{source: this.view.renderer.domElement}]);
         }
@@ -70,69 +105,65 @@ export class VrManager<Descriptor extends GraphDescriptor> extends Subscribable<
     stop() {
         if (!this.isStarted) { return; }
 
-        if (this.isXr) {
+        if (this.session) {
             this.session.end();
         } else {
             this.device.exitPresent();
         }
     }
 
-    connect() {
-        let promise: Promise<void>;
+    private _connect(): Promise<RMode> {
         if (isXrNavigator(navigator)) {
-            promise = navigator.xr.requestDevice().then(device => {
-                device.supportsSession({immersive: true, exclusive: true})
-                    .then(() => { this.setDevice(device); } )
-                    .catch(e => {
-                        this.setDevice(null);
-                        this.setError(`Session is not support this mode: ${e.errorMessage}.`);
-                    });
-            }).catch(e => this.setError(`Error during requesting device: ${e.errorMessage}.`));
-            this.isXr = true;
-        } else if ('getVRDisplays' in navigator) {
-            promise = navigator.getVRDisplays()
-                .then(displays => {
-                    if (displays.length > 0) {
-                        this.setDevice(displays[0] as any);
+            return navigator.xr.isSessionSupported('immersive-vr')
+                .then(supported => {
+                    if (supported) {
+                        return { type: 'xr' };
                     } else {
-                        this.setDevice(null);
-                        this.setError(`VR display is not found yet.`);
+                        return { type: 'unsupported', error: new Error(VR_UNSUPPORTED_ERROR) };
                     }
-                }).catch(e => {
-                    this.setDevice(null);
-                    this.setError(`Error during requesting displays: ${e.errorMessage}.`);
                 });
-            this.isXr = false;
+        } else if (hasVrDisplays(navigator)) {
+            return new Promise((resolve, reject) => {
+                navigator.getVRDisplays().then(displays => {
+                    if (displays.length > 0) {
+                        resolve({ type: 'vr', device: displays[0] as Device});
+                    } else {
+                        resolve({ type: 'unsupported', error: new Error(`${VR_UNSUPPORTED_ERROR}. No VR displays.`) });
+                    }
+                }).catch(e => ({ type: 'unsupported', error: e}));
+            });
+        } else {
+            return Promise.resolve({
+                type: 'unsupported',
+                error: new Error(`${VR_UNSUPPORTED_ERROR}. Neither xr no VR modes are supported by navigator.`),
+            });
         }
-
-        window.addEventListener('vrdisplayconnect', event => {
-            this.setDevice((event as VrEvent).display);
-        }, false);
-
-        window.addEventListener('vrdisplaydisconnect', event => {
-            this.stop();
-            this.setDevice(null);
-        }, false);
-
-        window.addEventListener('vrdisplayactivate', event => {
-            this.start();
-        }, false);
-
-        window.addEventListener('vrdisplaypresentchange', event => {
-            const vrEvent = event as VrEvent;
-            this._isStarted = vrEvent.display.isPresenting;
-            if (!this._isStarted) {
-                this._cancelVr();
-            }
-            this.trigger('presenting:state:changed');
-        }, false );
-
-        return promise;
     }
 
-    private _initVr() {
-        this.view.renderer.vr.enabled = true;
-        (this.view.renderer as any).setAnimationLoop(this.animationLoop);
+    private listenToEvents() {
+        if (hasVrDisplays(navigator)) {
+            window.addEventListener('vrdisplayconnect', event => {
+                this.setDevice((event as VrEvent).display);
+            }, false);
+
+            window.addEventListener('vrdisplaydisconnect', event => {
+                this.stop();
+                this.setDevice(null);
+            }, false);
+
+            window.addEventListener('vrdisplayactivate', event => {
+                this.start();
+            }, false);
+
+            window.addEventListener('vrdisplaypresentchange', event => {
+                const vrEvent = event as VrEvent;
+                this._isStarted = vrEvent.display.isPresenting;
+                if (!this._isStarted) {
+                    this._cancelVr();
+                }
+                this.trigger('presenting:state:changed');
+            }, false );
+        }
     }
 
     private animationLoop = () => {
@@ -140,12 +171,9 @@ export class VrManager<Descriptor extends GraphDescriptor> extends Subscribable<
     }
 
     private _cancelVr() {
+        // this.view.renderer.xr.enabled = false;
         this.view.renderer.vr.enabled = false;
-        (this.view.renderer as any).setAnimationLoop(null);
-    }
-
-    private setError(message: string) {
-        this.errorMessages.push(message);
+        this.view.renderer.setAnimationLoop(this.animationLoop);
     }
 
     private setDevice(device: Device) {

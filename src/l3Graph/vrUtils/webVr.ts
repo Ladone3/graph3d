@@ -34,7 +34,15 @@ export interface Session {
 
 export interface XrNavigator extends Navigator {
     xr: {
+        requestSession: (sessionType: 'immersive-vr', options: {optionalFeatures: string[]}) => Promise<Session>;
+        isSessionSupported: (sessionType: 'immersive-vr') => Promise<boolean>;
+    };
+}
+
+export interface VrNavigator extends Navigator {
+    xr: {
         requestDevice: () => Promise<Device>;
+        isSessionSupported: (sessionType: 'immersive-vr') => Promise<boolean>;
     };
 }
 
@@ -42,8 +50,12 @@ export interface CompleteNavigator extends Navigator {
     webkitGetGamepads: () => Gamepad[];
 }
 
-export function isXrNavigator(n: Navigator): n is XrNavigator {
-    return ('xr' in n) && typeof (navigator as any).xr.requestDevice === 'function';
+export function isXrNavigator(navigator: Navigator): navigator is XrNavigator {
+    return 'xr' in navigator;
+}
+
+export function hasVrDisplays(navigator: Navigator) {
+    return 'getVRDisplays' in navigator;
 }
 
 export function isWebkitNavigator(n: Navigator): n is CompleteNavigator {

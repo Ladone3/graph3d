@@ -18,7 +18,7 @@ import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
 export interface GraphViewProps<Descriptor extends GraphDescriptor> {
     graphModel: GraphModel<Descriptor>;
-    vrManager: VrManager<Descriptor>;
+    vrManager: VrManager;
     onAdd3dObject: (object: THREE.Object3D) => void;
     onRemove3dObject: (object: THREE.Object3D) => void;
     nodeTemplateProvider?: TemplateProvider<Node<Descriptor>>;
@@ -43,7 +43,7 @@ export class GraphView<Descriptor extends GraphDescriptor> extends Subscribable<
     overlayHtmlContainer: HTMLElement;
     linkRouter: LinkRouter<Descriptor>;
 
-    private vrManager: VrManager<Descriptor>;
+    private vrManager: VrManager;
 
     constructor(private props: GraphViewProps<Descriptor>) {
         super();

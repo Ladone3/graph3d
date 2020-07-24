@@ -29,12 +29,12 @@ export interface WidgetModelContext<Descriptor extends GraphDescriptor> {
     keyHandler: KeyHandler;
     mouseHandler: MouseHandler<Descriptor>;
     gamepadHandler: GamepadHandler<Descriptor>;
-    vrManager: VrManager<Descriptor>;
+    vrManager: VrManager;
 }
 
 export interface WidgetViewContext<WidgetModel extends Widget, Descriptor extends GraphDescriptor> {
     diagramView: DiagramView<Descriptor>;
-    vrManager: VrManager<Descriptor>;
+    vrManager: VrManager;
     widget: WidgetModel;
 }
 

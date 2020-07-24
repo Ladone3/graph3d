@@ -11,8 +11,7 @@ Subscribable<ViewControllerEvents> implements ViewController {
     public readonly id = 'vr-view-controller';
     public readonly label = 'VR View Controller';
 
-    private vrManager: VrManager<Descriptor>;
-    private connectionPromise: Promise<void>;
+    private vrManager: VrManager;
 
     constructor(
         protected view: DiagramView<Descriptor>,
@@ -22,21 +21,21 @@ Subscribable<ViewControllerEvents> implements ViewController {
     ) {
         super();
         this.vrManager = this.view.vrManager;
-        this.connectionPromise = this.vrManager.connect();
     }
 
     focusOn()  { /* nothing */ }
 
     switchOn() {
-        if (!this.vrManager.isConnected) {
-            this.connectionPromise.then(() => {
-                this.vrManager.start();
-                this.view.renderGraph();
-            })
-        } else {
+        this.vrManager.connect().then(() => {
             this.vrManager.start();
             this.view.renderGraph();
-        }
+        }).catch((e: Error) => {
+            // alert(e.message);
+            // tslint:disable-next-line: no-console
+            console.error(e.message + e.stack);
+            this.switchOff();
+        });
+
         this.keyHandler.on('keyPressed', this.onKeyPressed);
         this.vrManager.on('presenting:state:changed', this.onPresentingChanged);
         this.trigger('switched:on');

@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
             onComponentMount: onComponentMount,
         }, React.createElement(Toolbar, {
             viewControllers: l3Graph ? l3Graph.getViewControllers() : [],
-            defaultViewController: l3Graph ? l3Graph.getViewController() : undefined,
+            selectedViewController: l3Graph ? l3Graph.getViewController() : undefined,
             onChangeViewController: (viewController: ViewController) => {
                 l3Graph.setViewController(viewController);
             },

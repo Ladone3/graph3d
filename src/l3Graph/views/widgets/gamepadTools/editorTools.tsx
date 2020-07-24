@@ -38,7 +38,7 @@ const DEFAULT_CREATION_DISTANCE = 150;
 export interface GamepadEditorToolProps<Descriptor extends GraphDescriptor> {
     gamepadHandler: GamepadHandler<Descriptor>;
     diagramModel: DiagramModel<Descriptor>;
-    vrManager: VrManager<Descriptor>;
+    vrManager: VrManager;
 }
 
 export class LeftGamepadEditorTool<Descriptor extends GraphDescriptor> extends GamepadTool {

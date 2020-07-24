@@ -8,7 +8,7 @@ import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
 export interface WidgetsViewProps<Descriptor extends GraphDescriptor> {
     diagramView: DiagramView<Descriptor>;
-    vrManager: VrManager<Descriptor>;
+    vrManager: VrManager;
     widgetsModel: WidgetsModel;
     onAdd3dObject: (object: THREE.Object3D) => void;
     onRemove3dObject: (object: THREE.Object3D) => void;
@@ -19,7 +19,7 @@ export class WidgetsView<CustomWidget extends Widget, Descriptor extends GraphDe
     private viewRegistry: Map<string, WidgetViewResolver<CustomWidget, Descriptor>>;
 
     diagramView: DiagramView<Descriptor>;
-    vrManager: VrManager<Descriptor>;
+    vrManager: VrManager;
     widgetsModel: WidgetsModel;
 
     constructor(private props: WidgetsViewProps<Descriptor>) {

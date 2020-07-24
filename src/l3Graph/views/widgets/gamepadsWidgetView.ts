@@ -7,14 +7,14 @@ import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
 export interface GamepadsWidgetViewParameters<Descriptor extends GraphDescriptor> {
     model: GamepadsWidget<Descriptor>;
-    vrManager: VrManager<Descriptor>;
+    vrManager: VrManager;
 }
 
 export class GamepadsWidgetView<Descriptor extends GraphDescriptor> implements DiagramWidgetView {
     public readonly model: GamepadsWidget<Descriptor>;
     public readonly mesh: THREE.Group;
 
-    private vrManager: VrManager<Descriptor>;
+    private vrManager: VrManager;
     private boundingBox: THREE.Box3 = new THREE.Box3();
     private leftGamepad: THREE.Group;
     private rightGamepad: THREE.Group;

@@ -3,16 +3,12 @@ import { ViewController, ViewControllersSet } from './controllers/viewController
 
 export interface ToolbarProps {
     viewControllers: ReadonlyArray<ViewController>;
-    defaultViewController?: ViewController;
+    selectedViewController?: ViewController;
     onChangeViewController: (viewController: ViewController) => void;
     onApplyLayout: () => void;
 }
 
-interface State {
-    selectedViewController: ViewController | undefined;
-}
-
-export class Toolbar extends React.Component<ToolbarProps, State> {
+export class Toolbar extends React.Component<ToolbarProps> {
     constructor(props: ToolbarProps) {
         super(props);
         this.state = {
@@ -22,7 +18,7 @@ export class Toolbar extends React.Component<ToolbarProps, State> {
 
     componentDidMount() {
         this.setState({
-            selectedViewController: this.props.defaultViewController || this.props.viewControllers[0],
+            selectedViewController: this.props.selectedViewController,
         });
     }
 
@@ -35,7 +31,6 @@ export class Toolbar extends React.Component<ToolbarProps, State> {
 
     render() {
         const {viewControllers, onApplyLayout} = this.props;
-        const {selectedViewController} = this.state;
         return <div className='l3graph-toolbar'>
             <button
                 title='Help'
@@ -46,7 +41,6 @@ export class Toolbar extends React.Component<ToolbarProps, State> {
                 return <button
                     title={viewController.label}
                     key={`controller-button-${index}`}
-                    className={selectedViewController === viewController ? 'l3graph-selected' : ''}
                     onClick={() => { this.setViewController(viewController); }}>
                     {viewController.label[0]}
                 </button>;

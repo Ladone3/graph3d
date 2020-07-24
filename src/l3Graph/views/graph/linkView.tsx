@@ -50,11 +50,8 @@ export class LinkView<Descriptor extends GraphDescriptor> implements View<Link<D
 
         // Overlay
         this.overlayAnchor = new LinkOverlayAnchor(this.model, this);
-        if (this.model.data) {
-            this.overlayAnchor.setOverlay(enrichOverlay(
-                DEFAULT_LINK_OVERLAY as any,
-                this.model
-            ), 'c');
+        if (template.overlay) {
+            this.overlayAnchor.setOverlay(template.overlay, 'c');
         }
 
         this.overlayAnchor3d = new LinkOverlayAnchor3d(this.model, this, this.overlayAnchor);

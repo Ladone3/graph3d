@@ -6,7 +6,7 @@ import { GraphDescriptor } from '../../../models/graph/graphDescriptor';
 
 export interface GamepadToolProps<Descriptor extends GraphDescriptor> {
     gamepadHandler: GamepadHandler<Descriptor>;
-    vrManager: VrManager<Descriptor>;
+    vrManager: VrManager;
 }
 
 export interface GamepadToolEvents {

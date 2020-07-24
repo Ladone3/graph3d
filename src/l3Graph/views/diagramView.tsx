@@ -48,7 +48,7 @@ export class DiagramView<Descriptor extends GraphDescriptor> extends React.Compo
     scene: THREE.Scene;
     meshHtmlContainer: HTMLElement;
     overlayHtmlContainer: HTMLElement;
-    vrManager: VrManager<Descriptor>;
+    vrManager: VrManager;
 
     screenParameters: {
         WIDTH: number;

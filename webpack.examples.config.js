@@ -36,4 +36,7 @@ module.exports = {
         publicPath: '',
     },
     devtool: 'source-map',
+    devServer: {
+        https: true
+    }
 };
