@@ -22,7 +22,7 @@ export interface LinkEvents {
     'force-update': void;
 }
 
-export class Link<Descriptor extends GraphDescriptor> extends Subscribable<LinkEvents> {
+export class Link<Descriptor extends GraphDescriptor = GraphDescriptor> extends Subscribable<LinkEvents> {
     public readonly source: Node<Descriptor>;
     public readonly target: Node<Descriptor>;
     public modelIsChanged: boolean = false;

@@ -1,41 +1,42 @@
 import * as React from 'react';
 import { ViewController, ViewControllersSet } from './controllers/viewController';
-import { KeyHandler } from './utils/keyHandler';
+import { KeyHandler } from './input/keyHandler';
 import { DefaultEditor } from './editors/defaultEditor';
 import { DiagramModel } from './models/diagramModel';
 import { DiagramView, ViewOptions } from './views/diagramView';
 import { Vector2d, Vector3d } from './models/structures';
-import { MouseHandler } from './utils/mouseHandler';
+import { MouseHandler } from './input/mouseHandler';
 import { WidgetFactory, Widget } from './models/widgets/widget';
 import { Node } from './models/graph/node';
 import { OverlayPosition } from './views/graph/overlayAnchor';
 import { ReactOverlay } from './customization';
-import { GamepadHandler } from './vrUtils/gamepadHandler';
+import { GamepadHandler } from './input/gamepadHandler';
 import { GamepadEditor } from './editors/gamepadEditor';
 import { DEFAULT_VIEW_CONTROLLERS_SET } from './controllers/defaultViewControllers';
 import { DEFAULT_MESH_WIDGET_SET } from './defaultWidgetsSet';
-import { GraphDescriptor } from './models/graph/graphDescriptor';
+import { Subscribable } from './utils';
+import { DragHandlerEvents } from './input/dragHandler';
 
-export interface L3GraphProps<Descriptor extends GraphDescriptor> {
-    viewOptions?: ViewOptions<Descriptor>;
-    viewControllers?: ViewControllersSet<Descriptor>;
-    onComponentMount?: (graph: L3Graph<Descriptor>) => void;
-    onComponentUnmount?: (graph: L3Graph<Descriptor>) => void;
+export interface L3GraphProps {
+    viewOptions?: ViewOptions;
+    viewControllers?: ViewControllersSet;
+    onComponentMount?: (graph: L3Graph) => void;
+    onComponentUnmount?: (graph: L3Graph) => void;
 }
 
-export class L3Graph<Descriptor extends GraphDescriptor> extends React.Component<L3GraphProps<Descriptor>> {
-    private diagramModel: DiagramModel<Descriptor>;
-    private view: DiagramView<Descriptor>;
+export class L3Graph extends React.Component<L3GraphProps> {
+    private diagramModel: DiagramModel;
+    private view: DiagramView;
     private keyHandler: KeyHandler;
-    private gamepadHandler: GamepadHandler<Descriptor>;
-    private mouseHandler: MouseHandler<Descriptor>;
+    private gamepadHandler: GamepadHandler;
+    private mouseHandler: MouseHandler;
     private viewControllers: ViewController[] = [];
     private viewController: ViewController;
     // todo: handle duplication - the one should substitute another depending on the events
-    private defaultEditor: DefaultEditor<Descriptor>;
-    private gamepadEditor: GamepadEditor<Descriptor>;
+    private defaultEditor: DefaultEditor;
+    private gamepadEditor: GamepadEditor;
 
-    constructor(props: L3GraphProps<Descriptor>) {
+    constructor(props: L3GraphProps) {
         super(props);
         this.diagramModel = new DiagramModel();
         this.state = {};
@@ -68,18 +69,18 @@ export class L3Graph<Descriptor extends GraphDescriptor> extends React.Component
     }
 
     attachOverlayToNode(
-        node: Node<Descriptor>,
-        overlay: ReactOverlay<Node<Descriptor>>,
+        node: Node,
+        overlay: ReactOverlay<Node>,
         position: OverlayPosition
     ) {
-        const nodeView = this.view.graphView.nodeViews.get(node.id);
+        const nodeView = this.view.graphView.nodeViews.get(node);
         if (nodeView) {
             nodeView.overlayAnchor.setOverlay(overlay, position);
         }
     }
 
-    removeOverlayFromNode(node: Node<Descriptor>, overlayId: string) {
-        const nodeView = this.view.graphView.nodeViews.get(node.id);
+    removeOverlayFromNode(node: Node, overlayId: string) {
+        const nodeView = this.view.graphView.nodeViews.get(node);
         if (nodeView) {
             nodeView.overlayAnchor.removeOverlay(overlayId);
         }
@@ -106,10 +107,10 @@ export class L3Graph<Descriptor extends GraphDescriptor> extends React.Component
         return this.view.pos3dToClientPos(position);
     }
 
-    private onViewMount = (view: DiagramView<Descriptor>) => {
+    private onViewMount = (view: DiagramView) => {
         this.view = view;
         this.view.graphView.on('overlay:down',
-            ({data: {event, target}}) => this.mouseHandler.fireMouseDownEvent(event, target));
+            ({data: {event, target}}) => this.mouseHandler.onMouseDownEvent(event, target));
         this.mouseHandler = new MouseHandler(this.diagramModel, this.view);
         this.keyHandler = new KeyHandler();
         this.keyHandler.switchOn();
@@ -117,9 +118,9 @@ export class L3Graph<Descriptor extends GraphDescriptor> extends React.Component
         this.configureViewControllers();
         this.defaultEditor = new DefaultEditor(
             this.diagramModel,
-            this.view,
             this.mouseHandler,
             this.keyHandler,
+            this.gamepadHandler
         );
         this.gamepadEditor = new GamepadEditor(this.gamepadHandler);
         for (const widgetFactory of DEFAULT_MESH_WIDGET_SET()) {
@@ -151,7 +152,7 @@ export class L3Graph<Descriptor extends GraphDescriptor> extends React.Component
         this.keyHandler.switchOff();
     }
 
-    public registerWidget<CustomWidget extends Widget>(widgetResolver: WidgetFactory<CustomWidget, Descriptor>) {
+    public registerWidget<CustomWidget extends Widget>(widgetResolver: WidgetFactory<CustomWidget>) {
         const widgetModel = widgetResolver.getModel({
             vrManager: this.view.vrManager,
             diagramModel: this.diagramModel,
@@ -171,7 +172,10 @@ export class L3Graph<Descriptor extends GraphDescriptor> extends React.Component
     }
 
     render() {
-        const viewOptions: ViewOptions<Descriptor> = this.props.viewOptions || {};
+        const viewOptions: ViewOptions = this.props.viewOptions || {};
+        const dragHandlers: Subscribable<DragHandlerEvents>[] = [];
+        if (this.gamepadHandler) { dragHandlers.push(this.gamepadHandler as any); }
+        if (this.mouseHandler) { dragHandlers.push(this.mouseHandler as any); }
         return <div
             tabIndex={0}
             className='l3graph-main'
@@ -179,19 +183,23 @@ export class L3Graph<Descriptor extends GraphDescriptor> extends React.Component
             onBlur={this.onBlur}>
             <div
                 className='l3graph-main__touch-panel'
+                onMouseMove={event => {
+                    this.mouseHandler.onMouseMoveEvent(event.nativeEvent);
+                }}
                 onMouseDown={event => {
                     if (event.currentTarget !== event.target) { return; }
-                    this.mouseHandler.fireMouseDownEvent(event.nativeEvent);
+                    this.mouseHandler.onMouseDownEvent(event.nativeEvent);
                 }}
                 onTouchStart={event => {
                     if (event.currentTarget !== event.target) { return; }
-                    this.mouseHandler.fireMouseDownEvent(event.nativeEvent);
+                    this.mouseHandler.onMouseDownEvent(event.nativeEvent);
                 }}
-                onWheel={event => this.mouseHandler.fireScrollEvent(event.nativeEvent)}>
+                onWheel={event => this.mouseHandler.onScrollEvent(event.nativeEvent)}>
                 <DiagramView
                     model={this.diagramModel}
                     onViewMount={this.onViewMount}
-                    viewOptions={viewOptions}>
+                    viewOptions={viewOptions}
+                    dragHandlers={dragHandlers.length > 0 ? dragHandlers : undefined}>
                 </DiagramView>
             </div>
             {this.props.children}

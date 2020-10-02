@@ -2,18 +2,16 @@ import { Element } from '../graph/graphModel';
 import { DiagramModel } from '../diagramModel';
 import { Widget } from './widget';
 import { Node } from '../graph/node';
-import { Link } from '../graph/link';
-import { GraphDescriptor } from '../graph/graphDescriptor';
 
-export interface SelectionParameters<Descriptor extends GraphDescriptor> {
-    diagramModel: DiagramModel<Descriptor>;
+export interface SelectionParameters {
+    diagramModel: DiagramModel;
 }
 
-export class SelectionWidget<Descriptor extends GraphDescriptor> extends Widget {
+export class SelectionWidget extends Widget {
     public readonly widgetId: string;
-    private readonly diagramModel: DiagramModel<Descriptor>;
+    private readonly diagramModel: DiagramModel;
 
-    constructor(parameters: SelectionParameters<Descriptor>) {
+    constructor(parameters: SelectionParameters) {
         super();
         this.widgetId = 'l3graph-selection-widget';
         this.diagramModel = parameters.diagramModel;
@@ -25,12 +23,12 @@ export class SelectionWidget<Descriptor extends GraphDescriptor> extends Widget 
     }
 
     public get selectedElements() {
-        const elements: Element<Descriptor>[] = [];
+        const elements: Element[] = [];
         this.diagramModel.selection.elements.forEach(el => elements.push(el));
         return elements;
     }
 
-    private updateSubscription(previousSelection: ReadonlySet<Element<Descriptor>> | undefined) {
+    private updateSubscription(previousSelection: ReadonlySet<Element> | undefined) {
         if (previousSelection) {
             previousSelection.forEach(el => {
                 el.unsubscribeFromAll(this.forceUpdate);

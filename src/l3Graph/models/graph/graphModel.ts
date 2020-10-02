@@ -3,13 +3,13 @@ import { Link, LinkModel, LinkId } from './link';
 import { Subscribable } from '../../utils/subscribable';
 import { GraphDescriptor } from './graphDescriptor';
 
-export type NodeDefinition<NodeContent> = NodeModel<NodeContent> & NodeParameters;
-export type Element<Descriptor extends GraphDescriptor> =
+export type NodeDefinition<NodeContent = unknown> = NodeModel<NodeContent> & NodeParameters;
+export type Element<Descriptor extends GraphDescriptor = GraphDescriptor> =
     Node<Descriptor> | Link<Descriptor>;
-export type ElementModel<Descriptor extends GraphDescriptor> =
+export type ElementModel<Descriptor extends GraphDescriptor = GraphDescriptor> =
     NodeModel<Descriptor['nodeContentType']> | LinkModel<Descriptor['linkContentType']>;
 
-export interface GraphModelEvents<Descriptor extends GraphDescriptor> {
+export interface GraphModelEvents<Descriptor extends GraphDescriptor = GraphDescriptor> {
     'add:nodes': Node<Descriptor>[];
     'remove:nodes': Node<Descriptor>[];
     'update:nodes': Node<Descriptor>[];
@@ -31,7 +31,8 @@ export interface ImmutableSet<T> {
     readonly size: number;
 }
 
-export class GraphModel<Descriptor extends GraphDescriptor> extends Subscribable<GraphModelEvents<Descriptor>> {
+export class GraphModel<Descriptor extends GraphDescriptor = GraphDescriptor>
+extends Subscribable<GraphModelEvents<Descriptor>> {
     private _nodes: Map<NodeId, Node<Descriptor>> = new Map();
     private _links: Map<LinkId, Link<Descriptor>> = new Map();
 

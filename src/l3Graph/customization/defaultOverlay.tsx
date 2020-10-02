@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { ReactOverlay, OverlayProps } from './templates';
 import { Node } from '../models/graph/node';
-import { GraphDescriptor } from '../models/graph/graphDescriptor';
+import { DefaultDescriptor } from '../models/graph/graphDescriptor';
 import { Link } from '../models/graph/link';
 
-class DefaultLinkOverlayClass extends React.Component<OverlayProps<Node<GraphDescriptor>>> {
+class DefaultLinkOverlayClass extends React.Component<OverlayProps<Node<DefaultDescriptor>>> {
     render() {
         const {label} = this.props.target.data;
         return <div className='l3graph-link-html-view'>
@@ -13,7 +13,7 @@ class DefaultLinkOverlayClass extends React.Component<OverlayProps<Node<GraphDes
     }
 }
 
-class DefaultNodeOverlayClass extends React.Component<OverlayProps<Link<GraphDescriptor>>> {
+class DefaultNodeOverlayClass extends React.Component<OverlayProps<Link<DefaultDescriptor>>> {
     render() {
         const {label} = this.props.target.data;
         return <div className='l3graph-default-node-view'>
@@ -22,11 +22,11 @@ class DefaultNodeOverlayClass extends React.Component<OverlayProps<Link<GraphDes
     }
 }
 
-export const DEFAULT_NODE_OVERLAY: ReactOverlay<Node<GraphDescriptor>> = {
+export const DEFAULT_NODE_OVERLAY: ReactOverlay<Node<DefaultDescriptor>> = {
     id: 'node-overlay',
     value: <DefaultNodeOverlayClass/>,
 };
-export const DEFAULT_LINK_OVERLAY: ReactOverlay<Link<GraphDescriptor>> = {
+export const DEFAULT_LINK_OVERLAY: ReactOverlay<Link<DefaultDescriptor>> = {
     id: 'link-overlay',
     value: <DefaultLinkOverlayClass/>,
 };

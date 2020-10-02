@@ -15,7 +15,7 @@ import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
 const ARROW_LENGTH = 10;
 
-export class LinkView<Descriptor extends GraphDescriptor> implements View<Link<Descriptor>> {
+export class LinkView<Descriptor extends GraphDescriptor = GraphDescriptor> implements View<Link<Descriptor>> {
     public readonly mesh: THREE.Group;
     public readonly overlayAnchor: LinkOverlayAnchor<Descriptor>;
     public readonly overlayAnchor3d: LinkOverlayAnchor3d<Descriptor>;
@@ -30,7 +30,7 @@ export class LinkView<Descriptor extends GraphDescriptor> implements View<Link<D
 
     constructor(
         public readonly model: Link<Descriptor>,
-        public readonly router: LinkRouter<Descriptor>,
+        public readonly router: LinkRouter,
         private template: LinkViewTemplate<Descriptor>,
     ) {
         this.model = model;
@@ -156,10 +156,10 @@ AbstractOverlayAnchor3d<Link<Descriptor>, LinkView<Descriptor>> {
             let offset = applyOffset({x: 0, y: 0, z: 0}, initialOffset, position);
             for (const renderedSprite of sprites) {
                 renderedSprite.sprite.position.set(
-                    offset.x, 
-                    offset.y, 
-                    offset.z, 
-                )
+                    offset.x,
+                    offset.y,
+                    offset.z,
+                );
                 offset = applyOffset(offset, {
                     x: SELECTION_PADDING + renderedSprite.size.x,
                     y: SELECTION_PADDING + renderedSprite.size.y,
@@ -174,7 +174,7 @@ AbstractOverlayAnchor3d<Link<Descriptor>, LinkView<Descriptor>> {
 // 1 - lines can't have thikness on Windows OS,
 // 2 - There is bug with lines when they are too close to the camera
 // There is simpleLinkView.ts - you can check the behavior
-function createLine<Descriptor extends GraphDescriptor>(template: LinkViewTemplate<Descriptor>): THREE.Group {
+function createLine(template: LinkViewTemplate<any>): THREE.Group {
     const lineGeometry = new THREE.PlaneGeometry(1, 0.5 * template.thickness, 1, 1);
     const lineMaterial = new THREE.MeshBasicMaterial({color: template.color, side: THREE.DoubleSide});
     const line1 = new THREE.Mesh(lineGeometry, lineMaterial);

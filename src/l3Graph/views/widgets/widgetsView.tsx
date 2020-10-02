@@ -6,23 +6,23 @@ import { VrManager } from '../../vrUtils/vrManager';
 import { DiagramView } from '../diagramView';
 import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
-export interface WidgetsViewProps<Descriptor extends GraphDescriptor> {
-    diagramView: DiagramView<Descriptor>;
+export interface WidgetsViewProps {
+    diagramView: DiagramView;
     vrManager: VrManager;
     widgetsModel: WidgetsModel;
     onAdd3dObject: (object: THREE.Object3D) => void;
     onRemove3dObject: (object: THREE.Object3D) => void;
 }
 
-export class WidgetsView<CustomWidget extends Widget, Descriptor extends GraphDescriptor> {
+export class WidgetsView<CustomWidget extends Widget> {
     private views: Map<string, DiagramWidgetView>;
-    private viewRegistry: Map<string, WidgetViewResolver<CustomWidget, Descriptor>>;
+    private viewRegistry: Map<string, WidgetViewResolver<CustomWidget>>;
 
-    diagramView: DiagramView<Descriptor>;
+    diagramView: DiagramView;
     vrManager: VrManager;
     widgetsModel: WidgetsModel;
 
-    constructor(private props: WidgetsViewProps<Descriptor>) {
+    constructor(private props: WidgetsViewProps) {
         this.views = new Map();
         this.diagramView = props.diagramView;
         this.vrManager = props.vrManager;
@@ -31,7 +31,7 @@ export class WidgetsView<CustomWidget extends Widget, Descriptor extends GraphDe
         this.widgetsModel.widgets.forEach(widget => this.registerWidgetViewForModel(widget as any));
     }
 
-    public registerViewResolver(widgetId: string, viewResolver: WidgetViewResolver<CustomWidget, Descriptor>) {
+    public registerViewResolver(widgetId: string, viewResolver: WidgetViewResolver<CustomWidget>) {
         this.viewRegistry.set(widgetId, viewResolver);
     }
 

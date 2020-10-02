@@ -14,38 +14,37 @@ import { LinkRouter, DefaultLinkRouter } from '../../utils/linkRouter';
 import { DiagramElementView } from '../viewInterface';
 import { VrManager } from '../../vrUtils/vrManager';
 import { AbstractOverlayAnchor3d } from './overlay3DAnchor';
-import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
-export interface GraphViewProps<Descriptor extends GraphDescriptor> {
-    graphModel: GraphModel<Descriptor>;
+export interface GraphViewProps {
+    graphModel: GraphModel;
     vrManager: VrManager;
     onAdd3dObject: (object: THREE.Object3D) => void;
     onRemove3dObject: (object: THREE.Object3D) => void;
-    nodeTemplateProvider?: TemplateProvider<Node<Descriptor>>;
-    linkTemplateProvider?: TemplateProvider<Link<Descriptor>, Descriptor>;
+    nodeTemplateProvider?: TemplateProvider<Node>;
+    linkTemplateProvider?: TemplateProvider<Link>;
     simpleLinks?: boolean;
 }
 
-export interface GraphViewEvents<Descriptor extends GraphDescriptor> {
+export interface GraphViewEvents {
     'overlay:down': {
         event: MouseEvent | TouchEvent;
-        target: Element<Descriptor>;
+        target: Element;
     };
 }
 
-export class GraphView<Descriptor extends GraphDescriptor> extends Subscribable<GraphViewEvents<Descriptor>> {
-    nodeViews = new Map<NodeId, NodeView<Descriptor>>();
-    linkViews = new Map<LinkId, LinkView<Descriptor>>();
+export class GraphView extends Subscribable<GraphViewEvents> {
+    nodeViews = new Map<Node, NodeView>();
+    linkViews = new Map<Link, LinkView>();
     anchors3d: Set<AbstractOverlayAnchor3d<any, any>>;
 
-    graphModel: GraphModel<Descriptor>;
+    graphModel: GraphModel;
     meshHtmlContainer: HTMLElement;
     overlayHtmlContainer: HTMLElement;
-    linkRouter: LinkRouter<Descriptor>;
+    linkRouter: LinkRouter;
 
     private vrManager: VrManager;
 
-    constructor(private props: GraphViewProps<Descriptor>) {
+    constructor(private props: GraphViewProps) {
         super();
         this.graphModel = props.graphModel;
         this.linkRouter = new DefaultLinkRouter();
@@ -53,8 +52,8 @@ export class GraphView<Descriptor extends GraphDescriptor> extends Subscribable<
         this.graphModel.links.forEach(link => this.registerLink(link));
         this.anchors3d = new Set();
         this.vrManager = props.vrManager;
-        this.vrManager.on('presenting:state:changed', () => {
-            if (this.vrManager.isStarted) {
+        this.vrManager.on('connection:state:changed', () => {
+            if (this.vrManager.isConnected) {
                 this.anchors3d.forEach((sprite) => this.onAdd3dObject(sprite.mesh));
             } else {
                 this.anchors3d.forEach((sprite) => this.onRemove3dObject(sprite.mesh));
@@ -62,8 +61,8 @@ export class GraphView<Descriptor extends GraphDescriptor> extends Subscribable<
         });
     }
 
-    public registerNode(node: Node<Descriptor>) {
-        const isNodeViewExists = this.nodeViews.get(node.id);
+    public registerNode(node: Node) {
+        const isNodeViewExists = this.nodeViews.get(node);
         if (isNodeViewExists) {
             return; // We've already registered the view for this element
         }
@@ -72,13 +71,13 @@ export class GraphView<Descriptor extends GraphDescriptor> extends Subscribable<
 
         const view = new NodeView(node, nodeTemplate);
         this.registerView(view);
-        this.nodeViews.set(node.id, view);
+        this.nodeViews.set(node, view);
 
         return view;
     }
 
-    public registerLink(link: Link<Descriptor>) {
-        const elementViewExists = this.linkViews.get(link.id);
+    public registerLink(link: Link) {
+        const elementViewExists = this.linkViews.get(link);
         if (elementViewExists) {
             return; // We've registered the view for this element
         }
@@ -86,28 +85,28 @@ export class GraphView<Descriptor extends GraphDescriptor> extends Subscribable<
         const linkTemplate = templateProvider(link);
         const view = new LinkView(link, this.linkRouter, linkTemplate);
         this.registerView(view);
-        this.linkViews.set(link.id, view);
+        this.linkViews.set(link, view);
 
         return view;
     }
 
-    public removeNodeView(node: Node<Descriptor>) {
-        const view = this.nodeViews.get(node.id);
+    public removeNodeView(node: Node) {
+        const view = this.nodeViews.get(node);
         if (view) {
             this.unsubscribeFromView(view);
-            this.nodeViews.delete(node.id);
+            this.nodeViews.delete(node);
         }
     }
 
-    public removeLinkView(link: Link<Descriptor>) {
-        const view = this.linkViews.get(link.id);
+    public removeLinkView(link: Link) {
+        const view = this.linkViews.get(link);
         if (view) {
             this.unsubscribeFromView(view);
-            this.linkViews.delete(link.id);
+            this.linkViews.delete(link);
         }
     }
 
-    private registerView(view: DiagramElementView<Descriptor>) {
+    private registerView(view: DiagramElementView) {
         if (view.mesh) {
             this.onAdd3dObject(view.mesh);
         }
@@ -122,7 +121,7 @@ export class GraphView<Descriptor extends GraphDescriptor> extends Subscribable<
         }
         if (view.overlayAnchor3d) {
             this.anchors3d.add(view.overlayAnchor3d);
-            if (this.vrManager.isStarted) {
+            if (this.vrManager.isConnected) {
                 this.onAdd3dObject(view.overlayAnchor3d.mesh);
             }
         }
@@ -130,7 +129,7 @@ export class GraphView<Descriptor extends GraphDescriptor> extends Subscribable<
         return view;
     }
 
-    private unsubscribeFromView(view: DiagramElementView<Descriptor>) {
+    private unsubscribeFromView(view: DiagramElementView) {
         if (view.mesh) {
             this.onRemove3dObject(view.mesh);
         }
@@ -151,31 +150,42 @@ export class GraphView<Descriptor extends GraphDescriptor> extends Subscribable<
         this.props.onRemove3dObject(object);
     }
 
-    update({ updatedNodeIds, updatedLinkIds }: {updatedNodeIds: NodeId[]; updatedLinkIds: LinkId[]}) {
+    update({
+        updatedNodeIds,
+        updatedLinkIds,
+    }: {
+        updatedNodeIds: NodeId[];
+        updatedLinkIds: LinkId[];
+    }) {
         if (updatedNodeIds) {
             for (const id of updatedNodeIds) {
-                this.updateNodeView(id);
+                const node = this.graphModel.getNodeById(id);
+                if (node) {
+                    this.updateNodeView(node);
+                }
             }
         } else {
             this.nodeViews.forEach(view => {
-                this.updateNodeView(view.model.id);
+                this.updateNodeView(view.model);
             });
         }
         if (updatedLinkIds) {
             for (const id of updatedLinkIds) {
-                this.updateLinkView(id);
+                const link = this.graphModel.getLinkById(id);
+                if (link) {
+                    this.updateLinkView(link);
+                }
             }
         } else {
             this.linkViews.forEach(view => {
-                this.updateLinkView(view.model.id);
+                this.updateLinkView(view.model);
             });
         }
     }
 
-    private updateLinkView(linkId: LinkId) {
-        const link = this.graphModel.getLinkById(linkId);
+    private updateLinkView(link: Link) {
         if (link.modelIsChanged) {
-            const oldView = this.linkViews.get(link.id);
+            const oldView = this.linkViews.get(link);
             this.removeLinkView(link);
             const newView = this.registerLink(link);
 
@@ -188,16 +198,15 @@ export class GraphView<Descriptor extends GraphDescriptor> extends Subscribable<
 
             link.modelIsChanged = false;
         }
-        const view = this.linkViews.get(linkId);
+        const view = this.linkViews.get(link);
         if (view) { // Can be case when model is not changed but also is not loaded
             view.update();
         }
     }
 
-    private updateNodeView(nodeId: NodeId) {
-        const node = this.graphModel.getNodeById(nodeId);
+    private updateNodeView(node: Node) {
         if (node.modelIsChanged) {
-            const oldView = this.nodeViews.get(node.id);
+            const oldView = this.nodeViews.get(node);
             this.removeNodeView(node);
             const newView = this.registerNode(node);
 
@@ -210,7 +219,7 @@ export class GraphView<Descriptor extends GraphDescriptor> extends Subscribable<
 
             node.modelIsChanged = false;
         }
-        const view = this.nodeViews.get(nodeId);
+        const view = this.nodeViews.get(node);
         if (view) { // Can be case when model is not changed but also is not loaded
             view.update();
         }

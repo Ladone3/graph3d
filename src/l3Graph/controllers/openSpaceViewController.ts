@@ -13,21 +13,18 @@ import {
     inverse,
     multiply,
     sum,
-    KEY_CODES,
     normalLeft,
     normalRight,
     normalUp,
     normalDown,
-    KeyHandler,
     EventObject,
     Subscribable,
 } from '../utils';
-
+import { KEY_CODES, KeyHandler } from '../input/keyHandler';
 import { DiagramView } from '../views/diagramView';
-import { MouseHandler, HandlerDragEvent } from '../utils/mouseHandler';
-import { GraphDescriptor } from '../models/graph/graphDescriptor';
+import { MouseHandler, HandlerDragEvent } from '../input/mouseHandler';
 
-export class OpenSpaceViewController<Descriptor extends GraphDescriptor> extends
+export class OpenSpaceViewController extends
 Subscribable<ViewControllerEvents> implements ViewController {
     readonly id: string;
     public label: string;
@@ -36,8 +33,8 @@ Subscribable<ViewControllerEvents> implements ViewController {
     protected startAngle: Vector2d;
 
     constructor(
-        protected view: DiagramView<Descriptor>,
-        protected mouseHandler: MouseHandler<Descriptor>,
+        protected view: DiagramView,
+        protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
     ) {
         super();

@@ -85,7 +85,7 @@ const CUSTOM_NODE_TEMPLATE_1: ViewTemplate<CustomGraphDescriptor['nodeContentTyp
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    let l3Graph: L3Graph<CustomGraphDescriptor>;
+    let l3Graph: L3Graph;
     mountGraph();
 
     function mountGraph() {
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })), rootHtml);
     }
 
-    function onComponentMount(l3graph: L3Graph<CustomGraphDescriptor>) {
+    function onComponentMount(l3graph: L3Graph) {
         l3Graph = l3graph;
         const graphElements = generateData(10);
         l3graph.model.graph.addNodes(graphElements.nodes);
@@ -120,13 +120,13 @@ document.addEventListener('DOMContentLoaded', () => {
         applyForceLayout3d(l3graph.model.graph, 30, 200);
 
         l3graph.registerWidget({
-            getModel: (context: WidgetModelContext<CustomGraphDescriptor>) =>
-                new FocusNodeWidget<CustomGraphDescriptor>({
+            getModel: (context: WidgetModelContext) =>
+                new FocusNodeWidget({
                     ...context,
                     widgetId: 'l3graph-react-node-widget',
-                } as any) ,
+                }),
             getView: (
-                context: WidgetViewContext<FocusNodeWidget<GraphDescriptor>, GraphDescriptor>
+                context: WidgetViewContext<FocusNodeWidget>
             ) => new ReactNodeWidgetView({
                 model: context.widget as any,
                 diagramView: context.diagramView,

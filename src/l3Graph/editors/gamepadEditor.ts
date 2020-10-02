@@ -1,9 +1,8 @@
 import { Node } from '../models/graph/node';
-import { GamepadHandler } from '../vrUtils/gamepadHandler';
-import { GraphDescriptor } from '../models/graph/graphDescriptor';
+import { GamepadHandler } from '../input/gamepadHandler';
 
-export class GamepadEditor<Descriptor extends GraphDescriptor> {
-    constructor(private gamepadHandler: GamepadHandler<Descriptor>) {
+export class GamepadEditor {
+    constructor(private gamepadHandler: GamepadHandler) {
         this.gamepadHandler.on('elementDrag', event => {
             const { target, position } = event.data;
             if (target instanceof Node) {

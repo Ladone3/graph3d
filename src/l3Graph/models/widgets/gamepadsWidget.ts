@@ -1,62 +1,27 @@
 import { Widget } from './widget';
-import { GamepadHandler, OCULUS_CONTROLLERS } from '../../vrUtils/gamepadHandler';
+import { GamepadHandler, OCULUS_CONTROLLERS } from '../../input/gamepadHandler';
 import { GamepadTool } from '../../views/widgets/gamepadTools/defaultTools';
-import { GraphDescriptor } from '../graph/graphDescriptor';
 
-export interface GamepadsWidgetProps<Descriptor extends GraphDescriptor> {
-    gamepadHandler: GamepadHandler<Descriptor>;
-    leftTools: GamepadTool[];
-    rightTools: GamepadTool[];
+export interface GamepadsWidgetProps {
+    gamepadHandler: GamepadHandler;
+    leftTool?: GamepadTool;
+    rightTool?: GamepadTool;
 }
 
-export interface GamepadsTools {
-    leftTool: GamepadTool;
-    rightTool: GamepadTool;
-}
-
-export class GamepadsWidget<Descriptor extends GraphDescriptor> extends Widget {
+export class GamepadsWidget extends Widget {
     public readonly widgetId: string;
-    private _tools: GamepadsTools;
 
-    constructor(private props: GamepadsWidgetProps<Descriptor>) {
+    constructor(public props: GamepadsWidgetProps) {
         super();
         this.widgetId = 'l3graph-gamepad-widget';
-
-        if (props.leftTools.length === 0 || props.rightTools.length === 0) {
-            throw new Error('Left or Right tool is not provided!');
-        }
-
-        this._tools = {
-            leftTool: props.leftTools[0],
-            rightTool: props.rightTools[0],
-        };
     }
 
     onRemove() {
-        this.props.leftTools.forEach(tool => tool.onDiscard());
-        this.props.rightTools.forEach(tool => tool.onDiscard());
-    }
-
-    get tools(): GamepadsTools {
-        if (
-            this._tools.leftTool.forGamepadId === OCULUS_CONTROLLERS.LEFT_CONTROLLER &&
-            this._tools.rightTool.forGamepadId === OCULUS_CONTROLLERS.RIGHT_CONTROLLER
-        ) {
-            return this._tools;
-        } else if (
-            this._tools.leftTool.forGamepadId === OCULUS_CONTROLLERS.RIGHT_CONTROLLER &&
-            this._tools.rightTool.forGamepadId === OCULUS_CONTROLLERS.LEFT_CONTROLLER
-        ) {
-            // tslint:disable-next-line: no-console
-            console.warn('Please change configuration left gamepad and right one are mixed up!');
-            return {
-                leftTool: this._tools.rightTool,
-                rightTool: this._tools.leftTool,
-            };
-        } else {
-            // tslint:disable-next-line: no-console
-            console.warn('Wrong gamepad tool configuration!');
-            return this._tools;
+        if (this.props.leftTool) {
+            this.props.leftTool.discard();
+        }
+        if (this.props.rightTool) {
+            this.props.rightTool.discard();
         }
     }
 }

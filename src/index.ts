@@ -40,7 +40,7 @@ export {
 export { GamepadsWidget } from './l3Graph/models/widgets/gamepadsWidget';
 export { GamepadsWidgetView } from './l3Graph/views/widgets/gamepadsWidgetView';
 export * from './l3Graph/views/widgets/gamepadTools/defaultTools';
-export * from './l3Graph/views/widgets/gamepadTools/editorTools';
+// export * from './l3Graph/views/widgets/gamepadTools/editorTools';
 
 export { FocusNodeWidget }  from './l3Graph/models/widgets/focusNodeWidget';
 export { ReactNodeWidgetView } from './l3Graph/views/widgets/reactNodeWidgetView';
@@ -48,6 +48,6 @@ export { DiagramWidgetView } from './l3Graph/views/viewInterface';
 export { OverlayPosition } from './l3Graph/views/graph/overlayAnchor';
 export * from './l3Graph/defaultWidgetsSet';
 
-export { GAMEPAD_BUTTON } from './l3Graph/vrUtils/gamepadHandler';
+export { GAMEPAD_BUTTON } from './l3Graph/input/gamepadHandler';
 export { htmlToImage } from './l3Graph/utils/htmlToSprite';
 export * from './l3Graph/toolbar';

@@ -1,4 +1,5 @@
-import { Subscribable } from './subscribable';
+import { Subscribable } from '../utils/subscribable';
+import { animationFrameInterval, Cancellation } from '../utils';
 
 export interface KeyHandlerEvents {
     'keyDown': Set<number>;
@@ -61,37 +62,4 @@ export class KeyHandler extends Subscribable<KeyHandlerEvents> {
             this.trigger('keyPressed', this.keyMap);
         });
     }
-}
-
-export interface CancellationEvents {
-    'cancel': void;
-}
-
-export class Cancellation extends Subscribable<CancellationEvents> {
-    public isCancelled: boolean = false;
-    stop() {
-        this.isCancelled = true;
-        this.trigger('cancel');
-    }
-}
-
-export function animationFrameInterval(
-    intervalCallback: () => void,
-): Cancellation {
-    const cancellation = new Cancellation();
-    let animationFrameId: number;
-
-    const animate = (time: number) => {
-        if (!cancellation.isCancelled) {
-            intervalCallback();
-            animationFrameId = requestAnimationFrame(animate);
-        }
-    };
-    requestAnimationFrame(animate);
-
-    cancellation.on('cancel', () => {
-        cancelAnimationFrame(animationFrameId);
-    });
-
-    return cancellation;
 }

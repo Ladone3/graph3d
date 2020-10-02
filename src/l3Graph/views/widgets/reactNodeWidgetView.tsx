@@ -9,23 +9,23 @@ import { DiagramWidgetView } from '../viewInterface';
 import { DiagramView } from '../diagramView';
 import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
-export interface ReactNodeWidgetViewParameters<Descriptor extends GraphDescriptor> {
-    diagramView: DiagramView<Descriptor>;
-    model: FocusNodeWidget<Descriptor>;
-    overlay: ReactOverlay<Node<Descriptor>>;
+export interface ReactNodeWidgetViewParameters {
+    diagramView: DiagramView;
+    model: FocusNodeWidget;
+    overlay: ReactOverlay<Node>;
     position?: OverlayPosition;
 }
 
-export class ReactNodeWidgetView<Descriptor extends GraphDescriptor> implements DiagramWidgetView {
-    public readonly model: FocusNodeWidget<Descriptor>;
+export class ReactNodeWidgetView implements DiagramWidgetView {
+    public readonly model: FocusNodeWidget;
     public readonly mesh: THREE.Group;
 
     private htmlOverlay: HTMLElement;
-    private overlay: ReactOverlay<Node<Descriptor>>;
+    private overlay: ReactOverlay<Node>;
     private position: OverlayPosition;
-    private diagramView: DiagramView<Descriptor>;
+    private diagramView: DiagramView;
 
-    constructor(parameters: ReactNodeWidgetViewParameters<Descriptor>) {
+    constructor(parameters: ReactNodeWidgetViewParameters) {
         this.model = parameters.model;
         this.position = parameters.position || 'c';
         this.mesh = null;
@@ -48,7 +48,7 @@ export class ReactNodeWidgetView<Descriptor extends GraphDescriptor> implements 
         this.clearNode(this.model.prevFocusNode);
 
         if (this.model.focusNode) {
-            const curAnchor = this.diagramView.graphView.nodeViews.get(this.model.focusNode.id).overlayAnchor;
+            const curAnchor = this.diagramView.graphView.nodeViews.get(this.model.focusNode).overlayAnchor;
             if (!curAnchor.hasOverlay(this.overlay.id)) {
                 curAnchor.setOverlay(this.overlay, this.position);
             }
@@ -60,11 +60,11 @@ export class ReactNodeWidgetView<Descriptor extends GraphDescriptor> implements 
         this.clearNode(this.model.prevFocusNode);
     }
 
-    private clearNode(node: Node<Descriptor>) {
+    private clearNode(node: Node) {
         if (node && this.overlay) {
-            const view = this.diagramView.graphView.nodeViews.get(node.id);
+            const view = this.diagramView.graphView.nodeViews.get(node);
             if (view) {
-                const anchor = this.diagramView.graphView.nodeViews.get(node.id).overlayAnchor;
+                const anchor = this.diagramView.graphView.nodeViews.get(node).overlayAnchor;
                 anchor.removeOverlay(this.overlay.id);
             }
         }

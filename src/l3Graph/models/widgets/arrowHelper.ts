@@ -1,27 +1,26 @@
 import { NodeWidget } from './nodeWidget';
-import { MouseHandler } from '../../utils/mouseHandler';
+import { MouseHandler } from '../../input/mouseHandler';
 import { Node } from '../graph/node';
-import { GraphDescriptor } from '../graph/graphDescriptor';
 
-export interface ArrowHelperParameters<Descriptor extends GraphDescriptor> {
-    mouseHandler: MouseHandler<Descriptor>;
+export interface ArrowHelperParameters {
+    mouseHandler: MouseHandler;
 }
 
-export class ArrowHelper<Descriptor extends GraphDescriptor> extends NodeWidget<Descriptor> {
-    private mouseHandler: MouseHandler<Descriptor>;
+export class ArrowHelper extends NodeWidget {
+    private mouseHandler: MouseHandler;
 
-    constructor(parameters: ArrowHelperParameters<Descriptor>) {
+    constructor(parameters: ArrowHelperParameters) {
         super({widgetId: 'l3graph-arrow-helper-widget'});
         this.mouseHandler = parameters.mouseHandler;
 
-        this.mouseHandler.on('elementStartDrag', () => {
+        this.mouseHandler.on('elementDragStart', () => {
             const draggedElement = this.mouseHandler.draggedElement;
             if (draggedElement instanceof Node) {
                 this.setFocusNode(draggedElement);
             }
         });
 
-        this.mouseHandler.on('elementEndDrag', () => {
+        this.mouseHandler.on('elementDragEnd', () => {
             this.setFocusNode(undefined);
         });
     }

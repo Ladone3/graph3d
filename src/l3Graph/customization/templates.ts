@@ -23,7 +23,7 @@ export interface ViewTemplate<Model> {
     mesh?: () => L3Mesh;
 }
 
-export interface LinkViewTemplate<Descriptor extends GraphDescriptor> {
+export interface LinkViewTemplate<Descriptor extends GraphDescriptor = GraphDescriptor> {
     color: number | string;
     thickness?: number;
     overlay?: ReactOverlay<Link<Descriptor>>;

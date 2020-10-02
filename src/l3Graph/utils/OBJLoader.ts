@@ -578,7 +578,9 @@ export class OBJLoader {
                     if (isLine && material && !(material instanceof THREE.LineBasicMaterial)) {
                         const materialLine = new THREE.LineBasicMaterial();
                         THREE.Material.prototype.copy.call(materialLine, material);
-                        materialLine.color.copy(material.color);
+                        if (materialLine.color instanceof THREE.Color) {
+                            materialLine.color.copy(material.color);
+                        }
                         (materialLine as any).lights = false;
                         material = materialLine;
                     } else if (isPoints && material && ! (material instanceof THREE.PointsMaterial)) {

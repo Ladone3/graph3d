@@ -6,23 +6,24 @@ import { GraphView } from './graph/graphView';
 import { DiagramModel } from '../models/diagramModel';
 import { WidgetsView } from './widgets/widgetsView';
 import { Widget } from '../models/widgets/widget';
-import { vector3dToTreeVector3, EventObject, eventToPosition } from '../utils';
-import { WebGLRenderer } from '../vrUtils/webVr';
+import { vector3dToTreeVector3, eventToPosition, Subscribable } from '../utils';
 import { VrManager } from '../vrUtils/vrManager';
 import { CSS3DRenderer } from '../utils/CSS3DRenderer';
 import { NodeId, Node } from '../models/graph/node';
 import { LinkId, Link } from '../models/graph/link';
-import { GraphDescriptor } from '../models/graph/graphDescriptor';
+import { ElementHighlighter } from '../utils/highlighter';
+import { DragHandlerEvents } from '../input/dragHandler';
 
-export interface ViewOptions<Descriptor extends GraphDescriptor> {
-    nodeTemplateProvider?: TemplateProvider<Node<Descriptor>>;
-    linkTemplateProvider?: TemplateProvider<Link<Descriptor>, Descriptor>;
+export interface ViewOptions {
+    nodeTemplateProvider?: TemplateProvider<Node>;
+    linkTemplateProvider?: TemplateProvider<Link>;
 }
 
-export interface DiagramViewProps<Descriptor extends GraphDescriptor> {
-    model: DiagramModel<Descriptor>;
-    onViewMount?: (view: DiagramView<Descriptor>) => void;
-    viewOptions?: ViewOptions<Descriptor>;
+export interface DiagramViewProps {
+    model: DiagramModel;
+    onViewMount?: (view: DiagramView) => void;
+    viewOptions?: ViewOptions;
+    dragHandlers?: Subscribable<DragHandlerEvents>[];
 }
 
 export interface CameraState {
@@ -37,12 +38,15 @@ export const DEFAULT_SCREEN_PARAMETERS = {
     FAR: 10000,
 };
 
-export class DiagramView<Descriptor extends GraphDescriptor> extends React.Component<DiagramViewProps<Descriptor>> {
-    renderer: WebGLRenderer;
+export class DiagramView extends React.Component<DiagramViewProps> {
+    private highlighter: ElementHighlighter;
+    private dragHandlers: Subscribable<DragHandlerEvents>[];
+
+    renderer: THREE.WebGLRenderer;
     overlayRenderer: CSS3DRenderer;
 
-    graphView: GraphView<Descriptor>;
-    widgetsView: WidgetsView<any, Descriptor>;
+    graphView: GraphView;
+    widgetsView: WidgetsView<any>;
 
     camera: THREE.PerspectiveCamera;
     scene: THREE.Scene;
@@ -59,23 +63,29 @@ export class DiagramView<Descriptor extends GraphDescriptor> extends React.Compo
         FAR: number;
     };
 
-    constructor(props: DiagramViewProps<Descriptor>) {
+    constructor(props: DiagramViewProps) {
         super(props);
+        this.highlighter = new ElementHighlighter(this);
     }
 
     componentDidMount() {
         this.initScene();
         this.vrManager = new VrManager(this);
-        this.vrManager.on('presenting:state:changed', () => {
+        this.vrManager.on('connection:state:changed', () => {
             this.widgetsView.update();
         });
         this.initSubViews();
         this.subscribeOnModel();
+        this.subscribeOnHandlers();
         this.renderGraph();
 
         if (this.props.onViewMount) {
             this.props.onViewMount(this);
         }
+    }
+
+    componentDidUpdate() {
+        this.subscribeOnHandlers();
     }
 
     mouseTo3dPos(event: MouseEvent | TouchEvent, distanceFromScreen: number = 600): Vector3d {
@@ -201,6 +211,10 @@ export class DiagramView<Descriptor extends GraphDescriptor> extends React.Compo
         );
         this.renderer.setClearColor('white');
 
+        // xr
+        // document.body.appendChild(VRButton.createButton(this.renderer));
+        this.renderer.xr.enabled = true;
+
         // Prepare sprite renderer (css3d)
         this.overlayRenderer = new CSS3DRenderer();
         this.overlayRenderer.setSize(
@@ -223,6 +237,7 @@ export class DiagramView<Descriptor extends GraphDescriptor> extends React.Compo
         // Finalize
         this.renderer.render(this.scene, this.camera);
         this.overlayRenderer.render(this.scene, this.camera);
+        this.setAnimationLoop();
     }
 
     private initSubViews() {
@@ -245,7 +260,9 @@ export class DiagramView<Descriptor extends GraphDescriptor> extends React.Compo
     }
 
     private subscribeOnModel() {
-        this.props.model.on('syncupdate', combinedEvent => {
+        const {model} = this.props;
+            model.on('syncupdate', combinedEvent => {
+
             const { nodeEvents, linkEvents, widgetEvents } = combinedEvent.data;
 
             const updatedNodeIds: NodeId[] = [];
@@ -301,6 +318,23 @@ export class DiagramView<Descriptor extends GraphDescriptor> extends React.Compo
         });
     }
 
+    private subscribeOnHandlers() {
+        const {dragHandlers} = this.props;
+        if (!dragHandlers || this.dragHandlers) { return; }
+        this.dragHandlers = dragHandlers;
+        for (const dragHandler of this.dragHandlers) {
+            dragHandler.on('elementHoverStart', e => {
+                this.highlighter.highlight(e.data.target);
+            });
+            dragHandler.on('elementHover', e => {
+                this.highlighter.highlight(e.data.target);
+            });
+            dragHandler.on('elementHoverEnd', e => {
+                this.highlighter.clear(e.data.target);
+            });
+        }
+    }
+
     renderGraph() {
         this.renderer.render(this.scene, this.camera);
         this.overlayRenderer.render(this.scene, this.camera);
@@ -319,5 +353,11 @@ export class DiagramView<Descriptor extends GraphDescriptor> extends React.Compo
             >
             </div>
         </div>;
+    }
+
+    private setAnimationLoop() {
+        this.renderer.setAnimationLoop(() => {
+            this.renderer.render(this.scene, this.camera);
+        });
     }
 }

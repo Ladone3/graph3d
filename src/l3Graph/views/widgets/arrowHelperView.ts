@@ -5,17 +5,17 @@ import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
 const LINES_LENGTH = 100;
 
-export interface ArrowHelperViewParameters<Descriptor extends GraphDescriptor> {
-    model: ArrowHelper<Descriptor>;
+export interface ArrowHelperViewParameters {
+    model: ArrowHelper;
 }
 
-export class ArrowHelperView<Descriptor extends GraphDescriptor> implements DiagramWidgetView {
-    public readonly model: ArrowHelper<Descriptor>;
+export class ArrowHelperView implements DiagramWidgetView {
+    public readonly model: ArrowHelper;
     public readonly mesh: THREE.Group;
 
     private boundingBox: THREE.Box3;
 
-    constructor(parameters: ArrowHelperViewParameters<Descriptor>) {
+    constructor(parameters: ArrowHelperViewParameters) {
         this.model = parameters.model;
 
         this.mesh = new THREE.Group();

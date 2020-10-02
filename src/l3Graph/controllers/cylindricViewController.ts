@@ -1,15 +1,14 @@
 import { SphericalViewController } from './sphericalViewController';
 import { DiagramView } from '../views/diagramView';
-import { MouseHandler } from '../utils/mouseHandler';
-import { KeyHandler } from '../utils';
+import { MouseHandler } from '../input/mouseHandler';
+import { KeyHandler } from '../input/keyHandler';
 import { BORDER_OPACITY } from './viewController';
-import { GraphDescriptor } from '../models/graph/graphDescriptor';
 
-export class CylindricalViewController<Descriptor extends GraphDescriptor> extends SphericalViewController<Descriptor> {
+export class CylindricalViewController extends SphericalViewController {
     readonly id: string;
     constructor(
-        view: DiagramView<Descriptor>,
-        mouseHandler: MouseHandler<Descriptor>,
+        view: DiagramView,
+        mouseHandler: MouseHandler,
         keyHandler: KeyHandler,
     ) {
         super(view, mouseHandler, keyHandler);

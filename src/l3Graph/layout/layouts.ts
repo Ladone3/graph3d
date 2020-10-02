@@ -4,30 +4,28 @@ import { Link } from '../models/graph/link';
 import { Node, NodeId } from '../models/graph/node';
 import { GraphModel } from '../models/graph/graphModel';
 import { calcBounds } from '../utils';
-import { Vector3d } from '../models/structures';
-import { GraphDescriptor } from '../models/graph/graphDescriptor';
 
 export const PREFERRED_LINK_LENGTH = 75;
 
-export interface LayoutNode<Descriptor extends GraphDescriptor> {
+export interface LayoutNode {
     id?: string;
     x: number;
     y: number;
     width: number;
     height: number;
-    originalNode: Node<Descriptor>;
+    originalNode: Node;
     bounds?: any;
     innerBounds?: any;
 }
 
-export interface LayoutLink<Descriptor extends GraphDescriptor> {
-    originalLink: Link<Descriptor>;
-    source: LayoutNode<Descriptor>;
-    target: LayoutNode<Descriptor>;
+export interface LayoutLink {
+    originalLink: Link;
+    source: LayoutNode;
+    target: LayoutNode;
 }
 
-export class LayoutNode3D<Descriptor extends GraphDescriptor> extends cola.Node3D {
-    constructor(public node: Node<Descriptor>) {
+export class LayoutNode3D extends cola.Node3D {
+    constructor(public node: Node) {
         super(
             node.position.x,
             node.position.y,
@@ -36,9 +34,9 @@ export class LayoutNode3D<Descriptor extends GraphDescriptor> extends cola.Node3
     }
 }
 
-export class LayoutLink3D<Descriptor extends GraphDescriptor> extends cola.Link3D {
+export class LayoutLink3D extends cola.Link3D {
     constructor(
-        public link: Link<Descriptor>,
+        public link: Link,
         sourceIndex: number,
         targetIndex: number,
     ) {
@@ -46,10 +44,10 @@ export class LayoutLink3D<Descriptor extends GraphDescriptor> extends cola.Link3
     }
 }
 
-export function forceLayout<Descriptor extends GraphDescriptor>(params: {
+export function forceLayout(params: {
     iterations: number;
-    nodes: LayoutNode<Descriptor>[];
-    links: LayoutLink<Descriptor>[];
+    nodes: LayoutNode[];
+    links: LayoutLink[];
     preferredLinkLength: number;
 }) {
     const layout = new cola.Layout()
@@ -80,10 +78,10 @@ export function forceLayout3d(params: {
     });
 }
 
-export function flowLayout<Descriptor extends GraphDescriptor>(params: {
+export function flowLayout(params: {
     iterations: number;
-    nodes: LayoutNode<Descriptor>[];
-    links: LayoutLink<Descriptor>[];
+    nodes: LayoutNode[];
+    links: LayoutLink[];
     preferredLinkLength: number;
 }) {
     const layout = new cola.Layout()
@@ -96,11 +94,11 @@ export function flowLayout<Descriptor extends GraphDescriptor>(params: {
     layout.start(params.iterations, 0, params.iterations / 3, undefined, false);
 }
 
-export function applyForceLayout<Descriptor extends GraphDescriptor>(graph: GraphModel<Descriptor>) {
+export function applyForceLayout(graph: GraphModel) {
     const { nodes, links } = graph;
-    const processMap = new Map<string, LayoutNode<Descriptor>>();
+    const processMap = new Map<string, LayoutNode>();
 
-    const layoutNodes: LayoutNode<Descriptor>[] = [];
+    const layoutNodes: LayoutNode[] = [];
     nodes.forEach(node => {
         const position = node.position;
         const size = { x: PREFERRED_LINK_LENGTH / 5, y: PREFERRED_LINK_LENGTH / 5 };
@@ -118,7 +116,7 @@ export function applyForceLayout<Descriptor extends GraphDescriptor>(graph: Grap
         layoutNodes.push(layoutNode);
     });
 
-    const layoutLinks: LayoutLink<Descriptor>[] = [];
+    const layoutLinks: LayoutLink[] = [];
     links.forEach(link => {
         layoutLinks.push({
             originalLink: link,
@@ -146,14 +144,14 @@ export function applyForceLayout<Descriptor extends GraphDescriptor>(graph: Grap
     }
 }
 
-export function applyForceLayout3d<Descriptor extends GraphDescriptor>(
-    graph: GraphModel<Descriptor>,
+export function applyForceLayout3d(
+    graph: GraphModel,
     iterations: number = 1, 
     linkLength: number = PREFERRED_LINK_LENGTH,
 ) {
     const { nodes, links } = graph;
     const processMap = new Map<NodeId, number>();
-    const layoutNodes: LayoutNode3D<Descriptor>[] = [];
+    const layoutNodes: LayoutNode3D[] = [];
 
     let counter = 0;
     nodes.forEach((node, index) => {
@@ -163,7 +161,7 @@ export function applyForceLayout3d<Descriptor extends GraphDescriptor>(
         layoutNodes.push(layoutNode);
     });
 
-    const layoutLinks: LayoutLink3D<Descriptor>[] = [];
+    const layoutLinks: LayoutLink3D[] = [];
     links.forEach(link => {
         layoutLinks.push(new LayoutLink3D(
             link,

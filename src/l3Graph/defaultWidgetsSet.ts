@@ -5,11 +5,10 @@ import { ArrowHelper } from './models/widgets/arrowHelper';
 import { WidgetFactory, Widget } from './models/widgets/widget';
 import { GamepadsWidget } from './models/widgets/gamepadsWidget';
 import { GamepadsWidgetView } from './views/widgets/gamepadsWidgetView';
-import { LeftCreationTool } from './views/widgets/gamepadTools/elementCreationTools';
+// import { LeftCreationTool } from './views/widgets/gamepadTools/elementCreationTools';
 import { RightGamepadTool, LeftGamepadTool } from './views/widgets/gamepadTools/defaultTools';
-import { GraphDescriptor } from './models/graph/graphDescriptor';
 
-export const selectionWidgetFactory: WidgetFactory<SelectionWidget<any>, any> = {
+export const selectionWidgetFactory: WidgetFactory<SelectionWidget> = {
     getModel: context => new SelectionWidget({
         diagramModel: context.diagramModel,
     }),
@@ -18,7 +17,7 @@ export const selectionWidgetFactory: WidgetFactory<SelectionWidget<any>, any> = 
     }),
 };
 
-export const arrowHelperWidgetFactory: WidgetFactory<ArrowHelper<any>, any> = {
+export const arrowHelperWidgetFactory: WidgetFactory<ArrowHelper> = {
     getModel: context => {
         return new ArrowHelper({mouseHandler: context.mouseHandler});
     },
@@ -27,24 +26,13 @@ export const arrowHelperWidgetFactory: WidgetFactory<ArrowHelper<any>, any> = {
     }),
 };
 
-export const gamepadsWidgetFactory: WidgetFactory<GamepadsWidget<any>, any> = {
+export const gamepadsWidgetFactory: WidgetFactory<GamepadsWidget> = {
     getModel: context => {
         const {gamepadHandler, diagramModel, vrManager} = context;
         return new GamepadsWidget({
             gamepadHandler: context.gamepadHandler,
-            leftTools: [
-                new LeftGamepadTool({gamepadHandler, vrManager}),
-                // new LeftGamepadTool({gamepadHandler, vrManager}),
-                // new LeftCreationTool({
-                //     gamepadHandler,
-                //     diagramModel,
-                //     vrManager,
-                //     nodeIdPrefix: 'Node-created-by-left-controller-',
-                // }),
-            ],
-            rightTools: [
-                new RightGamepadTool({gamepadHandler, vrManager}),
-            ],
+            leftTool: new LeftGamepadTool({gamepadHandler, vrManager}),
+            rightTool: new RightGamepadTool({gamepadHandler, vrManager}),
         });
     },
     getView: context => new GamepadsWidgetView({
@@ -53,38 +41,38 @@ export const gamepadsWidgetFactory: WidgetFactory<GamepadsWidget<any>, any> = {
     }),
 };
 
-export const testToolFactory: WidgetFactory<any, any> = {
-    getModel: context => {
-        const {gamepadHandler, diagramModel, vrManager} = context;
-        return {
-            widgetId: 'testToolFactory',
-            forceUpdate: () => {/* do nothing */},
-            model: new LeftCreationTool({
-                gamepadHandler,
-                diagramModel,
-                vrManager,
-                nodeIdPrefix: 'Node-created-by-left-controller-',
-            }),
-            on: () => {/* do nothing */},
-            onAny: () => {/* do nothing */},
-            unsubscribe: () => {/* do nothing */},
-            unsubscribeFromAll: () => {/* do nothing */},
-            trigger: () => {/* do nothing */},
-        };
-    },
-    getView: context => {
-        const model: LeftCreationTool<any> = context.widget.model;
-        return {
-            mesh: model.mesh,
-            getBoundingBox: () => undefined,
-            update: () => { model.mesh.position.set(0, 0, 0); },
-            model: context.widget,
-        };
-    },
-};
+// export const testToolFactory: WidgetFactory<any> = {
+//     getModel: context => {
+//         const {gamepadHandler, diagramModel, vrManager} = context;
+//         return {
+//             widgetId: 'testToolFactory',
+//             forceUpdate: () => {/* do nothing */},
+//             model: new LeftCreationTool({
+//                 gamepadHandler,
+//                 diagramModel,
+//                 vrManager,
+//                 nodeIdPrefix: 'Node-created-by-left-controller-',
+//             }),
+//             on: () => {/* do nothing */},
+//             onAny: () => {/* do nothing */},
+//             unsubscribe: () => {/* do nothing */},
+//             unsubscribeFromAll: () => {/* do nothing */},
+//             trigger: () => {/* do nothing */},
+//         };
+//     },
+//     getView: context => {
+//         const model: LeftCreationTool = context.widget.model;
+//         return {
+//             mesh: model.mesh,
+//             getBoundingBox: () => undefined,
+//             update: () => { model.mesh.position.set(0, 0, 0); },
+//             model: context.widget,
+//         };
+//     },
+// };
 
-export function DEFAULT_MESH_WIDGET_SET<Descriptor extends GraphDescriptor>(
-): WidgetFactory<any, Descriptor>[] {
+export function DEFAULT_MESH_WIDGET_SET(
+): WidgetFactory<any>[] {
     return [
         selectionWidgetFactory,
         arrowHelperWidgetFactory,

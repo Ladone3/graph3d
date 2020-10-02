@@ -25,7 +25,7 @@ export interface NodeEvents extends PointEvents {
     'force-update': void;
 }
 
-export class Node<Descriptor extends GraphDescriptor> extends Point<NodeEvents> {
+export class Node<Descriptor extends GraphDescriptor = GraphDescriptor> extends Point<NodeEvents> {
     public incomingLinks: Set<Link<Descriptor>> = new Set();
     public outgoingLinks: Set<Link<Descriptor>> = new Set();
     public modelIsChanged: boolean = false;

@@ -16,7 +16,7 @@ export interface View<Model> {
     model: Model;
 }
 
-export type DiagramElementView<Descriptor extends GraphDescriptor> = (
-    View<Node<Descriptor>> | View<Link<Descriptor>>
+export type DiagramElementView = (
+    View<Node> | View<Link>
 );
 export type DiagramWidgetView = View<Widget>;

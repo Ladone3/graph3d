@@ -7,9 +7,27 @@
             "dom",
             "es2015"
         ],
-        "importHelpers": true,
+        "declaration": false,
         "strict": true,
-        "strictNullChecks": false
+        "strictNullChecks": false,
+        "alwaysStrict": false,
+        "noImplicitUseStrict": true,
+        "noFallthroughCasesInSwitch": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "importHelpers": true,
+        "skipLibCheck": true,
+        "plugins": [
+          {
+            "name": "typescript-tslint-plugin",
+            "alwaysShowRuleFailuresAsWarnings": true,
+            "ignoreDefinitionFiles": true,
+            "configFile": "./tslint.json",
+            "suppressWhileTypeErrorsPresent": false
+          }
+        ]
     },
     "include": [
         "./index.ts",

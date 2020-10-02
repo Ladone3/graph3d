@@ -1,10 +1,9 @@
 import { DiagramView } from '../views/diagramView';
 import { Vector3 } from 'three';
-import { MouseHandler } from '../utils/mouseHandler';
-import { KeyHandler, Subscribable } from '../utils';
-import { VrManager } from '../vrUtils/vrManager';
-import { GamepadHandler } from '../vrUtils/gamepadHandler';
-import { GraphDescriptor } from '../models/graph/graphDescriptor';
+import { MouseHandler } from '../input/mouseHandler';
+import { KeyHandler } from '../input/keyHandler';
+import { Subscribable } from '../utils';
+import { GamepadHandler } from '../input/gamepadHandler';
 
 export const ROTATION_DECREASE_SPEED = 300;
 export const CAMERA_STEP_SPEED = 20;
@@ -26,11 +25,11 @@ export interface ViewController extends Subscribable<ViewControllerEvents> {
     focusOn: (element: Element) => void;
 }
 
-export type ViewControllersSet<Descriptor extends GraphDescriptor> = (
+export type ViewControllersSet = (
     (
-        view: DiagramView<Descriptor>,
-        mouseHandler: MouseHandler<Descriptor>,
+        view: DiagramView,
+        mouseHandler: MouseHandler,
         keyHandler: KeyHandler,
-        gamepadHandler: GamepadHandler<Descriptor>
+        gamepadHandler: GamepadHandler
     ) => ViewController
 )[];

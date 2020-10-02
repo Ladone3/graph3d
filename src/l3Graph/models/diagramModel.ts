@@ -40,10 +40,11 @@ mapEvent.set('add:links', 'add:link');
 mapEvent.set('update:links', 'update:link');
 mapEvent.set('remove:links', 'remove:link');
 
-export class DiagramModel<Descriptor extends GraphDescriptor> extends Subscribable<DiagramModelEvents<Descriptor>> {
+export class DiagramModel<Descriptor extends GraphDescriptor = GraphDescriptor>
+extends Subscribable<DiagramModelEvents<Descriptor>> {
     public graph: GraphModel<Descriptor>;
     public widgetRegistry: WidgetsModel;
-    public selection: Selection<Descriptor>;
+    public selection: Selection;
 
     private animationFrame: number;
     private nodeEvents = new Map<Node<Descriptor>, NodeEvent<Descriptor>>();
@@ -54,7 +55,9 @@ export class DiagramModel<Descriptor extends GraphDescriptor> extends Subscribab
         super();
         this.graph = new GraphModel();
         this.widgetRegistry = new WidgetsModel();
-        this.selection = new Selection({graph: this.graph});
+        this.selection = new Selection({
+            graph: this.graph as GraphModel<any>,
+        });
 
         this.graph.on('add:nodes', this.onNodeEvent);
         this.graph.on('remove:nodes', this.onNodeEvent);
@@ -68,11 +71,11 @@ export class DiagramModel<Descriptor extends GraphDescriptor> extends Subscribab
         this.widgetRegistry.on('update:widget', this.onWidgetEvent);
     }
 
-    public get nodes(): ImmutableMap<NodeId, Node<Descriptor>> {
+    public get nodes(): ImmutableMap<NodeId, Node> {
         return this.graph.nodes;
     }
 
-    public get links(): ImmutableMap<LinkId, Link<Descriptor>> {
+    public get links(): ImmutableMap<LinkId, Link> {
         return this.graph.links;
     }
 

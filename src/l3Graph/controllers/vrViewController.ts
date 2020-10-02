@@ -1,12 +1,13 @@
 import { DiagramView } from '../views/diagramView';
-import { MouseHandler } from '../utils/mouseHandler';
-import { KeyHandler, KEY_CODES, EventObject, Subscribable } from '../utils';
+import { MouseHandler } from '../input/mouseHandler';
+import { EventObject, Subscribable } from '../utils';
+import { KeyHandler, KEY_CODES } from '../input/keyHandler';
+
 import { ViewController, ViewControllerEvents } from './viewController';
 import { VrManager } from '../vrUtils/vrManager';
-import { GamepadHandler } from '../vrUtils/gamepadHandler';
-import { GraphDescriptor } from '../models/graph/graphDescriptor';
+import { GamepadHandler } from '../input/gamepadHandler';
 
-export class VrViewController<Descriptor extends GraphDescriptor> extends
+export class VrViewController extends
 Subscribable<ViewControllerEvents> implements ViewController {
     public readonly id = 'vr-view-controller';
     public readonly label = 'VR View Controller';
@@ -14,10 +15,10 @@ Subscribable<ViewControllerEvents> implements ViewController {
     private vrManager: VrManager;
 
     constructor(
-        protected view: DiagramView<Descriptor>,
-        protected mouseHandler: MouseHandler<Descriptor>,
+        protected view: DiagramView,
+        protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
-        protected gamepadHandler: GamepadHandler<Descriptor>,
+        protected gamepadHandler: GamepadHandler,
     ) {
         super();
         this.vrManager = this.view.vrManager;
@@ -27,7 +28,7 @@ Subscribable<ViewControllerEvents> implements ViewController {
 
     switchOn() {
         this.vrManager.connect().then(() => {
-            this.vrManager.start();
+            this.switchOff();
             this.view.renderGraph();
         }).catch((e: Error) => {
             // alert(e.message);
@@ -37,18 +38,16 @@ Subscribable<ViewControllerEvents> implements ViewController {
         });
 
         this.keyHandler.on('keyPressed', this.onKeyPressed);
-        this.vrManager.on('presenting:state:changed', this.onPresentingChanged);
+        this.vrManager.on('connection:state:changed', this.onPresentingChanged);
         this.trigger('switched:on');
     }
 
     switchOff() {
-        if (this.vrManager && this.vrManager.isStarted) {
-            this.vrManager.stop();
-            this.view.renderGraph();
-        }
         this.keyHandler.unsubscribe('keyPressed', this.onKeyPressed);
-        this.vrManager.unsubscribe('presenting:state:changed', this.onPresentingChanged);
+        this.vrManager.unsubscribe('connection:state:changed', this.onPresentingChanged);
         this.trigger('switched:off');
+        this.vrManager.disconnect();
+        this.view.renderGraph();
     }
 
     private onKeyPressed = (e: EventObject<'keyPressed', Set<number>>) =>  {
@@ -58,7 +57,7 @@ Subscribable<ViewControllerEvents> implements ViewController {
     }
 
     private onPresentingChanged = () =>  {
-        if (!this.vrManager.isStarted) {
+        if (!this.vrManager.isConnected) {
             this.switchOff();
         }
     }

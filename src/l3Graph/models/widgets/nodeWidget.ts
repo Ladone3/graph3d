@@ -1,18 +1,17 @@
 import { Node } from '../graph/node';
 import { WidgetEvents, Widget } from './widget';
-import { GraphDescriptor } from '../graph/graphDescriptor';
 
-export interface NodeWidgetEvents<Descriptor extends GraphDescriptor> extends WidgetEvents {
-    'change:focus': Node<Descriptor>;
+export interface NodeWidgetEvents extends WidgetEvents {
+    'change:focus': Node;
 }
 
 export interface NodeWidgetParameters {
     widgetId: string;
 }
 
-export abstract class NodeWidget<Descriptor extends GraphDescriptor> extends Widget {
-    private _focusNode?: Node<Descriptor>;
-    private _prevFocusNode?: Node<Descriptor>;
+export abstract class NodeWidget extends Widget {
+    private _focusNode?: Node;
+    private _prevFocusNode?: Node;
     public readonly widgetId: string;
 
     constructor(parameters: NodeWidgetParameters) {
@@ -20,7 +19,7 @@ export abstract class NodeWidget<Descriptor extends GraphDescriptor> extends Wid
         this.widgetId = parameters.widgetId;
     }
 
-    setFocusNode(target: Node<Descriptor> | undefined) {
+    setFocusNode(target: Node | undefined) {
         this._prevFocusNode = this._focusNode;
         this._focusNode = target;
 
@@ -40,11 +39,11 @@ export abstract class NodeWidget<Descriptor extends GraphDescriptor> extends Wid
         return this._prevFocusNode !== this._focusNode;
     }
 
-    get focusNode(): Node<Descriptor> {
+    get focusNode(): Node {
         return this._focusNode;
     }
 
-    get prevFocusNode(): Node<Descriptor> {
+    get prevFocusNode(): Node {
         return this._prevFocusNode;
     }
 

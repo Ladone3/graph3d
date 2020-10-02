@@ -8,15 +8,14 @@ import {
     ZERO_POSITION,
     ViewControllerEvents,
 } from './viewController';
-import { vector3dToTreeVector3, KEY_CODES, KeyHandler, EventObject, Subscribable } from '../utils';
-
+import { vector3dToTreeVector3, EventObject, Subscribable } from '../utils';
+import { KEY_CODES, KeyHandler } from '../input/keyHandler';
 import { DiagramView } from '../views/diagramView';
-import { MouseHandler, HandlerDragEvent } from '../utils/mouseHandler';
-import { GraphDescriptor } from '../models/graph/graphDescriptor';
+import { MouseHandler, HandlerDragEvent } from '../input/mouseHandler';
 
 const WHEEL_SPEED = 100;
 
-export class SphericalViewController<Descriptor extends GraphDescriptor> extends
+export class SphericalViewController extends
 Subscribable<ViewControllerEvents> implements ViewController {
     readonly id: string;
     public label: string;
@@ -25,8 +24,8 @@ Subscribable<ViewControllerEvents> implements ViewController {
     protected startAngle: Vector2d;
 
     constructor(
-        protected view: DiagramView<Descriptor>,
-        protected mouseHandler: MouseHandler<Descriptor>,
+        protected view: DiagramView,
+        protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
     ) {
         super();

@@ -1,11 +1,10 @@
 import * as THREE from 'three';
-import { GamepadHandler, GAMEPAD_BUTTON, OCULUS_CONTROLLERS } from '../../../vrUtils/gamepadHandler';
+import { GamepadHandler, GAMEPAD_BUTTON, OCULUS_CONTROLLERS, Controller } from '../../../input/gamepadHandler';
 import { Subscribable, setColor, backupColors, restoreColors } from '../../../utils';
 import { VrManager } from '../../../vrUtils/vrManager';
-import { GraphDescriptor } from '../../../models/graph/graphDescriptor';
 
-export interface GamepadToolProps<Descriptor extends GraphDescriptor> {
-    gamepadHandler: GamepadHandler<Descriptor>;
+export interface GamepadToolProps {
+    gamepadHandler: GamepadHandler;
     vrManager: VrManager;
 }
 
@@ -19,7 +18,6 @@ const RIGHT_GAMEPAD_COLOR = 'blue';
 
 export abstract class GamepadTool extends Subscribable<GamepadToolEvents> {
     public mesh: THREE.Object3D;
-    public forGamepadId: number;
 
     constructor() {
         super();
@@ -29,46 +27,25 @@ export abstract class GamepadTool extends Subscribable<GamepadToolEvents> {
         this.trigger('update:gamepad');
     }
 
-    public abstract onDiscard(): void;
+    public abstract discard(): void;
 }
 
-export class LeftGamepadTool<Descriptor extends GraphDescriptor> extends GamepadTool {
-    protected TARGET_BUTTON = GAMEPAD_BUTTON.LEFT_TRIGGER;
-    constructor(protected props: GamepadToolProps<Descriptor>) {
+export class LeftGamepadTool extends GamepadTool {
+    constructor(protected props: GamepadToolProps) {
         super();
-        this.forGamepadId = OCULUS_CONTROLLERS.LEFT_CONTROLLER;
-        this.props.gamepadHandler = props.gamepadHandler;
         this.props.gamepadHandler.on('keyDown', this.updateMesh);
         this.props.gamepadHandler.on('keyUp', this.updateMesh);
-        this.registerHighlighter();
-        this.registerBearer();
         this.mesh = this.renderMesh();
+    }
+
+    protected get controller() {
+        return this.props.gamepadHandler.getController(
+            OCULUS_CONTROLLERS.LEFT_CONTROLLER
+        );
     }
 
     protected get COLOR() {
         return LEFT_GAMEPAD_COLOR;
-    }
-
-    protected registerBearer() {
-        const controller = this.props.vrManager.getController(OCULUS_CONTROLLERS.LEFT_CONTROLLER);
-        this.props.gamepadHandler.registerElementBearer(
-            controller, {
-                dragKey: GAMEPAD_BUTTON.LEFT_TRIGGER,
-                dragToKey: GAMEPAD_BUTTON.X,
-                dragFromKey: GAMEPAD_BUTTON.Y,
-            }
-        );
-    }
-
-    protected registerHighlighter() {
-        const controller = this.props.vrManager.getController(OCULUS_CONTROLLERS.LEFT_CONTROLLER);
-        this.props.gamepadHandler.registerHighlighter(
-            controller, (mesh: THREE.Object3D) => {
-                const backUp = backupColors(mesh);
-                setColor(mesh, SELECTION_COLOR);
-                return (meshToRestore: THREE.Object3D) => restoreColors(meshToRestore, backUp);
-            }
-        );
     }
 
     private renderMesh() {
@@ -91,47 +68,31 @@ export class LeftGamepadTool<Descriptor extends GraphDescriptor> extends Gamepad
     }
 
     private updateMesh = () => {
-        const color = this.props.gamepadHandler.keyPressed.has(this.TARGET_BUTTON) ? SELECTION_COLOR : this.COLOR;
+        const keyPressedMap = this.props.gamepadHandler.keyPressedMap.get(this.controller);
+        const color = keyPressedMap && keyPressedMap.size > 0 ?
+            SELECTION_COLOR : this.COLOR;
         setColor(this.mesh, color);
         this.forceUpdate();
     }
 
-    public onDiscard() {
+    public discard() {
         this.props.gamepadHandler.unsubscribe('keyUp', this.updateMesh);
         this.props.gamepadHandler.unsubscribe('keyDown', this.updateMesh);
     }
 }
 
-export class RightGamepadTool<Descriptor extends GraphDescriptor> extends LeftGamepadTool<Descriptor> {
-    constructor(props: GamepadToolProps<Descriptor>) {
+export class RightGamepadTool extends LeftGamepadTool {
+    constructor(props: GamepadToolProps) {
         super(props);
-        this.forGamepadId = OCULUS_CONTROLLERS.RIGHT_CONTROLLER;
     }
 
-    protected TARGET_BUTTON = GAMEPAD_BUTTON.RIGHT_TRIGGER;
+    protected TARGET_BUTTON = GAMEPAD_BUTTON.TRIGGER;
     protected get COLOR() {
         return RIGHT_GAMEPAD_COLOR;
     }
-
-    protected registerBearer() {
-        const controller = this.props.vrManager.getController(OCULUS_CONTROLLERS.RIGHT_CONTROLLER);
-        this.props.gamepadHandler.registerElementBearer(
-            controller, {
-                dragKey: GAMEPAD_BUTTON.RIGHT_TRIGGER,
-                dragToKey: GAMEPAD_BUTTON.A,
-                dragFromKey: GAMEPAD_BUTTON.B,
-            }
-        );
-    }
-
-    protected registerHighlighter() {
-        const controller = this.props.vrManager.getController(OCULUS_CONTROLLERS.RIGHT_CONTROLLER);
-        this.props.gamepadHandler.registerHighlighter(
-            controller, (mesh: THREE.Object3D) => {
-                const backUp = backupColors(mesh);
-                setColor(mesh, SELECTION_COLOR);
-                return (meshToRestore: THREE.Object3D) => restoreColors(meshToRestore, backUp);
-            }
+    protected get controller() {
+        return this.props.gamepadHandler.getController(
+            OCULUS_CONTROLLERS.RIGHT_CONTROLLER
         );
     }
 }

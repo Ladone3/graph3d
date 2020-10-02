@@ -17,9 +17,8 @@
     "check-cycles": "./node_modules/webpack-cyclic-dependency-checker/src/cli.js stats.json"
   },
   "dependencies": {
-    "@types/three": "0.103.2",
     "dom-to-image": "^2.6.0",
-    "three": "0.111.0",
+    "three": "^0.120.1",
     "webcola": "~3.3.8"
   },
   "peerDependencies": {

@@ -1,22 +1,20 @@
-import { vector3dToTreeVector3, KeyHandler, KEY_CODES } from '../utils';
+import { Subscribable } from '../utils';
 import { DiagramModel } from '../models/diagramModel';
-import { DiagramView } from '../views/diagramView';
 import { Element } from '../models/graph/graphModel';
-import { MouseHandler } from '../utils/mouseHandler';
+import { MouseHandler } from '../input/mouseHandler';
+import { KeyHandler, KEY_CODES } from '../input/keyHandler';
 import { Link } from '../models/graph/link';
 import { Node } from '../models/graph/node';
-import { GraphDescriptor } from '../models/graph/graphDescriptor';
+import { Vector3d } from '../models/structures';
+import { GamepadHandler } from '../input/gamepadHandler';
+import { DragHandlerEvents } from '../input/dragHandler';
 
-const WHEEL_STEP = 100;
-const MIN_DISTANCE_TO_CAMERA = 10;
-
-export class DefaultEditor<Descriptor extends GraphDescriptor> {
+export class DefaultEditor {
     constructor(
-        private diagramModel: DiagramModel<Descriptor>,
-        private diagramView: DiagramView<Descriptor>,
-        private mouseHandler: MouseHandler<Descriptor>,
+        private diagramModel: DiagramModel,
+        private mouseHandler: MouseHandler,
         private keyHandler: KeyHandler,
-        // private gamepadHandler: GamepadHandler
+        gamepadHandler: GamepadHandler
     ) {
         this.mouseHandler.on('elementClick', e => {
             if (e.data.element instanceof Node && !this.diagramModel.selection.elements.has(e.data.element)) {
@@ -26,23 +24,29 @@ export class DefaultEditor<Descriptor extends GraphDescriptor> {
         this.mouseHandler.on('paperClick', e => {
             this.diagramModel.selection.setSelection(new Set());
         });
-        this.mouseHandler.on('elementStartDrag', e => {
-            this.onElementDrag(e.data.nativeEvent, e.data.element);
-        });
-        this.mouseHandler.on('elementDrag', e => {
-            this.onElementDrag(e.data.nativeEvent, e.data.element);
-        });
-        this.mouseHandler.on('elementEndDrag', e => {
-            this.onElementDragEnd(e.data.nativeEvent, e.data.element);
-        });
-
         this.keyHandler.on('keyPressed', e => this.onKeyPressed(e.data));
+        this.subscribeOnDragHandler(mouseHandler as any);
+        this.subscribeOnDragHandler(gamepadHandler as any);
+    }
+
+    private subscribeOnDragHandler(
+        dragHandler: Subscribable<DragHandlerEvents>
+    ) {
+        dragHandler.on('elementDragStart', e => {
+            this.onElementDrag(e.data.target, e.data.position);
+        });
+        dragHandler.on('elementDrag', e => {
+            this.onElementDrag(e.data.target, e.data.position);
+        });
+        dragHandler.on('elementDragEnd', e => {
+            this.onElementDragEnd(e.data.target, e.data.position);
+        });
     }
 
     private onKeyPressed(keyMap: Set<number>) {
         if (keyMap.has(KEY_CODES.DELETE) && this.diagramModel.selection.elements.size > 0) {
-            const nodesToDelete: Node<Descriptor>[] = [];
-            const linksToDelete: Link<Descriptor>[] = [];
+            const nodesToDelete: Node[] = [];
+            const linksToDelete: Link[] = [];
             this.diagramModel.selection.elements.forEach(el => {
                 if (el instanceof Node) {
                     nodesToDelete.push(el);
@@ -55,29 +59,13 @@ export class DefaultEditor<Descriptor extends GraphDescriptor> {
         }
     }
 
-    private onElementDrag(event: MouseEvent | TouchEvent | MouseWheelEvent, target: Element<Descriptor>) {
+    private onElementDrag(target: Element, position: Vector3d) {
         if (target instanceof Link) { return; }
-        if (event instanceof TouchEvent && event.touches.length === 0) { return; }
-
-        const nodeThreePos = vector3dToTreeVector3(target.position);
-        const cameraPos = this.diagramView.camera.position;
-        let distanceToNode = nodeThreePos.distanceTo(cameraPos);
-        if (isMouseWheelEvent(event)) {
-            const delta = -(event.deltaX || event.deltaY || event.deltaZ);
-            distanceToNode += (delta > 0 ? 1 : -1) * WHEEL_STEP;
-        }
-        const size = target.size;
-        const minDist = Math.max(size.x, size.y, size.z) / 2 + MIN_DISTANCE_TO_CAMERA;
-        const limitedDistance = Math.max(distanceToNode, minDist);
-        const newNodePosition = this.diagramView.mouseTo3dPos(event, limitedDistance);
-        target.setPosition(newNodePosition);
+        if (!position) { throw new Error('Position can\'t be undefined!'); }
+        target.setPosition(position);
     }
 
-    private onElementDragEnd(event: MouseEvent | TouchEvent | MouseWheelEvent, target: Element<Descriptor>) {
-        this.onElementDrag(event, target);
+    private onElementDragEnd(target: Element, position: Vector3d) {
+        this.onElementDrag(target, position);
     }
-}
-
-function isMouseWheelEvent(e: any): e is MouseWheelEvent {
-    return Boolean(e.deltaX || e.deltaY || e.deltaZ);
 }
