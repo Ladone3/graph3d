@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { GraphDescriptor } from './models/graph/graphDescriptor';
 import { ViewController, ViewControllersSet } from './controllers/viewController';
 import { KeyHandler } from './input/keyHandler';
 import { DefaultEditor } from './editors/defaultEditor';
@@ -35,6 +36,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
     // todo: handle duplication - the one should substitute another depending on the events
     private defaultEditor: DefaultEditor;
     private gamepadEditor: GamepadEditor;
+    a: GraphDescriptor;
 
     constructor(props: L3GraphProps) {
         super(props);

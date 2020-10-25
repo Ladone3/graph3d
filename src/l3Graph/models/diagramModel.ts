@@ -1,4 +1,4 @@
-import { GraphModel, ImmutableMap, NodeDefinition, ElementModel, GraphModelEvents } from './graph/graphModel';
+import { GraphModel, ImmutableMap, GraphModelEvents } from './graph/graphModel';
 import { Subscribable, EventObject } from '../utils/subscribable';
 import { Node, NodeId } from './graph/node';
 import { Link, LinkId } from './graph/link';

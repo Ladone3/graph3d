@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 import { Subscribable } from '../utils/subscribable';
+import { GraphDescriptor } from '../models/graph/graphDescriptor';
 import { length, eventToPosition, vector3dToTreeVector3 } from '../utils/geometry';
 import { DiagramModel } from '../models/diagramModel';
 import { DiagramView } from '../views/diagramView';

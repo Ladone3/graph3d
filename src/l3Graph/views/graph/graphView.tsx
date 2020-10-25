@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GraphModel, Element } from '../../models/graph/graphModel';
+import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 import { NodeView } from './nodeView';
 import { LinkView } from './linkView';
 import {
