@@ -1,18 +1,18 @@
 import { SphericalViewController } from './sphericalViewController';
-import { DiagramView } from '../views/diagramView';
 import { MouseHandler } from '../input/mouseHandler';
 import { KeyHandler } from '../input/keyHandler';
 import { BORDER_OPACITY } from './viewController';
+import { Core } from '../core';
 
 export class CylindricalViewController extends SphericalViewController {
     readonly id: string;
     constructor(
-        view: DiagramView,
+        core: Core,
         mouseHandler: MouseHandler,
         keyHandler: KeyHandler,
     ) {
-        super(view, mouseHandler, keyHandler);
-        this.id = 'cylindrical-view-controller';
+        super(core, mouseHandler, keyHandler);
+        this.id = 'cylindrical-core-controller';
         this.label = 'Cylindrical View Controller';
     }
 
@@ -27,13 +27,13 @@ export class CylindricalViewController extends SphericalViewController {
             y: cameraPosition.y,
             z: 0,
         };
-        this.view.cameraState = {
+        this.core.setCameraState({
             position: cameraPosition,
             focusDirection,
-        };
+        });
     }
 
     protected limitDistance(distance: number) {
-        return Math.min(Math.max(0.001, distance), (this.view.screenParameters.FAR / 2 - BORDER_OPACITY) / 2);
+        return Math.min(Math.max(0.001, distance), (this.core.screenParameters.FAR / 2 - BORDER_OPACITY) / 2);
     }
 }

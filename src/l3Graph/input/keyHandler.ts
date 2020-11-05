@@ -1,5 +1,5 @@
 import { Subscribable } from '../utils/subscribable';
-import { animationFrameInterval, Cancellation } from '../utils';
+import { Core, Cancellation } from '../core';
 
 export interface KeyHandlerEvents {
     'keyDown': Set<number>;
@@ -23,6 +23,10 @@ export const KEY_CODES = {
 export class KeyHandler extends Subscribable<KeyHandlerEvents> {
     private keyMap: Set<number> = new Set();
     private cancellation: Cancellation | undefined;
+
+    constructor(private core: Core) {
+        super();
+    }
 
     switchOn() {
         document.addEventListener('keydown', this.onKeyDown);
@@ -58,7 +62,7 @@ export class KeyHandler extends Subscribable<KeyHandlerEvents> {
     }
 
     private start(): Cancellation {
-        return animationFrameInterval(() => {
+        return this.core.animationFrameInterval(() => {
             this.trigger('keyPressed', this.keyMap);
         });
     }

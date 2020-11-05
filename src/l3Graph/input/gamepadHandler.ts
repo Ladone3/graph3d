@@ -1,16 +1,16 @@
 import * as THREE from 'three';
 import { Subscribable } from '../utils/subscribable';
 import {
-    Cancellation, animationFrameInterval,
-    threeVector3ToVector3d, getModelFittingBox
+    threeVector3ToVector3d, multiply, distance, sub, sum, vector3dToTreeVector3, normalize
 } from '../utils';
 import { Element } from '../models/graph/graphModel';
 import { DiagramModel } from '../models/diagramModel';
-import { DiagramView, DEFAULT_SCREEN_PARAMETERS } from '../views/diagramView';
+import { DiagramView } from '../views/diagramView';
 import { mapMeshes } from './mouseHandler';
 import { Node } from '../models/graph/node';
 import { Vector3d } from '../models/structures';
 import { DragHandlerEvents } from './dragHandler';
+import { Core, Cancellation } from '../core';
 
 export type Controller = THREE.Group;
 
@@ -40,14 +40,15 @@ export const OCULUS_CONTROLLERS = {
 export const CONTROLLERS_NUMBER = Object.keys(OCULUS_CONTROLLERS).length;
 
 interface ControllerSubscription {
-    isDragging?: boolean;
+    controller: Controller;
+    unsubscribe: () => void;
+    target?: Node;
     targetParent?: THREE.Object3D;
+    isDragging?: boolean;
     mockObject?: THREE.Object3D;
     position?: Vector3d;
-    target?: Node;
-    onDragStart: () => void;
-    onDrag: () => void;
-    onDragEnd: () => void;
+    dragCompanion?: ControllerSubscription;
+    dragCompanionFor?: ControllerSubscription;
 }
 
 // It's currently support only OCULUS gamepads
@@ -67,8 +68,8 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         super();
         this.rayCaster = new THREE.Raycaster();
         this.tempMatrix = new THREE.Matrix4();
-        this.diagramView.vrManager.on('connection:state:changed', () => {
-            if (this.diagramView.vrManager.isConnected) {
+        this.diagramView.core.vrManager.on('connection:state:changed', () => {
+            if (this.diagramView.core.vrManager.isConnected) {
                 this.cancellation = this.start();
                 this.subscribeOnControllers();
             } else {
@@ -79,10 +80,12 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
                 }
             }
         });
+        // this.diagramView.core.scene.add(s1);
+        // this.diagramView.core.scene.add(s2);
     }
 
     getController(controllerId: number) {
-        return this.diagramView.vrManager.getController(controllerId);
+        return this.diagramView.core.vrManager.getController(controllerId);
     }
 
     get keyPressedMap(): ReadonlyMap<Controller, ReadonlySet<GAMEPAD_BUTTON>> {
@@ -91,82 +94,92 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
 
     private subscribeOnControllers() {
         for (let controllerId = 0; controllerId < CONTROLLERS_NUMBER; controllerId++) {
-            const controller = this.diagramView.vrManager.getController(controllerId);
+            const controller = this.diagramView.core.vrManager.getController(controllerId);
             if (!controller) { continue; }
             this._keyPressedMap.set(controller, new Set());
+            const onDragStart = () => {
+                this._keyPressedMap.get(controller).add(GAMEPAD_BUTTON.TRIGGER);
+                this.trigger('keyDown', {
+                    controller, button: GAMEPAD_BUTTON.TRIGGER,
+                });
+                if (!subscription.isDragging) {
+                    this.onDragStartEvent(controller);
+                }
+            };
+            const onDragEnd = () => {
+                this._keyPressedMap.get(controller).delete(GAMEPAD_BUTTON.TRIGGER);
+                this.trigger('keyUp', {
+                    controller, button: GAMEPAD_BUTTON.TRIGGER,
+                });
+                this.onDragEndEvent(subscription);
+            };
+
             const subscription: ControllerSubscription = {
-                onDragStart: () => {
-                    this._keyPressedMap.get(controller).add(GAMEPAD_BUTTON.TRIGGER);
-                    this.trigger('keyDown', {
-                        controller, button: GAMEPAD_BUTTON.TRIGGER,
-                    });
-                    if (!subscription.isDragging) {
-                        this.onDragStartEvent(controller);
-                    }
-                },
-                onDrag: () => this.onDragEvent(controller),
-                onDragEnd: () => {
-                    this._keyPressedMap.get(controller).delete(GAMEPAD_BUTTON.TRIGGER);
-                    this.trigger('keyUp', {
-                        controller, button: GAMEPAD_BUTTON.TRIGGER,
-                    });
-                    if (subscription.isDragging) {
-                        this.onDragEndEvent(controller);
-                    }
+                controller,
+                unsubscribe: () => {
+                    controller.removeEventListener('selectstart', onDragStart);
+                    controller.removeEventListener('selectend', onDragEnd);
+                    controller.removeEventListener('squeezestart', onDragStart);
+                    controller.removeEventListener('squeezeend', onDragEnd);
                 },
             };
             this.subscriptions.set(controller, subscription);
-            controller.addEventListener('selectstart', subscription.onDragStart);
-            // controller.addEventListener('select', subscription.onDrag);
-            controller.addEventListener('selectend', subscription.onDragEnd);
-            controller.addEventListener('squeezestart', subscription.onDragStart);
-            // controller.addEventListener('squeeze', subscription.onDrag);
-            controller.addEventListener('squeezeend', subscription.onDragEnd);
+            controller.addEventListener('selectstart', onDragStart);
+            controller.addEventListener('selectend', onDragEnd);
+            controller.addEventListener('squeezestart', onDragStart);
+            controller.addEventListener('squeezeend', onDragEnd);
         }
     }
 
     private unsubscribeFromController() {
         for (let controllerId = 0; controllerId < CONTROLLERS_NUMBER; controllerId++) {
-            const controller = this.diagramView.vrManager.getController(controllerId);
+            const controller = this.diagramView.core.vrManager.getController(controllerId);
             if (!controller) { continue; }
             const subscription = this.subscriptions.get(controller);
-            controller.removeEventListener('selectstart', subscription.onDragStart);
-            // controller.removeEventListener('select', subscription.onDrag);
-            controller.removeEventListener('selectend', subscription.onDragEnd);
-            controller.removeEventListener('squeezestart', subscription.onDragStart);
-            // controller.removeEventListener('squeeze', subscription.onDrag);
-            controller.removeEventListener('squeezeend', subscription.onDragEnd);
+            subscription.unsubscribe();
             this.subscriptions.delete(controller);
         }
+    }
+
+    private draggedBy = (element: Element) => {
+        let dragged: ControllerSubscription;
+        this.subscriptions.forEach(subscription => {
+            if (element === subscription.target && !dragged) {
+                dragged = subscription;
+            }
+        });
+        return dragged;
     }
 
     private onDragStartEvent(controller: Controller) {
         const target = this.targets.get(controller);
         const subscription = this.subscriptions.get(controller);
         if (target) {
-            startDragging(
-                target,
-                this.diagramView,
-                controller,
-                subscription,
-            );
+            const draggedBy = this.draggedBy(target);
+            if (draggedBy) {
+                draggedBy.dragCompanion = subscription;
+                subscription.dragCompanionFor = draggedBy;
+            } else {
+                startDragging(
+                    target,
+                    this.diagramView,
+                    subscription,
+                );
 
-            this.trigger('elementDragStart', {
-                target,
-                position: subscription.position,
-            });
+                this.trigger('elementDragStart', {
+                    target,
+                    position: subscription.position,
+                });
+            }
         }
     }
 
-    private onDragEvent(controller: Controller) {
-        const subscription = this.subscriptions.get(controller);
+    private onDrag(subscription: ControllerSubscription) {
+        if (!(subscription && subscription.isDragging && !subscription.dragCompanionFor)) {
+            return;
+        }
 
-        dragElement(
-            this.diagramView,
-            0,
-            controller,
-            subscription,
-        );
+        dragElement(this.diagramView, subscription);
 
         this.trigger('elementDrag', {
             target: subscription.target,
@@ -174,11 +187,27 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
         });
     }
 
-    private onDragEndEvent(controller: Controller) {
-        const subscription = this.subscriptions.get(controller);
-
+    private onDragEndEvent(subscription: ControllerSubscription) {
+        if (subscription.dragCompanionFor) {
+            subscription.dragCompanionFor.dragCompanion = undefined;
+        }
+        if (!subscription.isDragging) { return; }
         const target = subscription.target;
-        stopDragging(subscription, this.diagramView, controller);
+
+        if (subscription.dragCompanion) {
+            subscription.dragCompanion.dragCompanionFor = undefined;
+            startDragging(
+                target,
+                this.diagramView,
+                subscription.dragCompanion,
+            );
+
+            this.trigger('elementDragStart', {
+                target,
+                position: subscription.position,
+            });
+        }
+        stopDragging(subscription, this.diagramView, subscription.controller);
 
         this.trigger('elementDragEnd', {
             target,
@@ -188,12 +217,12 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
 
     private handlerTimeLoop() {
         for (let controllerId = 0; controllerId < CONTROLLERS_NUMBER; controllerId++) {
-            const controller = this.diagramView.vrManager.getController(controllerId);
+            const controller = this.diagramView.core.vrManager.getController(controllerId);
             if (!controller) { continue; }
             const prevTarget = this.targets.get(controller);
             const target = this.getTarget(controller);
             if (prevTarget) {
-                if (target) {
+                if (target && target === prevTarget) {
                     this.trigger('elementHover', {
                         target: target,
                         position: target instanceof Node ? target.position : undefined,
@@ -215,9 +244,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
                 }
             }
             const subscription = this.subscriptions.get(controller);
-            if (subscription && subscription.isDragging) {
-                subscription.onDrag();
-            }
+            this.onDrag(subscription);
         }
     }
 
@@ -240,7 +267,7 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
 
     private start(): Cancellation {
         if (this.cancellation) { return this.cancellation; }
-        return animationFrameInterval(() => {
+        return this.diagramView.core.animationFrameInterval(() => {
             this.handlerTimeLoop();
         });
     }
@@ -249,49 +276,149 @@ export class GamepadHandler extends Subscribable<GamepadHandlerEvents> {
 function startDragging(
     target: Element,
     diagramView: DiagramView,
-    controller: Controller,
     subscription: ControllerSubscription,
 ) {
     if (target && target instanceof Node) {
         const elementMesh = diagramView.graphView.nodeViews.get(target).mesh;
-        if (controller) {
-            const mockObject = elementMesh.clone();
-            mockObject.visible = false;
-            attach(mockObject, controller, diagramView.scene);
-            subscription.isDragging = true;
-            subscription.mockObject = mockObject;
-            subscription.targetParent = diagramView.scene;
-            subscription.target = target;
-            subscription.position = target.position;
-        }
+        const mockObject = elementMesh.clone();
+        mockObject.visible = false;
+        attach(mockObject, subscription.controller, diagramView.core.scene);
+        subscription.isDragging = true;
+        subscription.mockObject = mockObject;
+        subscription.targetParent = diagramView.core.scene;
+        subscription.target = target;
+        subscription.position = target.position;
+        subscription.dragCompanionFor = undefined;
     }
 }
 
+// let line1: THREE.Line;
+// let line2: THREE.Line;
+
 function dragElement(
     diagramView: DiagramView,
-    zOffset: number,
-    controller: Controller,
     subscription: ControllerSubscription,
 ) {
     if (subscription) {
-        if (controller) {
-            attach(subscription.mockObject, diagramView.scene, diagramView.scene);
-            subscription.position = threeVector3ToVector3d(subscription.mockObject.position);
-            attach(subscription.mockObject, controller, diagramView.scene);
-            if (zOffset !== 0) {
-                const dist = subscription.mockObject.position.z + zOffset;
-                const fittingBox = getModelFittingBox(subscription.target.size);
-                const limitedValue =  Math.max(
-                    Math.min(
-                        Math.abs(dist),
-                        DEFAULT_SCREEN_PARAMETERS.FAR,
+        attach(subscription.mockObject, diagramView.core.scene, diagramView.core.scene);
+        if (subscription.dragCompanion) {
+            const c1 = subscription.controller;
+            const c2 = subscription.dragCompanion.controller;
+
+            const v1 = {
+                start: threeVector3ToVector3d(c1.position),
+                end: threeVector3ToVector3d(
+                    new THREE.Vector3(0, 0, -1)
+                        .applyMatrix4(c1.matrixWorld)
+                ),
+            };
+            const v2 = {
+                start: threeVector3ToVector3d(c2.position),
+                end: threeVector3ToVector3d(
+                    new THREE.Vector3(0, 0, -1)
+                        .applyMatrix4(c2.matrixWorld)
+                ),
+            };
+            const maxDistance = diagramView.core.screenParameters.FAR;
+            subscription.position = sum(
+                multiply(
+                    sub(
+                        getCrossingPoint(v1, v2, maxDistance),
+                        v1.start
                     ),
-                    DEFAULT_SCREEN_PARAMETERS.NEAR + fittingBox.deep / 2)
-                ;
-                subscription.mockObject.position.setZ(dist > 0 ? limitedValue : -limitedValue);
-            }
+                    10,
+                ),
+                v1.start
+            );
+            // getCrossingPoint(v1, v2, maxDistance);
+
+            // const material1 = new THREE.LineBasicMaterial( { color: 'green' } );
+            // const material2 = new THREE.LineBasicMaterial( { color: 'blue' } );
+
+            // const geometry1 = new THREE.BufferGeometry().setFromPoints([
+            //     vector3dToTreeVector3(v1.start),
+            //     vector3dToTreeVector3(v1.end),
+            // ]);
+            // const geometry2 = new THREE.BufferGeometry().setFromPoints([
+            //     vector3dToTreeVector3(v2.start),
+            //     vector3dToTreeVector3(v2.end),
+            // ]);
+
+            // if (line1) { diagramView.core.scene.remove(line1); }
+            // line1 = new THREE.Line(geometry1, material1);
+            // diagramView.core.scene.add(line1);
+            // if (line2) { diagramView.core.scene.remove(line2); }
+            // line2 = new THREE.Line(geometry2, material2);
+            // diagramView.core.scene.add(line2);
+            // diagramView.core.forceRender();
+        } else {
+            subscription.position = threeVector3ToVector3d(subscription.mockObject.position);
+        }
+        attach(subscription.mockObject, subscription.controller, diagramView.core.scene);
+    }
+}
+
+// const sgeometry1 = new THREE.SphereGeometry(0.1, 32, 32);
+// const smaterial1 = new THREE.MeshBasicMaterial({color: 'green'});
+// const s1 = new THREE.Mesh(sgeometry1, smaterial1);
+
+// const sgeometry2 = new THREE.SphereGeometry(0.1, 32, 32);
+// const smaterial2 = new THREE.MeshBasicMaterial({color: 'blue'});
+// const s2 = new THREE.Mesh(sgeometry2, smaterial2);
+
+function getCrossingPoint(
+    v1: { start: Vector3d; end: Vector3d },
+    v2: { start: Vector3d; end: Vector3d },
+    maxDistance: number,
+): Vector3d {
+    const direction1 = sub(v1.end, v1.start);
+    const direction2 = sub(v2.end, v2.start);
+    const getPointOnDirection = (
+        direction: Vector3d,
+        dist: number,
+        offset: Vector3d,
+    ) => sum(offset, multiply(direction, dist));
+
+    const MAX_ITERATIONS = 16;
+    let step = 2;
+    let curPos = maxDistance / step;
+
+    const returnResult = () => {
+        const p1 = getPointOnDirection(direction1, curPos, v1.start);
+        const p2 = getPointOnDirection(direction2, curPos, v2.start);
+        return {
+            x: (p1.x + p2.x) / 2,
+            y: (p1.y + p2.y) / 2,
+            z: (p1.z + p2.z) / 2,
+        };
+    };
+
+    for (let i = 0; i < MAX_ITERATIONS; i++) {
+        step *= 2;
+        const nextPos1 = curPos + maxDistance / step;
+        const p1_1 = getPointOnDirection(direction1, nextPos1, v1.start);
+        const p1_2 = getPointOnDirection(direction2, nextPos1, v2.start);
+        const dist1 = distance(p1_1, p1_2);
+
+        const nextPos2 = curPos - maxDistance / step;
+        const p2_1 = getPointOnDirection(direction1, nextPos2, v1.start);
+        const p2_2 = getPointOnDirection(direction2, nextPos2, v2.start);
+        const dist2 = distance(p2_1, p2_2);
+        // s1.position.set(v1.end.x, v1.end.y, v1.end.z);
+        // s2.position.set(v2.end.x, v2.end.y, v2.end.z);
+        if (dist1 < dist2) {
+            // s1.position.set(p1_1.x, p1_1.y, p1_1.z);
+            // s2.position.set(p1_2.x, p1_2.y, p1_2.z);
+            curPos = curPos + maxDistance / step;
+        } else if (dist1 > dist2) {
+            // s1.position.set(p2_1.x, p2_1.y, p2_1.z);
+            // s2.position.set(p2_2.x, p2_2.y, p2_2.z);
+            curPos = curPos - maxDistance / step;
+        } else {
+            return returnResult();
         }
     }
+    return returnResult();
 }
 
 function stopDragging(
@@ -301,13 +428,14 @@ function stopDragging(
 ) {
     if (subscription) {
         if (controller) {
-            attach(subscription.mockObject, subscription.targetParent, diagramView.scene);
+            attach(subscription.mockObject, subscription.targetParent, diagramView.core.scene);
             subscription.position = threeVector3ToVector3d(subscription.mockObject.position);
-            detach(subscription.mockObject, subscription.mockObject.parent, diagramView.scene);
+            detach(subscription.mockObject, subscription.mockObject.parent, diagramView.core.scene);
             subscription.target = undefined;
             subscription.mockObject = undefined;
             subscription.targetParent = undefined;
             subscription.isDragging = false;
+            subscription.dragCompanionFor = undefined;
         }
     }
 }

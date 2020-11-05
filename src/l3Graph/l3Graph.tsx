@@ -17,6 +17,7 @@ import { DEFAULT_VIEW_CONTROLLERS_SET } from './controllers/defaultViewControlle
 import { DEFAULT_MESH_WIDGET_SET } from './defaultWidgetsSet';
 import { Subscribable } from './utils';
 import { DragHandlerEvents } from './input/dragHandler';
+import { Core } from './core';
 
 export interface L3GraphProps {
     viewOptions?: ViewOptions;
@@ -26,6 +27,7 @@ export interface L3GraphProps {
 }
 
 export class L3Graph extends React.Component<L3GraphProps> {
+    private core: Core;
     private diagramModel: DiagramModel;
     private view: DiagramView;
     private keyHandler: KeyHandler;
@@ -41,6 +43,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
     constructor(props: L3GraphProps) {
         super(props);
         this.diagramModel = new DiagramModel();
+        this.core = new Core();
         this.state = {};
     }
 
@@ -49,7 +52,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
     }
 
     resize() {
-        if (this.view) { this.view.resize(); }
+        if (this.view) { this.core.resize(); }
     }
 
     getViewControllers(): ReadonlyArray<ViewController> {
@@ -102,11 +105,11 @@ export class L3Graph extends React.Component<L3GraphProps> {
     }
 
     clientPosTo3dPos(position: Vector2d, distanceFromScreen: number = 600): Vector3d {
-        return this.view.clientPosTo3dPos(position, distanceFromScreen);
+        return this.core.clientPosTo3dPos(position, distanceFromScreen);
     }
 
     pos3dToClientPos(position: Vector3d): Vector2d {
-        return this.view.pos3dToClientPos(position);
+        return this.core.pos3dToClientPos(position);
     }
 
     private onViewMount = (view: DiagramView) => {
@@ -114,7 +117,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
         this.view.graphView.on('overlay:down',
             ({data: {event, target}}) => this.mouseHandler.onMouseDownEvent(event, target));
         this.mouseHandler = new MouseHandler(this.diagramModel, this.view);
-        this.keyHandler = new KeyHandler();
+        this.keyHandler = new KeyHandler(this.core);
         this.keyHandler.switchOn();
         this.gamepadHandler = new GamepadHandler(this.diagramModel, this.view);
         this.configureViewControllers();
@@ -134,7 +137,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
     private configureViewControllers() {
         this.viewControllers =
         (this.props.viewControllers || DEFAULT_VIEW_CONTROLLERS_SET())
-            .map(makeController => makeController(this.view, this.mouseHandler, this.keyHandler, this.gamepadHandler));
+            .map(makeController => makeController(this.core, this.mouseHandler, this.keyHandler, this.gamepadHandler));
         this.setViewController(this.viewControllers[0]);
         for (const vc of this.viewControllers) {
             vc.on('switched:off', () => {
@@ -156,7 +159,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
 
     public registerWidget<CustomWidget extends Widget>(widgetResolver: WidgetFactory<CustomWidget>) {
         const widgetModel = widgetResolver.getModel({
-            vrManager: this.view.vrManager,
+            vrManager: this.core.vrManager,
             diagramModel: this.diagramModel,
             keyHandler: this.keyHandler,
             mouseHandler: this.mouseHandler,
@@ -199,6 +202,7 @@ export class L3Graph extends React.Component<L3GraphProps> {
                 onWheel={event => this.mouseHandler.onScrollEvent(event.nativeEvent)}>
                 <DiagramView
                     model={this.diagramModel}
+                    core={this.core}
                     onViewMount={this.onViewMount}
                     viewOptions={viewOptions}
                     dragHandlers={dragHandlers.length > 0 ? dragHandlers : undefined}>

@@ -21,8 +21,8 @@ import {
     Subscribable,
 } from '../utils';
 import { KEY_CODES, KeyHandler } from '../input/keyHandler';
-import { DiagramView } from '../views/diagramView';
 import { MouseHandler, HandlerDragEvent } from '../input/mouseHandler';
+import { Core } from '../core';
 
 export class OpenSpaceViewController extends
 Subscribable<ViewControllerEvents> implements ViewController {
@@ -33,12 +33,12 @@ Subscribable<ViewControllerEvents> implements ViewController {
     protected startAngle: Vector2d;
 
     constructor(
-        protected view: DiagramView,
+        protected core: Core,
         protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
     ) {
         super();
-        this.id = 'open-space-view-controller';
+        this.id = 'open-space-core-controller';
         this.label = 'Open Space View Controller';
         this.updateCameraPosition();
     }
@@ -65,7 +65,7 @@ Subscribable<ViewControllerEvents> implements ViewController {
     }
 
     private refreshCamera() {
-        const {position} = this.view.cameraState;
+        const {position} = this.core.cameraState;
         this.position = position;
 
         const curTreePos = vector3dToTreeVector3(position);
@@ -95,14 +95,14 @@ Subscribable<ViewControllerEvents> implements ViewController {
             y: this.position.y + cameraDirection.y,
             z: this.position.z + cameraDirection.z,
         };
-        this.view.cameraState = {
+        this.core.setCameraState({
             position: this.position,
             focusDirection,
-        };
+        });
     }
 
     protected limitPosition(targetPosition: Vector3d): Vector3d {
-        const maxRadius = this.view.screenParameters.FAR / 2 - BORDER_OPACITY;
+        const maxRadius = this.core.screenParameters.FAR / 2 - BORDER_OPACITY;
         const curTreePos = vector3dToTreeVector3(targetPosition);
         const distanceToTheCenter = curTreePos.distanceTo(ZERO_POSITION);
         if (distanceToTheCenter > maxRadius) {

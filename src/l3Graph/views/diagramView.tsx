@@ -7,12 +7,12 @@ import { DiagramModel } from '../models/diagramModel';
 import { WidgetsView } from './widgets/widgetsView';
 import { Widget } from '../models/widgets/widget';
 import { vector3dToTreeVector3, eventToPosition, Subscribable } from '../utils';
-import { VrManager } from '../vrUtils/vrManager';
 import { CSS3DRenderer } from '../utils/CSS3DRenderer';
 import { NodeId, Node } from '../models/graph/node';
 import { LinkId, Link } from '../models/graph/link';
 import { ElementHighlighter } from '../utils/highlighter';
 import { DragHandlerEvents } from '../input/dragHandler';
+import { Core } from '../core';
 
 export interface ViewOptions {
     nodeTemplateProvider?: TemplateProvider<Node>;
@@ -21,6 +21,7 @@ export interface ViewOptions {
 
 export interface DiagramViewProps {
     model: DiagramModel;
+    core: Core;
     onViewMount?: (view: DiagramView) => void;
     viewOptions?: ViewOptions;
     dragHandlers?: Subscribable<DragHandlerEvents>[];
@@ -42,42 +43,28 @@ export class DiagramView extends React.Component<DiagramViewProps> {
     private highlighter: ElementHighlighter;
     private dragHandlers: Subscribable<DragHandlerEvents>[];
 
-    renderer: THREE.WebGLRenderer;
-    overlayRenderer: CSS3DRenderer;
-
+    core: Core;
     graphView: GraphView;
     widgetsView: WidgetsView<any>;
 
-    camera: THREE.PerspectiveCamera;
-    scene: THREE.Scene;
     meshHtmlContainer: HTMLElement;
     overlayHtmlContainer: HTMLElement;
-    vrManager: VrManager;
-
-    screenParameters: {
-        WIDTH: number;
-        HEIGHT: number;
-        VIEW_ANGLE: number;
-        ASPECT: number;
-        NEAR: number;
-        FAR: number;
-    };
 
     constructor(props: DiagramViewProps) {
         super(props);
+        this.core = props.core;
         this.highlighter = new ElementHighlighter(this);
     }
 
     componentDidMount() {
-        this.initScene();
-        this.vrManager = new VrManager(this);
-        this.vrManager.on('connection:state:changed', () => {
+        this.core.vrManager.on('connection:state:changed', () => {
             this.widgetsView.update();
         });
         this.initSubViews();
         this.subscribeOnModel();
         this.subscribeOnHandlers();
-        this.renderGraph();
+
+        this.core.attachTo(this.meshHtmlContainer, this.overlayHtmlContainer);
 
         if (this.props.onViewMount) {
             this.props.onViewMount(this);
@@ -88,181 +75,28 @@ export class DiagramView extends React.Component<DiagramViewProps> {
         this.subscribeOnHandlers();
     }
 
-    mouseTo3dPos(event: MouseEvent | TouchEvent, distanceFromScreen: number = 600): Vector3d {
-        const bBox = this.meshHtmlContainer.getBoundingClientRect();
-        return this.clientPosTo3dPos(eventToPosition(event, bBox) || {x: 0, y: 0}, distanceFromScreen);
-    }
-
-    clientPosTo3dPos(position: Vector2d, distanceFromScreen: number = 600): Vector3d {
-        const cameraPos = this.camera.position;
-        const screenParameters = this.screenParameters;
-        const vector = new THREE.Vector3(
-            (position.x / screenParameters.WIDTH) * 2 - 1,
-            1 - (position.y / screenParameters.HEIGHT) * 2,
-            1
-        );
-        const point = vector.unproject(this.camera);
-        const distance = point.distanceTo(cameraPos);
-        const k = distanceFromScreen / distance;
-
-        const relativePoint: Vector3d = {
-            x: point.x - cameraPos.x,
-            y: point.y - cameraPos.y,
-            z: point.z - cameraPos.z,
-        };
-        return {
-            x: relativePoint.x * k + cameraPos.x,
-            y: relativePoint.y * k + cameraPos.y,
-            z: relativePoint.z * k + cameraPos.z,
-        };
-    }
-
-    pos3dToClientPos(position: Vector3d): Vector2d {
-        const treePos = vector3dToTreeVector3(position);
-        const screenParameters = this.screenParameters;
-        const vector = treePos.project(this.camera);
-        return {
-            x: (vector.x + 1) * screenParameters.WIDTH / 2,
-            y: (1 - vector.y) * screenParameters.HEIGHT / 2,
-        };
-    }
-
-    get cameraState(): CameraState {
-        const focusDirection = new THREE.Vector3(0, 0, - 1);
-        focusDirection.applyQuaternion(this.camera.quaternion);
-        return {
-            position: this.camera.position,
-            focusDirection,
-        };
-    }
-
-    set cameraState(cameraState: CameraState) {
-        const {position, focusDirection} = cameraState;
-        this.camera.position.x = position.x;
-        this.camera.position.y = position.y;
-        this.camera.position.z = position.z;
-
-        if (focusDirection) {
-            this.camera.lookAt(new THREE.Vector3(
-                focusDirection.x,
-                focusDirection.y,
-                focusDirection.z,
-            ));
-        }
-        this.renderGraph();
-    }
-
-    resize() {
-        this.screenParameters = {
-            ...this.screenParameters,
-            WIDTH: this.meshHtmlContainer.clientWidth,
-            HEIGHT: this.meshHtmlContainer.clientHeight,
-            ASPECT: this.meshHtmlContainer.clientWidth / this.meshHtmlContainer.clientHeight,
-        };
-        this.renderer.setSize(
-            this.screenParameters.WIDTH,
-            this.screenParameters.HEIGHT,
-        );
-        this.overlayRenderer.setSize(
-            this.screenParameters.WIDTH,
-            this.screenParameters.HEIGHT,
-        );
-        this.camera.aspect = this.screenParameters.ASPECT;
-        this.camera.updateProjectionMatrix();
-        this.renderGraph();
-    }
-
-    private initScene() {
-        // Create main scene
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(255, 255, 255);
-        // this.scene.fog = new THREE.FogExp2(0xffffff, 0.0003);
-
-        // Prepare perspective camera
-        this.screenParameters = {
-            ...DEFAULT_SCREEN_PARAMETERS,
-            WIDTH: this.meshHtmlContainer.clientWidth,
-            HEIGHT: this.meshHtmlContainer.clientHeight,
-            ASPECT: this.meshHtmlContainer.clientWidth / this.meshHtmlContainer.clientHeight,
-        };
-
-        this.camera = new THREE.PerspectiveCamera(
-            this.screenParameters.VIEW_ANGLE,
-            this.screenParameters.ASPECT,
-            this.screenParameters.NEAR,
-            this.screenParameters.FAR,
-        );
-        this.camera.position.set(0, 0, DEFAULT_CAMERA_DIST);
-        this.camera.lookAt(this.scene.position);
-        this.scene.add(this.camera);
-
-        // Add lights
-        const dirLight = new THREE.DirectionalLight(0xffffff);
-        dirLight.position.set(200, 200, 1000).normalize();
-        this.scene.add(new THREE.AmbientLight(0x444444));
-        this.camera.add(dirLight);
-        this.camera.add(dirLight.target);
-
-        // Prepare webgl renderer
-        this.renderer = new THREE.WebGLRenderer({antialias: true}) as any;
-        this.renderer.setSize(
-            this.screenParameters.WIDTH,
-            this.screenParameters.HEIGHT,
-        );
-        this.renderer.setClearColor('white');
-
-        // xr
-        // document.body.appendChild(VRButton.createButton(this.renderer));
-        this.renderer.xr.enabled = true;
-
-        // Prepare sprite renderer (css3d)
-        this.overlayRenderer = new CSS3DRenderer();
-        this.overlayRenderer.setSize(
-            this.screenParameters.WIDTH,
-            this.screenParameters.HEIGHT,
-        );
-
-        this.meshHtmlContainer.appendChild(this.renderer.domElement);
-        this.overlayHtmlContainer.appendChild(this.overlayRenderer.domElement);
-
-        // Helper sphere
-        const sphereGeometry = new THREE.SphereGeometry(this.screenParameters.FAR / 2, 35, 35);
-        const sphereMaterial = new THREE.MeshBasicMaterial({
-            wireframe: true, color: 0xf0f0f0,
-        });
-        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-        sphere.position.set(0, 0, 0);
-        this.scene.add(sphere);
-
-        // Finalize
-        this.renderer.render(this.scene, this.camera);
-        this.overlayRenderer.render(this.scene, this.camera);
-        this.setAnimationLoop();
-    }
-
     private initSubViews() {
         const viewOptions = this.props.viewOptions || {};
         this.graphView = new GraphView({
-            vrManager: this.vrManager,
+            vrManager: this.core.vrManager,
             graphModel: this.props.model.graph,
             nodeTemplateProvider: viewOptions.nodeTemplateProvider,
             linkTemplateProvider: viewOptions.linkTemplateProvider,
-            onAdd3dObject: object => this.scene.add(object),
-            onRemove3dObject: object => this.scene.remove(object),
+            onAdd3dObject: object => this.core.scene.add(object),
+            onRemove3dObject: object => this.core.scene.remove(object),
         });
         this.widgetsView = new WidgetsView({
             diagramView: this,
-            vrManager: this.vrManager,
+            vrManager: this.core.vrManager,
             widgetsModel: this.props.model.widgetRegistry,
-            onAdd3dObject: object => this.scene.add(object),
-            onRemove3dObject: object => this.scene.remove(object),
+            onAdd3dObject: object => this.core.scene.add(object),
+            onRemove3dObject: object => this.core.scene.remove(object),
         });
     }
 
     private subscribeOnModel() {
         const {model} = this.props;
-            model.on('syncupdate', combinedEvent => {
-
+        model.on('syncupdate', combinedEvent => {
             const { nodeEvents, linkEvents, widgetEvents } = combinedEvent.data;
 
             const updatedNodeIds: NodeId[] = [];
@@ -314,30 +148,24 @@ export class DiagramView extends React.Component<DiagramViewProps> {
             this.graphView.update({updatedNodeIds, updatedLinkIds});
             this.widgetsView.update(updatedWidgetIds);
 
-            this.renderGraph();
+            this.core.forceRender();
         });
     }
 
     private subscribeOnHandlers() {
-        const {dragHandlers} = this.props;
+        const {dragHandlers, core} = this.props;
         if (!dragHandlers || this.dragHandlers) { return; }
         this.dragHandlers = dragHandlers;
         for (const dragHandler of this.dragHandlers) {
             dragHandler.on('elementHoverStart', e => {
                 this.highlighter.highlight(e.data.target);
-            });
-            dragHandler.on('elementHover', e => {
-                this.highlighter.highlight(e.data.target);
+                this.core.forceRender();
             });
             dragHandler.on('elementHoverEnd', e => {
                 this.highlighter.clear(e.data.target);
+                this.core.forceRender();
             });
         }
-    }
-
-    renderGraph() {
-        this.renderer.render(this.scene, this.camera);
-        this.overlayRenderer.render(this.scene, this.camera);
     }
 
     render() {
@@ -353,11 +181,5 @@ export class DiagramView extends React.Component<DiagramViewProps> {
             >
             </div>
         </div>;
-    }
-
-    private setAnimationLoop() {
-        this.renderer.setAnimationLoop(() => {
-            this.renderer.render(this.scene, this.camera);
-        });
     }
 }

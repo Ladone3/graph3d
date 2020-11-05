@@ -1,4 +1,3 @@
-import { DiagramView } from '../views/diagramView';
 import { MouseHandler } from '../input/mouseHandler';
 import { EventObject, Subscribable } from '../utils';
 import { KeyHandler, KEY_CODES } from '../input/keyHandler';
@@ -6,31 +5,29 @@ import { KeyHandler, KEY_CODES } from '../input/keyHandler';
 import { ViewController, ViewControllerEvents } from './viewController';
 import { VrManager } from '../vrUtils/vrManager';
 import { GamepadHandler } from '../input/gamepadHandler';
+import { Core } from '../core';
 
 export class VrViewController extends
 Subscribable<ViewControllerEvents> implements ViewController {
-    public readonly id = 'vr-view-controller';
+    public readonly id = 'vr-core-controller';
     public readonly label = 'VR View Controller';
 
     private vrManager: VrManager;
 
     constructor(
-        protected view: DiagramView,
+        protected core: Core,
         protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
         protected gamepadHandler: GamepadHandler,
     ) {
         super();
-        this.vrManager = this.view.vrManager;
+        this.vrManager = this.core.vrManager;
     }
 
     focusOn()  { /* nothing */ }
 
     switchOn() {
-        this.vrManager.connect().then(() => {
-            this.switchOff();
-            this.view.renderGraph();
-        }).catch((e: Error) => {
+        this.vrManager.connect().catch((e: Error) => {
             // alert(e.message);
             // tslint:disable-next-line: no-console
             console.error(e.message + e.stack);
@@ -47,7 +44,7 @@ Subscribable<ViewControllerEvents> implements ViewController {
         this.vrManager.unsubscribe('connection:state:changed', this.onPresentingChanged);
         this.trigger('switched:off');
         this.vrManager.disconnect();
-        this.view.renderGraph();
+        this.core.forceRender();
     }
 
     private onKeyPressed = (e: EventObject<'keyPressed', Set<number>>) =>  {

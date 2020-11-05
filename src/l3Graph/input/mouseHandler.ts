@@ -75,7 +75,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         const hoverTarget = this.getIntersectedObject(event);
         const prevTarget = this._hoverTarget;
         if (prevTarget) {
-            if (hoverTarget) {
+            if (hoverTarget && hoverTarget === prevTarget) {
                 this.trigger('elementHover', {
                     target: hoverTarget,
                     position: hoverTarget instanceof Node ?
@@ -171,7 +171,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         if (event instanceof TouchEvent && event.touches.length === 0) { return target.position; }
 
         const nodeThreePos = vector3dToTreeVector3(target.position);
-        const cameraPos = this.diagramView.camera.position;
+        const cameraPos = this.diagramView.core.camera.position;
         let distanceToNode = nodeThreePos.distanceTo(cameraPos);
         if (isMouseWheelEvent(event)) {
             const delta = -(event.deltaX || event.deltaY || event.deltaZ);
@@ -180,7 +180,7 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         const size = target.size;
         const minDist = Math.max(size.x, size.y, size.z) / 2 + MIN_DISTANCE_TO_CAMERA;
         const limitedDistance = Math.max(distanceToNode, minDist);
-        return this.diagramView.mouseTo3dPos(event, limitedDistance);
+        return this.diagramView.core.mouseTo3dPos(event, limitedDistance);
     }
 
     private getIntersectedObject(event: MouseEvent | TouchEvent): Element | undefined {
@@ -188,13 +188,13 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         const bBox = view.meshHtmlContainer.getBoundingClientRect();
         const position = eventToPosition(event, bBox);
         if (!position) { return undefined; }
-        const screenParameters = view.screenParameters;
+        const screenParameters = view.core.screenParameters;
         const vector = new THREE.Vector3(
             (position.x / screenParameters.WIDTH) * 2 - 1,
             1 - (position.y / screenParameters.HEIGHT) * 2,
             1
         );
-        const viewDirection = vector.unproject(view.camera);
+        const viewDirection = vector.unproject(view.core.camera);
 
         const {meshes, nodeMeshMap} = mapMeshes(this.diagramModel, this.diagramView);
 
@@ -215,8 +215,8 @@ export class MouseHandler extends Subscribable<MouseHandlerEvents> {
         });
 
         this.raycaster.set(
-            this.diagramView.camera.position,
-            viewDirection.sub(this.diagramView.camera.position).normalize()
+            this.diagramView.core.camera.position,
+            viewDirection.sub(this.diagramView.core.camera.position).normalize()
         );
         const intersections = this.raycaster.intersectObjects(meshes);
 

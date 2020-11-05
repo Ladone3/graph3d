@@ -10,8 +10,8 @@ import {
 } from './viewController';
 import { vector3dToTreeVector3, EventObject, Subscribable } from '../utils';
 import { KEY_CODES, KeyHandler } from '../input/keyHandler';
-import { DiagramView } from '../views/diagramView';
 import { MouseHandler, HandlerDragEvent } from '../input/mouseHandler';
+import { Core } from '../core';
 
 const WHEEL_SPEED = 100;
 
@@ -24,12 +24,12 @@ Subscribable<ViewControllerEvents> implements ViewController {
     protected startAngle: Vector2d;
 
     constructor(
-        protected view: DiagramView,
+        protected core: Core,
         protected mouseHandler: MouseHandler,
         protected keyHandler: KeyHandler,
     ) {
         super();
-        this.id = 'spherical-view-controller';
+        this.id = 'spherical-core-controller';
         this.label = 'Spherical View Controller';
         this.updateCameraPosition();
     }
@@ -52,7 +52,7 @@ Subscribable<ViewControllerEvents> implements ViewController {
     }
 
     private refreshCamera() {
-        const {position} = this.view.cameraState;
+        const {position} = this.core.cameraState;
         const curTreePos = vector3dToTreeVector3(position);
         const distance = curTreePos.distanceTo(ZERO_POSITION);
         this.cameraDistance = this.limitDistance(distance);
@@ -102,14 +102,14 @@ Subscribable<ViewControllerEvents> implements ViewController {
             y: Math.sin(this.cameraAngle.y) * this.cameraDistance,
             z: Math.sin(this.cameraAngle.x) * this.cameraDistance * Math.cos(this.cameraAngle.y),
         };
-        this.view.cameraState = {
+        this.core.setCameraState({
             position: cameraPosition,
-            focusDirection: this.view.scene.position,
-        };
+            focusDirection: this.core.scene.position,
+        });
     }
 
     protected limitDistance(distance: number) {
-        return Math.min(Math.max(0.001, distance), this.view.screenParameters.FAR / 2 - BORDER_OPACITY);
+        return Math.min(Math.max(0.001, distance), this.core.screenParameters.FAR / 2 - BORDER_OPACITY);
     }
 
     private onMouseDragStart = (event: EventObject<'paperStartDrag', HandlerDragEvent>) => {

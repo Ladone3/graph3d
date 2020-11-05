@@ -1,6 +1,7 @@
 import Subscribable from '../utils/subscribable';
 import { DiagramView } from '../views/diagramView';
 import { isXrNavigator, XrNavigator, Session } from './webVr';
+import { Core } from '../core';
 
 export interface VrManagerEvents {
     'connection:state:changed': void;
@@ -10,14 +11,12 @@ export class VrManager extends Subscribable<VrManagerEvents> {
     private _isConnected: boolean;
     private _session: Session | undefined;
 
-    constructor(
-        private view: DiagramView,
-    ) {
+    constructor(private core: Core) {
         super();
     }
 
     get camera() {
-        return this.view.renderer.xr.getCamera(this.view.camera);
+        return this.core.renderer.xr.getCamera(this.core.camera);
     }
 
     get isConnected() {
@@ -36,7 +35,7 @@ export class VrManager extends Subscribable<VrManagerEvents> {
                 if (supported) {
                     const sessionInit = {optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking']};
                     return (navigator as XrNavigator).xr.requestSession('immersive-vr', sessionInit).then(session => {
-                        const xr = this.view.renderer.xr;
+                        const xr = this.core.renderer.xr;
 
                         const onSessionEnded = (event: Event) => {
                             session.removeEventListener('end', onSessionEnded);
@@ -61,7 +60,7 @@ export class VrManager extends Subscribable<VrManagerEvents> {
     }
 
     getController(id: number) {
-        return this.view.renderer.xr.getController(id);
+        return this.core.renderer.xr.getController(id);
     }
 
     private checkIfSupported(): Promise<boolean> {
