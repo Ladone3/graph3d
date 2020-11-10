@@ -8,6 +8,7 @@ import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 export abstract class AbstractOverlayAnchor3d<Model, View> {
     readonly mesh: THREE.Object3D;
     sprites: Rendered3dSprite[];
+
     constructor(
         protected meshModel: Model,
         protected meshView: View,

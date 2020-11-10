@@ -92,6 +92,14 @@ export function sum(vector1: Vector3d, vector2: Vector3d): Vector3d {
     };
 }
 
+export function sumScalar(vector1: Vector3d, scalar: number): Vector3d {
+    return {
+        x: vector1.x + scalar,
+        y: vector1.y + scalar,
+        z: vector1.z + scalar,
+    };
+}
+
 export function sub(vector1: Vector3d, vector2: Vector3d): Vector3d {
     return {
         x: vector1.x - vector2.x,

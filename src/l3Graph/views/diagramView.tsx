@@ -7,7 +7,6 @@ import { DiagramModel } from '../models/diagramModel';
 import { WidgetsView } from './widgets/widgetsView';
 import { Widget } from '../models/widgets/widget';
 import { vector3dToTreeVector3, eventToPosition, Subscribable } from '../utils';
-import { CSS3DRenderer } from '../utils/CSS3DRenderer';
 import { NodeId, Node } from '../models/graph/node';
 import { LinkId, Link } from '../models/graph/link';
 import { ElementHighlighter } from '../utils/highlighter';
