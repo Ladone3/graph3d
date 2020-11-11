@@ -5,20 +5,18 @@ import { Link } from '../../models/graph/link';
 import { LinkViewTemplate, DEFAULT_LINK_OVERLAY, enrichOverlay } from '../../customization';
 import { multiply, sum, distance, vector3dToTreeVector3 } from '../../utils';
 import { Vector3d } from '../../models/structures';
-import { AbstractOverlayAnchor, OverlayPosition } from './overlayAnchor';
+import { AbstractOverlayAnchor, OverlayPosition, AbstractOverlayAnchor3d, applyOffset } from './overlayAnchor';
 import { LinkRouter, getPointAlongPolylineByRatio } from '../../utils/linkRouter';
 import { View } from '../viewInterface';
-import { AbstractOverlayAnchor3d, applyOffset } from './overlay3DAnchor';
 import { Rendered3dSprite } from '../../utils/htmlToSprite';
 import { SELECTION_PADDING } from '../widgets/selectionView';
 import { GraphDescriptor } from '../../models/graph/graphDescriptor';
 
 const ARROW_LENGTH = 10;
 
-export class LinkView<Descriptor extends GraphDescriptor = GraphDescriptor> implements View<Link<Descriptor>> {
+export class LinkView implements View<Link> {
     public readonly mesh: THREE.Group;
-    public readonly overlayAnchor: LinkOverlayAnchor<Descriptor>;
-    public readonly overlayAnchor3d: LinkOverlayAnchor3d<Descriptor>;
+    public readonly overlayAnchor: LinkOverlayAnchor;
     public polyline: Vector3d[] = [];
 
     private lines: THREE.Group[];
@@ -29,9 +27,9 @@ export class LinkView<Descriptor extends GraphDescriptor = GraphDescriptor> impl
     private boundingBox: THREE.Box3;
 
     constructor(
-        public readonly model: Link<Descriptor>,
+        public readonly model: Link,
         public readonly router: LinkRouter,
-        private template: LinkViewTemplate<Descriptor>,
+        private template: LinkViewTemplate,
     ) {
         this.model = model;
 
@@ -53,8 +51,6 @@ export class LinkView<Descriptor extends GraphDescriptor = GraphDescriptor> impl
         if (template.overlay) {
             this.overlayAnchor.setOverlay(template.overlay, 'c');
         }
-
-        this.overlayAnchor3d = new LinkOverlayAnchor3d(this.model, this, this.overlayAnchor);
 
         this.update();
     }
@@ -94,13 +90,11 @@ export class LinkView<Descriptor extends GraphDescriptor = GraphDescriptor> impl
 
         // Update overlay
         this.overlayAnchor.update();
-        this.overlayAnchor3d.update();
 }
 }
 
 // It is not completed, but for now it's enough
-export class LinkOverlayAnchor<Descriptor extends GraphDescriptor> extends
-AbstractOverlayAnchor<Link<Descriptor>, LinkView<Descriptor>> {
+export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link, LinkView> {
     getModelFittingBox() {
         const polyline = this.meshView.polyline;
         if (polyline.length > 0) {
@@ -123,11 +117,14 @@ AbstractOverlayAnchor<Link<Descriptor>, LinkView<Descriptor>> {
             </div>
         </div>;
     }
+
+    createAnchor3d(): LinkOverlayAnchor3d {
+        return new LinkOverlayAnchor3d(this.meshModel, this.meshView, this);
+    }
 }
 
 // The same here
-export class LinkOverlayAnchor3d<Descriptor extends GraphDescriptor> extends
-AbstractOverlayAnchor3d<Link<Descriptor>, LinkView<Descriptor>> {
+export class LinkOverlayAnchor3d extends AbstractOverlayAnchor3d<Link, LinkView> {
     forceUpdate() {
         this.meshModel.forceUpdate();
     }

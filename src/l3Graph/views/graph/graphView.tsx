@@ -14,13 +14,13 @@ import { Node, NodeId } from '../../models/graph/node';
 import { LinkRouter, DefaultLinkRouter } from '../../utils/linkRouter';
 import { DiagramElementView } from '../viewInterface';
 import { VrManager } from '../../vrUtils/vrManager';
-import { AbstractOverlayAnchor3d } from './overlay3DAnchor';
+import { Core } from '../../core';
+import { AbstractOverlayAnchor, AbstractOverlayAnchor3d } from './overlayAnchor';
 
 export interface GraphViewProps {
+    core: Core;
     graphModel: GraphModel;
     vrManager: VrManager;
-    onAdd3dObject: (object: THREE.Object3D) => void;
-    onRemove3dObject: (object: THREE.Object3D) => void;
     nodeTemplateProvider?: TemplateProvider<Node>;
     linkTemplateProvider?: TemplateProvider<Link>;
     simpleLinks?: boolean;
@@ -36,7 +36,7 @@ export interface GraphViewEvents {
 export class GraphView extends Subscribable<GraphViewEvents> {
     nodeViews = new Map<Node, NodeView>();
     linkViews = new Map<Link, LinkView>();
-    anchors3d: Set<AbstractOverlayAnchor3d<any, any>>;
+    anchors3d = new Map<AbstractOverlayAnchor, AbstractOverlayAnchor3d | undefined>();
 
     graphModel: GraphModel;
     meshHtmlContainer: HTMLElement;
@@ -51,13 +51,20 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         this.linkRouter = new DefaultLinkRouter();
         this.graphModel.nodes.forEach(node => this.registerNode(node));
         this.graphModel.links.forEach(link => this.registerLink(link));
-        this.anchors3d = new Set();
         this.vrManager = props.vrManager;
         this.vrManager.on('connection:state:changed', () => {
             if (this.vrManager.isConnected) {
-                this.anchors3d.forEach((sprite) => this.onAdd3dObject(sprite.mesh));
+                for (const anchor of Array.from(this.anchors3d.keys())) {
+                    const anchor3d = anchor.createAnchor3d();
+                    this.anchors3d.set(anchor, anchor3d);
+                    this.add3dObject(anchor3d.mesh);
+                }
             } else {
-                this.anchors3d.forEach((sprite) => this.onRemove3dObject(sprite.mesh));
+                for (const anchor of Array.from(this.anchors3d.keys())) {
+                    const anchor3d = this.anchors3d.get(anchor);
+                    this.anchors3d.set(anchor, undefined);
+                    this.remove3dObject(anchor3d.mesh);
+                }
             }
         });
     }
@@ -109,7 +116,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
 
     private registerView(view: DiagramElementView) {
         if (view.mesh) {
-            this.onAdd3dObject(view.mesh);
+            this.add3dObject(view.mesh);
         }
         if (view.overlayAnchor) {
             view.overlayAnchor.html.addEventListener('mousedown', e => {
@@ -118,13 +125,8 @@ export class GraphView extends Subscribable<GraphViewEvents> {
             view.overlayAnchor.html.addEventListener('touchstart', e => {
                 this.trigger('overlay:down', {event: e, target: view.model});
             }, false);
-            this.onAdd3dObject(view.overlayAnchor.sprite);
-        }
-        if (view.overlayAnchor3d) {
-            this.anchors3d.add(view.overlayAnchor3d);
-            if (this.vrManager.isConnected) {
-                this.onAdd3dObject(view.overlayAnchor3d.mesh);
-            }
+            this.add3dObject(view.overlayAnchor.sprite);
+            this.anchors3d.set(view.overlayAnchor as AbstractOverlayAnchor, undefined);
         }
 
         return view;
@@ -132,23 +134,25 @@ export class GraphView extends Subscribable<GraphViewEvents> {
 
     private unsubscribeFromView(view: DiagramElementView) {
         if (view.mesh) {
-            this.onRemove3dObject(view.mesh);
+            this.remove3dObject(view.mesh);
         }
         if (view.overlayAnchor) {
-            this.onRemove3dObject(view.overlayAnchor.sprite);
+            this.remove3dObject(view.overlayAnchor.sprite);
+            const overlayAnchor3d = this.anchors3d.get(view.overlayAnchor as AbstractOverlayAnchor);
+            if (overlayAnchor3d) {
+                this.remove3dObject(overlayAnchor3d.mesh);
+                this.anchors3d.delete(view.overlayAnchor as AbstractOverlayAnchor);
+            }
         }
-        if (view.overlayAnchor3d) {
-            this.onRemove3dObject(view.overlayAnchor3d.mesh);
-            this.anchors3d.delete(view.overlayAnchor3d);
-        }
+
     }
 
-    private onAdd3dObject(object: THREE.Object3D) {
-        this.props.onAdd3dObject(object);
+    private add3dObject(object: THREE.Object3D) {
+        this.props.core.scene.add(object);
     }
 
-    private onRemove3dObject(object: THREE.Object3D) {
-        this.props.onRemove3dObject(object);
+    private remove3dObject(object: THREE.Object3D) {
+        this.props.core.scene.remove(object);
     }
 
     update({
@@ -202,6 +206,8 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         const view = this.linkViews.get(link);
         if (view) { // Can be case when model is not changed but also is not loaded
             view.update();
+            const anchor3d = this.anchors3d.get(view.overlayAnchor as AbstractOverlayAnchor);
+            if (anchor3d) { anchor3d.update(); }
         }
     }
 
@@ -223,6 +229,8 @@ export class GraphView extends Subscribable<GraphViewEvents> {
         const view = this.nodeViews.get(node);
         if (view) { // Can be case when model is not changed but also is not loaded
             view.update();
+            const anchor3d = this.anchors3d.get(view.overlayAnchor as AbstractOverlayAnchor);
+            if (anchor3d) { anchor3d.update(); }
         }
     }
 }

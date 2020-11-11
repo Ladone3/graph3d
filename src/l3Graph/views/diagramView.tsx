@@ -81,15 +81,13 @@ export class DiagramView extends React.Component<DiagramViewProps> {
             graphModel: this.props.model.graph,
             nodeTemplateProvider: viewOptions.nodeTemplateProvider,
             linkTemplateProvider: viewOptions.linkTemplateProvider,
-            onAdd3dObject: object => this.core.scene.add(object),
-            onRemove3dObject: object => this.core.scene.remove(object),
+            core: this.props.core,
         });
         this.widgetsView = new WidgetsView({
             diagramView: this,
             vrManager: this.core.vrManager,
             widgetsModel: this.props.model.widgetRegistry,
-            onAdd3dObject: object => this.core.scene.add(object),
-            onRemove3dObject: object => this.core.scene.remove(object),
+            core: this.props.core,
         });
     }
 

@@ -5,13 +5,13 @@ import { WidgetViewResolver, Widget } from '../../models/widgets/widget';
 import { VrManager } from '../../vrUtils/vrManager';
 import { DiagramView } from '../diagramView';
 import { GraphDescriptor } from '../../models/graph/graphDescriptor';
+import { Core } from '../../core';
 
 export interface WidgetsViewProps {
     diagramView: DiagramView;
     vrManager: VrManager;
     widgetsModel: WidgetsModel;
-    onAdd3dObject: (object: THREE.Object3D) => void;
-    onRemove3dObject: (object: THREE.Object3D) => void;
+    core: Core;
 }
 
 export class WidgetsView<CustomWidget extends Widget> {
@@ -45,14 +45,11 @@ export class WidgetsView<CustomWidget extends Widget> {
 
         if (view) {
             if (view.mesh) {
-                this.onAdd3dObject(view.mesh);
+                this.add3dObject(view.mesh);
             }
 
             if (view.overlayAnchor) {
-                this.onAdd3dObject(view.overlayAnchor.sprite);
-            }
-            if (view.overlayAnchor3d) {
-                this.onAdd3dObject(view.overlayAnchor3d.mesh);
+                this.add3dObject(view.overlayAnchor.sprite);
             }
             this.views.set(widget.widgetId, view);
         }
@@ -63,26 +60,26 @@ export class WidgetsView<CustomWidget extends Widget> {
         const view = this.views.get(widget.widgetId);
         if (view) {
             if (view.mesh) {
-                this.onRemove3dObject(view.mesh);
+                this.remove3dObject(view.mesh);
             }
 
             if (view.overlayAnchor) {
-                this.onRemove3dObject(view.overlayAnchor.sprite);
+                this.remove3dObject(view.overlayAnchor.sprite);
             }
-            if (view.overlayAnchor) {
-                this.onRemove3dObject(view.overlayAnchor3d.mesh);
-            }
+            // if (view.overlayAnchor) {
+            //     this.remove3dObject(view.overlayAnchor3d.mesh);
+            // }
             if (view.onRemove) { view.onRemove(); }
         }
         this.views.delete(widget.widgetId);
     }
 
-    private onAdd3dObject(object: THREE.Object3D) {
-        this.props.onAdd3dObject(object);
+    private add3dObject(object: THREE.Object3D) {
+        this.props.core.scene.add(object);
     }
 
-    private onRemove3dObject(object: THREE.Object3D) {
-        this.props.onRemove3dObject(object);
+    private remove3dObject(object: THREE.Object3D) {
+        this.props.core.scene.remove(object);
     }
 
     private findViewForWidget(widget: CustomWidget): DiagramWidgetView | undefined {

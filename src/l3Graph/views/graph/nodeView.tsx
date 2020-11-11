@@ -9,9 +9,8 @@ import {
 import { preparePrimitive, prepareMesh } from '../../utils/shapeUtils';
 import { Vector3d } from '../../models/structures';
 import { threeVector3ToVector3d, getModelFittingBox, vector3dToTreeVector3 } from '../../utils';
-import { AbstractOverlayAnchor, OverlayPosition } from './overlayAnchor';
+import { AbstractOverlayAnchor, OverlayPosition, AbstractOverlayAnchor3d, applyOffset } from './overlayAnchor';
 import { View } from '../viewInterface';
-import { AbstractOverlayAnchor3d, applyOffset } from './overlay3DAnchor';
 import { SELECTION_PADDING } from '../widgets/selectionView';
 import { Rendered3dSprite } from '../../utils/htmlToSprite';
 import { GraphDescriptor } from '../../models/graph/graphDescriptor';
@@ -20,7 +19,6 @@ export class NodeView implements View<Node> {
     public readonly model: Node;
     public readonly mesh: THREE.Object3D;
     public readonly overlayAnchor: NodeOverlayAnchor;
-    public readonly overlayAnchor3d: NodeOverlayAnchor3d;
 
     private boundingBox: THREE.Box3;
     private meshOriginalSize: THREE.Vector3;
@@ -62,8 +60,6 @@ export class NodeView implements View<Node> {
             this.overlayAnchor.setOverlay(template.overlay, 'e');
         }
 
-        this.overlayAnchor3d = new NodeOverlayAnchor3d(this.model, this, this.overlayAnchor);
-
         this.update();
     }
 
@@ -90,7 +86,6 @@ export class NodeView implements View<Node> {
             );
         }
         this.overlayAnchor.update();
-        this.overlayAnchor3d.update();
     }
 
     private calcScale(): Vector3d {
@@ -114,8 +109,7 @@ export class NodeView implements View<Node> {
     }
 }
 
-export class NodeOverlayAnchor extends
-AbstractOverlayAnchor<Node, NodeView> {
+export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node, NodeView> {
     getModelFittingBox() {
         return {
             ...this.meshModel.position,
@@ -126,10 +120,12 @@ AbstractOverlayAnchor<Node, NodeView> {
     protected enrichOverlay(poorOverlay: ReactOverlay<Node>) {
         return enrichOverlay(poorOverlay, this.meshModel);
     }
+    createAnchor3d(): NodeOverlayAnchor3d {
+        return new NodeOverlayAnchor3d(this.meshModel, this.meshView, this);
+    }
 }
 
-export class NodeOverlayAnchor3d extends
-AbstractOverlayAnchor3d<Node, NodeView> {
+export class NodeOverlayAnchor3d extends AbstractOverlayAnchor3d<Node, NodeView> {
     forceUpdate() {
         this.meshModel.forceUpdate();
     }

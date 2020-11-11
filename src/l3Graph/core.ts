@@ -35,7 +35,7 @@ export class Cancellation extends Subscribable<CancellationEvents> {
 
 export class Core {
     private readonly animationLoopActions = new Set<AnimationLoopAction>();
-    private forceRenderFlag = false;
+    private forceRenderCallback: (() => void) | undefined;
 
     renderer: THREE.WebGLRenderer;
     overlayRenderer: CSS3DRenderer;
@@ -186,8 +186,11 @@ export class Core {
         this.forceRender();
     }
 
-    forceRender = () => {
-        this.forceRenderFlag = true;
+    forceRender = (callback?: () => void) => {
+        this.forceRenderCallback = () => {
+            this.forceRenderCallback = undefined;
+            if (callback) { callback(); }
+        };
     }
 
     private initScene() {
@@ -256,12 +259,7 @@ export class Core {
     }
 
     private forceRenderAction = () => {
-        if (this.forceRenderFlag) {
-            this.forceRenderFlag = false;
-            return true;
-        } else {
-            return false;
-        }
+        return Boolean(this.forceRenderCallback);
     }
 
     private vrAction = () => true;
@@ -276,6 +274,9 @@ export class Core {
             if (renderNeeded) {
                 this.renderer.render(this.scene, this.camera);
                 this.overlayRenderer.render(this.scene, this.camera);
+                if (this.forceRenderCallback) {
+                    this.forceRenderCallback();
+                }
             }
         });
     }
