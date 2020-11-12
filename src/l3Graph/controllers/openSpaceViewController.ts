@@ -38,7 +38,7 @@ Subscribable<ViewControllerEvents> implements ViewController {
         protected keyHandler: KeyHandler,
     ) {
         super();
-        this.id = 'open-space-core-controller';
+        this.id = 'open-space-view-controller';
         this.label = 'Open Space View Controller';
         this.updateCameraPosition();
     }

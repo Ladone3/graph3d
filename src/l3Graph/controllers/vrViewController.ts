@@ -9,7 +9,7 @@ import { Core } from '../core';
 
 export class VrViewController extends
 Subscribable<ViewControllerEvents> implements ViewController {
-    public readonly id = 'vr-core-controller';
+    public readonly id = 'vr-view-controller';
     public readonly label = 'VR View Controller';
 
     private vrManager: VrManager;

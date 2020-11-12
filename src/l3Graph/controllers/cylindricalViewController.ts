@@ -12,7 +12,7 @@ export class CylindricalViewController extends SphericalViewController {
         keyHandler: KeyHandler,
     ) {
         super(core, mouseHandler, keyHandler);
-        this.id = 'cylindrical-core-controller';
+        this.id = 'cylindrical-view-controller';
         this.label = 'Cylindrical View Controller';
     }
 

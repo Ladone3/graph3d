@@ -29,7 +29,7 @@ Subscribable<ViewControllerEvents> implements ViewController {
         protected keyHandler: KeyHandler,
     ) {
         super();
-        this.id = 'spherical-core-controller';
+        this.id = 'spherical-view-controller';
         this.label = 'Spherical View Controller';
         this.updateCameraPosition();
     }
