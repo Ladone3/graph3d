@@ -4,7 +4,7 @@ import { AbstractOverlayAnchor, OverlayPosition } from './overlayAnchor';
 import { Vector3d } from '../../models/structures';
 import { sum } from '../../utils';
 
-export abstract class AbstracrOverlayAnchor3d<Model, View> {
+export abstract class AbstractOverlayAnchor3d<Model, View> {
     readonly mesh: THREE.Group;
     sprites: Rendered3dSprite[];
 
@@ -25,10 +25,10 @@ export abstract class AbstracrOverlayAnchor3d<Model, View> {
         ) => {
             spriteGroup.lookAt(camera.position);
             superAfterRender(renderer, scene, camera, geometry, material, group);
-        }
+        };
         this.mesh = spriteGroup;
         this.renderSprites();
-        
+
         overlayAnchor.on('anchor:changed', () => this.renderSprites());
     }
 
@@ -65,24 +65,23 @@ export abstract class AbstracrOverlayAnchor3d<Model, View> {
     abstract placeSprites(sprites: Rendered3dSprite[]): void;
 }
 
-
 export function applyOffset(
     basicVector: Vector3d,
     offset: Vector3d,
     position: OverlayPosition,
 ): Vector3d {
     const {x: xOffset, y: yOffset} = offset;
-    let offsetByPossition: Vector3d;
-    switch(position) {
-        case 'e': offsetByPossition = {x: xOffset,  y: 0, z: 0}; break;
-        case 'w': offsetByPossition = {x: -xOffset, y: 0, z: 0}; break;
-        case 'n': offsetByPossition = {x: 0, y: -yOffset, z: 0}; break;
-        case 's': offsetByPossition = {x: 0, y: yOffset, z: 0}; break;
-        case 'ne': offsetByPossition = {x: xOffset,  y: -yOffset, z: 0}; break;
-        case 'se': offsetByPossition = {x: xOffset,  y: yOffset, z: 0}; break;
-        case 'nw': offsetByPossition = {x: -xOffset,  y: -yOffset, z: 0}; break;
-        case 'sw': offsetByPossition = {x: -xOffset,  y: yOffset, z: 0}; break;
-        default: offsetByPossition = {x: 0, y: 0, z: 0};
+    let offsetByPosition: Vector3d;
+    switch (position) {
+        case 'e': offsetByPosition = {x: xOffset,  y: 0, z: 0}; break;
+        case 'w': offsetByPosition = {x: -xOffset, y: 0, z: 0}; break;
+        case 'n': offsetByPosition = {x: 0, y: -yOffset, z: 0}; break;
+        case 's': offsetByPosition = {x: 0, y: yOffset, z: 0}; break;
+        case 'ne': offsetByPosition = {x: xOffset,  y: -yOffset, z: 0}; break;
+        case 'se': offsetByPosition = {x: xOffset,  y: yOffset, z: 0}; break;
+        case 'nw': offsetByPosition = {x: -xOffset,  y: -yOffset, z: 0}; break;
+        case 'sw': offsetByPosition = {x: -xOffset,  y: yOffset, z: 0}; break;
+        default: offsetByPosition = {x: 0, y: 0, z: 0};
     }
-    return sum(basicVector, offsetByPossition);
+    return sum(basicVector, offsetByPosition);
 }

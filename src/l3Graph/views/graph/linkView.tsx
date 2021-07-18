@@ -8,7 +8,7 @@ import { Vector3d } from '../../models/structures';
 import { AbstractOverlayAnchor, OverlayPosition } from './overlayAnchor';
 import { LinkRouter, getPointAlongPolylineByRatio } from '../../utils/linkRouter';
 import { DiagramElementView } from '../viewInterface';
-import { AbstracrOverlayAnchor3d, applyOffset } from './overlay3DAnchor';
+import { AbstractOverlayAnchor3d, applyOffset } from './overlay3DAnchor';
 import { Rendered3dSprite } from '../../utils/htmlToSprite';
 import { SELECTION_PADDING } from '../widgets/selectionView';
 
@@ -124,7 +124,7 @@ export class LinkOverlayAnchor extends AbstractOverlayAnchor<Link, LinkView> {
 }
 
 // The same here
-export class LinkOverlayAnchor3d extends AbstracrOverlayAnchor3d<Link, LinkView> {
+export class LinkOverlayAnchor3d extends AbstractOverlayAnchor3d<Link, LinkView> {
     forceUpdate() {
         this.meshModel.forceUpdate();
     }
@@ -153,10 +153,10 @@ export class LinkOverlayAnchor3d extends AbstracrOverlayAnchor3d<Link, LinkView>
             let offset = applyOffset({x: 0, y: 0, z: 0}, initialOffset, position);
             for (const renderedSprite of sprites) {
                 renderedSprite.sprite.position.set(
-                    offset.x, 
-                    offset.y, 
-                    offset.z, 
-                )
+                    offset.x,
+                    offset.y,
+                    offset.z,
+                );
                 offset = applyOffset(offset, {
                     x: SELECTION_PADDING + renderedSprite.size.x,
                     y: SELECTION_PADDING + renderedSprite.size.y,

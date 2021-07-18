@@ -16,7 +16,7 @@ import { Node } from '../../models/graph/node';
 import { LinkRouter, DefaultLinkRouter } from '../../utils/linkRouter';
 import { DiagramElementView } from '../viewInterface';
 import { VrManager } from '../../vrUtils/vrManager';
-import { AbstracrOverlayAnchor3d } from './overlay3DAnchor';
+import { AbstractOverlayAnchor3d } from './overlay3DAnchor';
 
 export interface GraphViewProps {
     graphModel: GraphModel;
@@ -34,7 +34,7 @@ export interface GraphViewEvents {
 
 export class GraphView extends Subscribable<GraphViewEvents> {
     views: Map<string, DiagramElementView>;
-    anchors3d: Set<AbstracrOverlayAnchor3d<any, any>>;
+    anchors3d: Set<AbstractOverlayAnchor3d<any, any>>;
 
     graphModel: GraphModel;
     meshHtmlContainer: HTMLElement;
@@ -58,7 +58,7 @@ export class GraphView extends Subscribable<GraphViewEvents> {
             } else {
                 this.anchors3d.forEach((sprite) => this.onRemove3dObject(sprite.mesh));
             }
-        })
+        });
     }
 
     public registerElement(element: Element) {
@@ -115,11 +115,11 @@ export class GraphView extends Subscribable<GraphViewEvents> {
     }
 
     private onAdd3dObject(object: THREE.Object3D) {
-        this.props.onAdd3dObject(object)
+        this.props.onAdd3dObject(object);
     }
 
     private onRemove3dObject(object: THREE.Object3D) {
-        this.props.onRemove3dObject(object)
+        this.props.onRemove3dObject(object);
     }
 
     private createNodeView(node: Node): DiagramElementView {
@@ -150,10 +150,10 @@ export class GraphView extends Subscribable<GraphViewEvents> {
 
                 // Restore overlays
                 oldView.overlayAnchor.overlays.forEach((overlaysById, position) => {
-                    overlaysById.forEach(overlay =>{
+                    overlaysById.forEach(overlay => {
                         newView.overlayAnchor.setOverlay(overlay, position);
                     });
-                })
+                });
 
                 element.modelIsChanged = false;
             }

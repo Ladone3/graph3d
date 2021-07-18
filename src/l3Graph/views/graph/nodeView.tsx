@@ -11,7 +11,7 @@ import { Vector3d } from '../../models/structures';
 import { threeVector3ToVector3d, getModelFittingBox, vector3dToTreeVector3 } from '../../utils';
 import { AbstractOverlayAnchor, OverlayPosition } from './overlayAnchor';
 import { DiagramElementView } from '../viewInterface';
-import { AbstracrOverlayAnchor3d, applyOffset } from './overlay3DAnchor';
+import { AbstractOverlayAnchor3d, applyOffset } from './overlay3DAnchor';
 import { SELECTION_PADDING } from '../widgets/selectionView';
 import { Rendered3dSprite } from '../../utils/htmlToSprite';
 
@@ -94,11 +94,11 @@ export class NodeView implements DiagramElementView {
 
     private calcScale(): Vector3d {
         const size = this.meshOriginalSize;
-        const prefferedSize = this.model.size;
+        const preferredSize = this.model.size;
         const scale = {
-            x: prefferedSize.x / size.x,
-            y: prefferedSize.y / size.y,
-            z: prefferedSize.z / size.z,
+            x: preferredSize.x / size.x,
+            y: preferredSize.y / size.y,
+            z: preferredSize.z / size.z,
         };
         if (this.preserveRatio) {
             const singleScale = Math.min(scale.x, scale.y, scale.z);
@@ -121,12 +121,12 @@ export class NodeOverlayAnchor extends AbstractOverlayAnchor<Node, NodeView> {
         };
     }
 
-    protected enrichOverlay(pooreOverlay: ReactOverlay): ReactOverlay {
-        return enrichOverlay(pooreOverlay, this.meshModel.data);
+    protected enrichOverlay(poorOverlay: ReactOverlay): ReactOverlay {
+        return enrichOverlay(poorOverlay, this.meshModel.data);
     }
 }
 
-export class NodeOverlayAnchor3d extends AbstracrOverlayAnchor3d<Node, NodeView> {
+export class NodeOverlayAnchor3d extends AbstractOverlayAnchor3d<Node, NodeView> {
     forceUpdate() {
         this.meshModel.forceUpdate();
     }
@@ -153,10 +153,10 @@ export class NodeOverlayAnchor3d extends AbstracrOverlayAnchor3d<Node, NodeView>
             let offset = applyOffset({x: 0, y: 0, z: 0}, initialOffset, position);
             for (const renderedSprite of sprites) {
                 renderedSprite.sprite.position.set(
-                    offset.x, 
-                    offset.y, 
-                    offset.z, 
-                )
+                    offset.x,
+                    offset.y,
+                    offset.z,
+                );
                 offset = applyOffset(offset, {
                     x: SELECTION_PADDING + renderedSprite.size.x,
                     y: SELECTION_PADDING + renderedSprite.size.y,
